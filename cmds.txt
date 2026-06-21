@@ -1,0 +1,164 @@
+arm-none-eabi-gcc \
+    -x assembler-with-cpp \
+    -E \
+    -Wp,-P \
+    -DMPS2_AN386 \
+    -DDATA_IN_FLASH \
+    -Icommon/mps2 \
+    common/mps2/MPS2.ld \
+    -o obj/ldscript.ld
+
+----------------------------
+
+
+arm-none-eabi-gcc \
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    -DMPS2_AN386 \
+    -DDATA_IN_FLASH \
+    -Icommon/mps2 \
+    -c common/mps2/startup_MPS2.S \
+    -o obj/common/mps2/startup_MPS2.S.o
+
+----------------------------
+
+
+ arm-none-eabi-gcc \
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    --specs=nosys.specs \
+    -DMPS2_AN386 \
+    -Icommon/mps2 \
+    -c common/hal-mps2.c \
+    -o obj/common/hal-mps2.c.o
+
+
+----------------------------
+
+
+arm-none-eabi-gcc \   
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    --specs=nosys.specs \
+    -DMPS2_AN386 \
+    -c common/randombytes.c \
+    -o obj/common/randombytes.c.o
+
+----------------------------
+
+
+arm-none-eabi-ar rcs \
+    obj/libpqm4hal.a \
+    obj/common/mps2/startup_MPS2.S.o \
+    obj/common/hal-mps2.c.o \
+    obj/common/randombytes.c.o
+
+
+----------------------------
+
+
+
+arm-none-eabi-gcc \
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    --specs=nosys.specs \
+    -c main.c \
+    -o main.o
+
+--------OR-------------
+
+
+clang \
+    --target=arm-none-eabi \
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    -emit-llvm \
+    -S main.c \
+    -o main.ll
+
+# llc \
+    -march=arm \
+    -mcpu=cortex-m4 \
+    -mattr=+thumb2,+vfp4 \
+    -float-abi=hard \
+    -filetype=obj \
+    main.ll \
+    -o main.o
+#
+
+
+llc \
+  -march=arm \
+  -mcpu=cortex-m4 \
+  -mattr=+thumb2,+vfp4d16 \
+  -float-abi=hard \
+  -filetype=obj \
+  main.ll \
+  -o main.o
+
+----------------------------
+
+
+
+ arm-none-eabi-gcc \
+    main.o \
+    -Lobj \
+    -lpqm4hal \
+    --specs=nosys.specs \
+    -Wl,--wrap=_sbrk \
+    -Wl,--wrap=_open \
+    -Wl,--wrap=_close \
+    -Wl,--wrap=_isatty \
+    -Wl,--wrap=_kill \
+    -Wl,--wrap=_lseek \
+    -Wl,--wrap=_read \
+    -Wl,--wrap=_write \
+    -Wl,--wrap=_fstat \
+    -Wl,--wrap=_getpid \
+    -Wl,--no-warn-rwx-segments \
+    -ffreestanding \
+    -T obj/ldscript.ld \
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    -o main.elf
+
+
+
+----------------------------
+
+
+qemu-system-arm \
+    -M mps2-an386 \
+    -nographic \
+    -semihosting \
+    -kernel main.elf
+
+---------- For GDB -------
+
+qemu-system-arm \
+    -M mps2-an386 \
+    -kernel main.elf \
+    -nographic \
+    -semihosting \
+    -S \
+    -gdb tcp::1234\
+
+
+---------------------
+gdb-multiarch main.elf
+In gdb:
+target remote :1234
+break main
+continue and next till result, and print result
