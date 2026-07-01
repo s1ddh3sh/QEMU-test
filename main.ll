@@ -31,7 +31,7 @@ attributes #0 = { noinline nounwind optnone "no-trapping-math"="true" "stack-pro
 !llvm.ident = !{!6}
 
 !0 = distinct !DICompileUnit(language: DW_LANG_C11, file: !1, producer: "Ubuntu clang version 20.1.2 (0ubuntu1~24.04.3)", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, splitDebugInlining: false, nameTableKind: None)
-!1 = !DIFile(filename: "main.c", directory: "/home/siddhesh/Desktop/test_qemu", checksumkind: CSK_MD5, checksum: "81bf6110d89855fc40d88423cf65054f")
+!1 = !DIFile(filename: "main.c", directory: "/home/siddhesh/Desktop/QEMU-test", checksumkind: CSK_MD5, checksum: "81bf6110d89855fc40d88423cf65054f")
 !2 = !{i32 7, !"Dwarf Version", i32 5}
 !3 = !{i32 2, !"Debug Info Version", i32 3}
 !4 = !{i32 1, !"wchar_size", i32 4}

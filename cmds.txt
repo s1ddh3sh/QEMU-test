@@ -73,6 +73,18 @@ arm-none-eabi-gcc \
     -c main.c \
     -o main.o
 
+
+arm-none-eabi-gcc \
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    -fno-exceptions -fno-rtti -ffreestanding \
+    --specs=nosys.specs \
+    -c common/assert_stub.cpp \
+    -o obj/common/assert_stub.o
+
+
 --------OR-------------
 
 
@@ -112,6 +124,7 @@ llc \
 
  arm-none-eabi-gcc \
     main.o \
+    obj/common/assert_stub.o \
     -Lobj \
     -lpqm4hal \
     --specs=nosys.specs \
