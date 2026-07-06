@@ -10,10 +10,21 @@ if [ -z "$1" ]; then
     echo "Example: $0 main"
     exit 1
 fi
+INPUT="$1"
+# Verify it exists
+if [ ! -f "$INPUT" ]; then
+    echo "Error: File '$INPUT' not found."
+    exit 1
+fi
 
-# Assign the argument to a descriptive variable
-FILENAME="$1"
-BUILD_DIR="build"
+FILENAME=$(basename "$INPUT" .ll)
+INPUT_DIR=$(dirname "$INPUT")
+if [ "$INPUT_DIR" = "." ]; then
+    BUILD_DIR="build"
+else
+    BUILD_DIR="build/$INPUT_DIR"
+fi
+
 mkdir -p "$BUILD_DIR"
 
 llc \
@@ -22,7 +33,7 @@ llc \
   -mattr=+thumb2,+vfp4d16 \
   -float-abi=hard \
   -filetype=obj \
-  "${FILENAME}.ll" \
+  "$INPUT" \
   -o "${BUILD_DIR}/${FILENAME}.o"
 
 arm-none-eabi-gcc \
@@ -51,3 +62,13 @@ arm-none-eabi-gcc \
     -o "${BUILD_DIR}/${FILENAME}.elf"
 
 echo "${BUILD_DIR}/${FILENAME}.elf generated."
+echo "QEMU started"
+echo "run gdb-multiarch ${BUILD_DIR}/${FILENAME}.elf"
+
+qemu-system-arm \
+    -M mps2-an386 \
+    -kernel "${BUILD_DIR}/${FILENAME}.elf" \
+    -nographic \
+    -semihosting \
+    -S \
+    -gdb tcp::1234
