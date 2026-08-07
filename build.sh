@@ -6,7 +6,7 @@ set -e
 # Check if an argument was provided
 if [ -z "$1" ]; then
     echo "Error: Missing file name argument."
-    echo "Usage: $0 <filename_without_extension>"
+    echo "Usage: $0 <filename>"
     echo "Example: $0 main"
     exit 1
 fi
