@@ -62,18 +62,6 @@ arm-none-eabi-ar rcs \
 
 ----------------------------
 
-
-
-arm-none-eabi-gcc \
-    -mcpu=cortex-m4 \
-    -mthumb \
-    -mfloat-abi=hard \
-    -mfpu=fpv4-sp-d16 \
-    --specs=nosys.specs \
-    -c main.c \
-    -o main.o
-
-
 arm-none-eabi-gcc \
     -mcpu=cortex-m4 \
     -mthumb \
@@ -84,29 +72,6 @@ arm-none-eabi-gcc \
     -c common/assert_stub.cpp \
     -o obj/common/assert_stub.o
 
-
---------OR-------------
-
-
-clang \
-    --target=arm-none-eabi \
-    -mcpu=cortex-m4 \
-    -mthumb \
-    -mfloat-abi=hard \
-    -mfpu=fpv4-sp-d16 \
-    -emit-llvm \
-    -S main.c \
-    -o main.ll
-
-# llc \
-    -march=arm \
-    -mcpu=cortex-m4 \
-    -mattr=+thumb2,+vfp4 \
-    -float-abi=hard \
-    -filetype=obj \
-    main.ll \
-    -o main.o
-#
 
 
 llc \
