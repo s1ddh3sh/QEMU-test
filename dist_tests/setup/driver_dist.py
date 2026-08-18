@@ -188,15 +188,16 @@ def run_collect():
     # SAME seed must be used for correct and faulty runs of the same
     # trial_id, so both variants see identical inputs -- the caller is
     # responsible for passing the same GDB_DRIVER_TRIAL_SEED for both.
+   
     rng = random.Random(trial_seed)
+    written_inputs = {}
     for name, spec in layout.items():
         if spec.get("role") != "input":
             continue
         fill_len = active_lengths.get(name, spec["length"])
         vals = random_fill(rng, field_mod, fill_len)
         write_bytes(addr_of[name], vals)
-        # bytes [fill_len, spec['length']) are left at their post-memset
-        # default (zero) -- deliberately unrandomized, per calibration.
+        written_inputs[name] = vals   # <-- record what was actually written
 
     gdb.execute("finish", to_string=True)
 
@@ -208,10 +209,7 @@ def run_collect():
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"{variant}_trial{trial_seed:06d}.json")
     with open(out_path, "w") as f:
-        json.dump(outputs, f)
-
-    gdb.execute("kill", to_string=True)
-    print(f"[collect] {variant} seed={trial_seed} -> {out_path}")
+        json.dump({"inputs": written_inputs, "outputs": outputs}, f)  # <-- both now
 
 
 # ---------------------------------------------------------------------------
