@@ -1,0 +1,18 @@
+GDB_DRIVER_ELF=build/tests/mat_add/mat_add.elf \
+GDB_DRIVER_WITNESS=tests_mayo/mat_add/qemu_witness.json \
+GDB_DRIVER_FUNC=mat_add
+GDB_DRIVER_MODE="probe" | "collect"
+GDB_DRIVER_FIELD_MOD=16
+
+# probe mode additionally needs:
+
+GDB_DRIVER_PROBE_BUF=s
+GDB_DRIVER_PROBE_LEN=78
+GDB_DRIVER_PROBE_SEED=0
+GDB_DRIVER_PROBE_OUT=tests_mayo_mat_add/mat_add_probe.json
+
+collect mode additionally needs:
+GDB_DRIVER_ACTIVE_LENGTHS  path to active_lengths.json
+GDB_DRIVER_TRIAL_SEED      RNG seed for this trial (int)
+GDB_DRIVER_VARIANT         "correct" | "faulty"
+GDB_DRIVER_OUTDIR 

@@ -7,7 +7,7 @@ set -e
 if [ -z "$1" ]; then
     echo "Error: Missing file name argument."
     echo "Usage: $0 <filename>"
-    echo "Example: $0 main"
+    echo "Example: $0 main.ll"
     exit 1
 fi
 INPUT="$1"
