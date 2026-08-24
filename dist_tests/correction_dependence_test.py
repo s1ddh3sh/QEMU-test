@@ -5,16 +5,30 @@ zero/nonzero split), via a contingency chi-square test on a
 (secret_domain_size x 2) table. Generalizes across fault mechanisms
 that don't necessarily hinge on a "was it zero" boundary -- the only
 domain-specific assumption is what delta==0 means (equal output ->
-no observable divergence), which is generic across functions."""
+no observable divergence), which is generic across functions.
+
+PATCHED:
+  - reads secret_buf / out_buf from the "captured" section (where
+    locals like s1/s2/w1/w0 actually live), falling back to "inputs"
+    for driver-written pointer args (sk/rnd/m/etc).
+  - decodes int32-coefficient buffers (4 little-endian bytes/entry)
+    instead of indexing raw bytes, controlled by --secret-word-size /
+    --out-word-size (default 4, matching int32_t coeffs[]; pass 1 for
+    genuine byte buffers like sk/sig).
+  - secret domain is no longer hardcoded to [0,16). --secret-min /
+    --secret-max define the row range (e.g. -2..2 for Dilithium eta=2,
+    or leave as auto-detected from the observed data with --auto-domain).
+"""
 
 import argparse
 import glob
 import json
+import struct
 import sys
 import numpy as np
 from scipy.stats import chi2_contingency, fisher_exact
 
-FIELD_MOD = 16
+DEFAULT_FIELD_MOD = 16
 
 
 def load_trials(dist_dir):
@@ -29,48 +43,140 @@ def load_trials(dist_dir):
             c, f = json.load(open(cpath)), json.load(open(fpath))
         except FileNotFoundError:
             continue
-        if "inputs" not in c or "inputs" not in f:
-            raise KeyError(f"{cpath} missing 'inputs' -- re-run collection with the patched driver")
+        # PATCHED: accept trials in any of the schemas this codebase
+        # produces -- "captured"/"inputs"/"pre_transform"
+        # (driver_internal_capture.py, used for Dilithium) or "outputs"
+        # (older driver_dist.py schema, used for Mayo). Require at
+        # least one so we still catch genuinely broken/empty trial files.
+        schema_keys = ("captured", "inputs", "outputs", "pre_transform")
+        if not any(k in c for k in schema_keys):
+            raise KeyError(f"{cpath} has none of {schema_keys} -- corrupt or wrong-format trial file")
+        if not any(k in f for k in schema_keys):
+            raise KeyError(f"{fpath} has none of {schema_keys} -- corrupt or wrong-format trial file")
         trials.append((c, f))
     if not trials:
         raise RuntimeError(f"No usable trial pairs in {dist_dir}")
     return trials
 
 
-def compute_delta(c, f, out_buf="s", active_len=None):
-    co, fo = np.array(c["outputs"][out_buf]), np.array(f["outputs"][out_buf])
+def get_buffer(trial_record, buf_name):
+    """Look up buf_name across every schema this codebase's trial files
+    use, in order:
+      - "pre_transform" -- driver_internal_capture.py's pre-transform
+                            captures (e.g. s1_pre_ntt/s2_pre_ntt: the
+                            RAW eta-bounded secret, captured before an
+                            in-place transform like NTT mutates it)
+      - "captured"      -- driver_internal_capture.py's locals as they
+                            stand at function return (Dilithium:
+                            s1/s2/w1/w0/y/z/t0/h/cp -- NOTE these are
+                            POST-transform if the FUT applies one, e.g.
+                            s1/s2 here are NTT-domain, not the raw key)
+      - "inputs"        -- driver_internal_capture.py's driver-written
+                            pointer args (Dilithium: sk/rnd/m/pre/sig)
+      - "outputs"       -- the older driver_dist.py/calibrate.py schema
+                            used by Mayo trials (e.g. buffer 's')
+    Different collection scripts produced different trial-file shapes,
+    so this checks all four rather than assuming one. Raises KeyError
+    listing every section's keys if absent from all of them, instead of
+    a bare KeyError on one guessed location.
+
+    IMPORTANT: if a label exists in BOTH pre_transform (e.g.
+    "s1_pre_ntt") and captured (e.g. "s1"), these are DIFFERENT names
+    and both remain independently addressable -- pre_transform is
+    checked first only so that if you ever reuse the same name in both
+    sections, the raw pre-transform value wins. In practice always use
+    distinct labels (as in the example spec) to avoid relying on this
+    precedence at all.
+    """
+    pre_transform = trial_record.get("pre_transform", {})
+    if buf_name in pre_transform and pre_transform[buf_name] is not None:
+        return pre_transform[buf_name]
+    captured = trial_record.get("captured", {})
+    if buf_name in captured and captured[buf_name] is not None:
+        return captured[buf_name]
+    inputs = trial_record.get("inputs", {})
+    if buf_name in inputs:
+        return inputs[buf_name]
+    outputs = trial_record.get("outputs", {})
+    if buf_name in outputs:
+        return outputs[buf_name]
+    raise KeyError(
+        f"'{buf_name}' not found in trial's pre_transform, captured, "
+        f"inputs, or outputs. "
+        f"pre_transform keys: {sorted(pre_transform.keys())}, "
+        f"captured keys: {sorted(captured.keys())}, "
+        f"inputs keys: {sorted(inputs.keys())}, "
+        f"outputs keys: {sorted(outputs.keys())}"
+    )
+
+
+def decode_words(byte_list, word_size):
+    """word_size=1 -> raw bytes as-is (unsigned 0-255, matches sk/sig/m).
+    word_size=4 -> little-endian signed int32 per group of 4 bytes
+    (matches int32_t coeffs[] buffers: s1, s2, y, z, t0, w1, w0, h, cp)."""
+    if word_size == 1:
+        return list(byte_list)
+    if word_size == 4:
+        if len(byte_list) % 4 != 0:
+            raise ValueError(
+                f"buffer length {len(byte_list)} not divisible by 4 -- "
+                f"not a valid int32 array; pass --*-word-size 1 if this "
+                f"buffer is actually raw bytes"
+            )
+        n = len(byte_list) // 4
+        return list(struct.unpack(f"<{n}i", bytes(byte_list)))
+    raise ValueError(f"unsupported word_size {word_size} (use 1 or 4)")
+
+
+def compute_delta(c, f, out_buf, active_len, word_size):
+    co = np.array(decode_words(get_buffer(c, out_buf), word_size))
+    fo = np.array(decode_words(get_buffer(f, out_buf), word_size))
     if active_len is not None:
         co, fo = co[:active_len], fo[:active_len]
-    return np.bitwise_xor(co, fo)
+    return np.bitwise_xor(co.astype(np.int64), fo.astype(np.int64))
 
 
 def build_table(trials, secret_buf, secret_pos, out_buf, active_len, delta_pos,
-                 field_mod=FIELD_MOD):
+                 secret_min, secret_max, secret_word_size, out_word_size):
     """
-    Rows: full secret value domain [0, field_mod).
-    Columns: delta==0 vs delta!=0 (the only thing binarized).
+    Rows: secret value domain [secret_min, secret_max] (inclusive),
+    offset internally so row 0 == secret_min. Columns: delta==0 vs
+    delta!=0 (the only thing binarized).
     """
+    field_mod = secret_max - secret_min + 1
     table = np.zeros((field_mod, 2), dtype=int)  # col 0: delta==0, col 1: delta!=0
     for c, f in trials:
-        secret_val = c["inputs"][secret_buf][secret_pos]
-        delta = compute_delta(c, f, out_buf, active_len)
+        secret_words = decode_words(get_buffer(c, secret_buf), secret_word_size)
+        secret_val = secret_words[secret_pos]
+        if not (secret_min <= secret_val <= secret_max):
+            raise ValueError(
+                f"secret value {secret_val} at position {secret_pos} in "
+                f"buffer '{secret_buf}' is outside declared domain "
+                f"[{secret_min}, {secret_max}]. Either the domain bounds "
+                f"are wrong for this buffer (e.g. this is NTT-domain data, "
+                f"not the raw eta-bounded secret), or the wrong buffer/"
+                f"word-size was given."
+            )
+        row = secret_val - secret_min
+        delta = compute_delta(c, f, out_buf, active_len, out_word_size)
         col = 0 if delta[delta_pos] == 0 else 1
-        table[secret_val, col] += 1
+        table[row, col] += 1
     return table
 
-def build_table(trials, secret_buf, secret_pos, out_buf, active_len, delta_pos,
-                 field_mod=FIELD_MOD):
-    """
-    Rows: full secret value domain [0, field_mod).
-    Columns: delta==0 vs delta!=0 (the only thing binarized).
-    """
-    table = np.zeros((field_mod, 2), dtype=int)  # col 0: delta==0, col 1: delta!=0
-    for c, f in trials:
-        secret_val = c["inputs"][secret_buf][secret_pos]
-        delta = compute_delta(c, f, out_buf, active_len)
-        col = 0 if delta[delta_pos] == 0 else 1
-        table[secret_val, col] += 1
-    return table
+
+def detect_domain(trials, secret_buf, secret_word_size, n_positions):
+    """Scan all trials/positions to find the observed min/max of the
+    secret buffer, for --auto-domain. Useful when you don't already
+    know the buffer's exact range (e.g. unsure if s1 is pre- or
+    post-NTT)."""
+    lo, hi = None, None
+    for c, _ in trials:
+        words = decode_words(get_buffer(c, secret_buf), secret_word_size)
+        words = words[:n_positions]
+        wmin, wmax = min(words), max(words)
+        lo = wmin if lo is None else min(lo, wmin)
+        hi = wmax if hi is None else max(hi, wmax)
+    return lo, hi
 
 
 # ---------------------------------------------------------------------
@@ -117,9 +223,6 @@ def permutation_test_full_table(table, n_perm=20000, rng=None):
             count_ge += 1
     p_value = (count_ge + 1) / (n_perm + 1)  # +1 avoids p=0
     return observed_stat, p_value
-
-
-
 
 
 def dependence_test(table, alpha, min_cell_count=5, use_permutation_fallback=True,
@@ -180,22 +283,30 @@ def dependence_test(table, alpha, min_cell_count=5, use_permutation_fallback=Tru
     return chi2, p, ("secret-dependent" if p < alpha else "no dependence detected")
 
 
-
-def scan_all_positions(trials, secret_buf, out_buf, active_len, n_positions, alpha):
-    alpha_corrected = alpha / n_positions
-    results = []
-    for pos in range(n_positions):
-        table = build_table(trials, secret_buf, pos, out_buf, active_len, pos)
-        chi2, p, verdict = dependence_test(table, alpha_corrected)
-        results.append({"position": pos, "chi2": chi2, "p": p, "verdict": verdict, "table": table})
-    return results
-
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--dist-dir", required=True)
     ap.add_argument("--out-buf", default="s")
     ap.add_argument("--secret-buf", default="Ox")
-    ap.add_argument("--active-len", type=int, default=78)
+    ap.add_argument("--active-len", type=int, default=78,
+                     help="number of coefficient/byte positions to sweep "
+                          "(coefficient count if word-size=4, byte count if word-size=1)")
+    ap.add_argument("--secret-word-size", type=int, default=4, choices=[1, 4],
+                     help="4 for int32 coefficient arrays (s1/s2/y/z/w1/w0/t0/h/cp), "
+                          "1 for raw byte buffers (sk/sig/m/rnd/pre)")
+    ap.add_argument("--out-word-size", type=int, default=4, choices=[1, 4],
+                     help="same as --secret-word-size but for --out-buf")
+    ap.add_argument("--secret-min", type=int, default=None,
+                     help="minimum value of the secret domain, inclusive "
+                          "(e.g. -2 for Dilithium eta=2). Required unless --auto-domain.")
+    ap.add_argument("--secret-max", type=int, default=None,
+                     help="maximum value of the secret domain, inclusive "
+                          "(e.g. 2 for Dilithium eta=2). Required unless --auto-domain.")
+    ap.add_argument("--auto-domain", action="store_true",
+                     help="infer --secret-min/--secret-max from the observed "
+                          "data instead of requiring them explicitly. Use "
+                          "when unsure of the buffer's actual range (e.g. "
+                          "unsure if a poly is pre- or post-NTT).")
     ap.add_argument("--n-perm", type=int, default=20000,
                      help="permutations for the sparse-table fallback test")
     ap.add_argument("--no-permutation-fallback", action="store_true",
@@ -207,12 +318,33 @@ if __name__ == "__main__":
     trials = load_trials(args.dist_dir)
     print(f"[i] loaded {len(trials)} trial pairs")
 
+    if args.auto_domain:
+        secret_min, secret_max = detect_domain(
+            trials, args.secret_buf, args.secret_word_size, args.active_len
+        )
+        print(f"[i] auto-detected secret domain for '{args.secret_buf}': "
+              f"[{secret_min}, {secret_max}]")
+    else:
+        if args.secret_min is None or args.secret_max is None:
+            sys.exit(
+                "error: --secret-min and --secret-max are required unless "
+                "--auto-domain is passed. For Dilithium2 eta=2 secret polys "
+                "(pre-NTT), that's --secret-min -2 --secret-max 2. If s1/s2 "
+                "were captured post-NTT (check: are values full-range, e.g. "
+                "in the millions, rather than -2..2?), use --auto-domain "
+                "instead since the NTT-domain range isn't a small fixed constant."
+            )
+        secret_min, secret_max = args.secret_min, args.secret_max
+
     alpha_corrected = 0.05 / args.active_len
     rng = np.random.default_rng(0)
 
     results = []
     for pos in range(args.active_len):
-        table = build_table(trials, args.secret_buf, pos, args.out_buf, args.active_len, pos)
+        table = build_table(
+            trials, args.secret_buf, pos, args.out_buf, args.active_len, pos,
+            secret_min, secret_max, args.secret_word_size, args.out_word_size,
+        )
         chi2, p, verdict = dependence_test(
             table, alpha_corrected,
             use_permutation_fallback=not args.no_permutation_fallback,
@@ -227,4 +359,4 @@ if __name__ == "__main__":
         if flagged or (not settled_negative) or args.verbose:
             print(f"pos {r['position']}: chi2={r['chi2']}, p={r['p']}, verdict={r['verdict']}")
             if flagged or args.verbose:
-                print(f"    table (rows=secret 0..15, cols=[delta==0, delta!=0]):\n{r['table']}")
+                print(f"    table (rows=secret {secret_min}..{secret_max}, cols=[delta==0, delta!=0]):\n{r['table']}")
