@@ -65,13 +65,13 @@ echo "${BUILD_DIR}/${FILENAME}.elf generated."
 echo "run QEMU for ${BUILD_DIR}/${FILENAME}.elf"
 # echo "run gdb-multiarch ${BUILD_DIR}/${FILENAME}.elf"
 
-# qemu-system-arm \
-#     -M mps2-an386 \
-#     -kernel "${BUILD_DIR}/${FILENAME}.elf" \
-#     -nographic \
-#     -semihosting \
-#     -S \
-#     -gdb tcp::1234 &
+echo "qemu-system-arm \
+    -M mps2-an386 \
+    -kernel "${BUILD_DIR}/${FILENAME}.elf" \
+    -nographic \
+    -semihosting \
+    -S \
+    -gdb tcp::1234"
 
 # QEMU_PID=$!
 # echo "QEMU pid: $QEMU_PID"
