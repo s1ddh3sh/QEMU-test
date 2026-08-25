@@ -1,0 +1,1406 @@
+[i] loaded 100 correct/faulty trial pairs
+[i] auto-detected secret domain: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+===========================================================================
+pos 0
+  [CORRECTION] secret/correction-dependent
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 61/120
+  [BEST CHI-SQUARE] Ox=5 vs Ox=12
+           chi2=20.0, p=7.744216431044088e-06
+           N=11 vs 9
+  [T-TEST] Ox=0 vs Ox=1
+           t=-inf, p=0.0
+           Bonferroni alpha=0.0004166666666666667
+           verdict=leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 1.0
+           difference=-1.0
+  [DIAGNOSTIC] fraction delta == Ox = 1.000000
+===========================================================================
+pos 1
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=3 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.030000
+===========================================================================
+pos 2
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 3
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 4
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 5
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 6
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 7
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 9
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 8
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 9
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 10
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=11 vs 10
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.110000
+===========================================================================
+pos 11
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=11 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.110000
+===========================================================================
+pos 12
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 7
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 13
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 14
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 15
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 16
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 7
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 17
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=3 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.030000
+===========================================================================
+pos 18
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=1 vs Ox=2
+           chi2=0.0, p=1.0
+           N=5 vs 6
+  [T-TEST] Ox=1 vs Ox=2
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=1 = 0.0
+           mean HW(delta) | Ox=2 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.010000
+===========================================================================
+pos 19
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=3 vs 7
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.030000
+===========================================================================
+pos 20
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 21
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=11 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.110000
+===========================================================================
+pos 22
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 3
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 23
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=10 vs 3
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.100000
+===========================================================================
+pos 24
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=12 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.120000
+===========================================================================
+pos 25
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=3 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.030000
+===========================================================================
+pos 26
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 27
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 7
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 28
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 29
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 30
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 3
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 31
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=3 vs 7
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.030000
+===========================================================================
+pos 32
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 33
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 3
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 34
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 35
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 36
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=2
+           chi2=0.0, p=1.0
+           N=6 vs 6
+  [T-TEST] Ox=0 vs Ox=2
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=2 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 37
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 38
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 9
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 39
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 10
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 40
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 10
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 41
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=3 vs 9
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.030000
+===========================================================================
+pos 42
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 2
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 43
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 44
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 45
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 46
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 2
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 47
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 10
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 48
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=10 vs 10
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.100000
+===========================================================================
+pos 49
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 10
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 50
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 51
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 52
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 53
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 54
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 11
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 55
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 2
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 56
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 57
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 9
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 58
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 59
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 60
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=5 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.050000
+===========================================================================
+pos 61
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 3
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 62
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=12 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.120000
+===========================================================================
+pos 63
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 64
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 65
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 66
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=4 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.040000
+===========================================================================
+pos 67
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=10 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.100000
+===========================================================================
+pos 68
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 69
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 70
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 71
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 105
+           Bonferroni alpha: 0.0004761904761904762
+           significant chi-square pairs: 0/105
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=8 vs 9
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004761904761904762
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.080000
+===========================================================================
+pos 72
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 73
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=6 vs 10
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.060000
+===========================================================================
+pos 74
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=7 vs 4
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.070000
+===========================================================================
+pos 75
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=2 vs 5
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.020000
+===========================================================================
+pos 76
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=9 vs 6
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.090000
+===========================================================================
+pos 77
+  [CORRECTION] no correction dependence detected
+           observed Ox values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+           pairwise chi-square tests: 120
+           Bonferroni alpha: 0.0004166666666666667
+           significant chi-square pairs: 0/120
+  [BEST CHI-SQUARE] Ox=0 vs Ox=1
+           chi2=0.0, p=1.0
+           N=10 vs 8
+  [T-TEST] Ox=0 vs Ox=1
+           t=nan, p=nan
+           Bonferroni alpha=0.0004166666666666667
+           verdict=no leakage detected
+           mean HW(delta) | Ox=0 = 0.0
+           mean HW(delta) | Ox=1 = 0.0
+           difference=0.0
+  [DIAGNOSTIC] fraction delta == Ox = 0.100000
