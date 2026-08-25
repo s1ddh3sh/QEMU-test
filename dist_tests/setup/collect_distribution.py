@@ -44,8 +44,10 @@ def run_collect_trial(elf_path, witness_path, active_lengths_path, func,
         "GDB_DRIVER_VARIANT": variant,
         "GDB_DRIVER_OUTDIR": out_dir,
     })
+    driver_script = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                      "driver_dist.py")
     subprocess.run(
-        ["gdb-multiarch", "-nx", "-batch", "-x", "driver_dist.py"],
+        ["gdb-multiarch", "-nx", "-batch", "-x", driver_script],
         env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     qemu_proc.terminate()
@@ -64,7 +66,7 @@ def main():
     ap.add_argument("--outdir", required=True)
     ap.add_argument("--machine", default="mps2-an386")
     args = ap.parse_args()
-
+    os.makedirs(args.outdir, exist_ok=True)
     for i in range(args.n):
         seed = i
         print(f"=== trial {i} (seed={seed}) ===")

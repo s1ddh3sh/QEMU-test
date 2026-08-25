@@ -54,14 +54,14 @@ python3 dist_tests/setup/collect_distribution_internal.py \    --capture-witness
     --machine mps2-an386
 
 python3 dist_tests/setup/collect_distribution_internal.py \                                                                                      
-    --capture-witness tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.json \
-    --correct-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.elf \
-    --faulty-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/loopOrFuncSkip/pqcrystals_dilithium2_ref_polyvecl_add_fnSkip_pqcrystals_dilithium2_ref_poly_add_line7.elf \
-    --func pqcrystals_dilithium2_ref_polyvecl_add \
-    -n 100 \
-    --outdir tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/dist_y \
-    --machine mps2-an386 \
-    --dist-spec 'v=uniform_gamma1_l2'
+--capture-witness tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.json \
+--correct-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.elf \
+--faulty-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/loopOrFuncSkip/pqcrystals_dilithium2_ref_polyvecl_add_fnSkip_pqcrystals_dilithium2_ref_poly_add_line7.elf \
+--func pqcrystals_dilithium2_ref_polyvecl_add \
+-n 100 \
+--outdir tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/dist_y \
+--machine mps2-an386 \
+--dist-spec 'v=uniform_gamma1_l2'
 
 
 python3 dist_tests/correction_dependence_test.py \                                                                                               
