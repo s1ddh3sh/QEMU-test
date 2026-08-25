@@ -87,9 +87,35 @@ def find_fut_call(main_body: str, fn_name: str) -> List[Tuple[str, str]]:
         if im:
             args.append(("imm", im.group("imm")))
             continue
-            
+        rm = re.search(r'i(?P<bits>\d+)\s+%(?P<reg>\w+)', raw)
+        if rm:
+            args.append(("reg", rm.group("reg")))
+            continue
         raise ValueError(f"Unrecognized call argument form: '{raw}'")
     return args
+
+def find_arg_anchor(ll_text: str, reg_name: str) -> Tuple[str, int]:
+    """
+    Given a register name like 'a_val', find the defining:
+
+        %a_val = load volatile i8, ptr @__mbc_arg_add_f_a, align 1
+
+    and return (anchor_global_name, byte_width).
+    """
+    pattern = re.compile(
+        r'%' + re.escape(reg_name) +
+        r'\s*=\s*load\s+volatile\s+i(?P<bits>\d+),\s*ptr\s+@(?P<anchor>[\w.]+)'
+    )
+    m = pattern.search(ll_text)
+    if not m:
+        raise ValueError(
+            f"Could not find 'load volatile ... @__mbc_arg_*' defining "
+            f"register %{reg_name}; scalar-input anchor pattern not found."
+        )
+    bits = int(m.group("bits"))
+    if bits % 8 != 0:
+        raise ValueError(f"Unsupported scalar bit width {bits} for %{reg_name}")
+    return m.group("anchor"), bits // 8
 
 
 def find_ret_anchor(ll_text: str, fn_name: str) -> str:
@@ -113,7 +139,6 @@ def load_first_sample(json_path: Path) -> Dict[str, object]:
             if line:
                 return json.loads(line)
     raise ValueError(f"No JSON objects found in {json_path}")
-
 
 def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict[str, dict]:
     allocas = extract_allocas(ll_text)
@@ -140,24 +165,41 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
         )
 
     key_to_arg = dict(zip(param_keys, call_args))
-    buffer_keys = [k for k, (kind, _) in key_to_arg.items() if kind == "ptr"]
 
-    if not is_scalar_return and output_key not in buffer_keys:
+    layout = {}
+    ptr_keys = set()   # <-- tracks which keys are pointer-typed args
+
+    for key, (kind, val) in key_to_arg.items():
+        if kind == "ptr":
+            var_name = val
+            if var_name not in allocas:
+                raise ValueError(
+                    f"Call argument %{var_name} (json key '{key}') has no "
+                    f"matching alloca with !llvmbmc.var in main()"
+                )
+            layout[key] = {"role": "input", "length": allocas[var_name]}
+            ptr_keys.add(key)
+
+        elif kind == "reg":
+            anchor_name, byte_width = find_arg_anchor(ll_text, val)
+            layout[key] = {
+                "role": "input",
+                "type": "scalar",
+                "anchor": anchor_name,
+                "length": byte_width,
+            }
+
+        elif kind == "imm":
+            print(
+                f"[!] key '{key}' is a bare immediate ({val}); not "
+                f"patchable. Check the harness generator emitted an anchor "
+                f"for this argument."
+            )
+
+    if not is_scalar_return and output_key not in ptr_keys:
         raise ValueError(
             f"'output' key '{output_key}' does not map to a pointer argument."
         )
-
-    layout = {}
-    for key in buffer_keys:
-        _, var_name = key_to_arg[key]
-        if var_name not in allocas:
-            raise ValueError(
-                f"Call argument %{var_name} (json key '{key}') has no "
-                f"matching alloca with !llvmbmc.var in main()"
-            )
-        length = allocas[var_name]
-        role = "output" if (not is_scalar_return and key == output_key) else "input"
-        layout[var_name] = {"role": role, "length": length}
 
     if is_scalar_return:
         anchor = find_ret_anchor(ll_text, fn_name)
@@ -167,9 +209,12 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
             "type": "scalar",
             "anchor": anchor,
         }
+    else:
+        # non-scalar-return case: the pointer-arg entry currently marked
+        # role="input" for output_key needs to become role="output"
+        layout[output_key]["role"] = "output"
 
     return layout
-
 
 def build_qemu_witness(fn_name: str, layout: Dict[str, dict]) -> Dict[str, object]:
     return {"function": fn_name, "layout": layout}

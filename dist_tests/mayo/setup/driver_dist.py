@@ -63,6 +63,11 @@ def read_bytes(addr, count):
 # ---------------------------------------------------------------------------
 # Address recovery (unchanged from driver.py)
 # ---------------------------------------------------------------------------
+def connect(elf_path):
+    # print(f"[debug] elf_path = {elf_path}", file=sys.stderr)
+    gdb.execute(f"file {elf_path}", to_string=True)
+    gdb.execute(f"target remote {GDB_TARGET}", to_string=True)
+
 
 def get_pointer_args(frame):
     block = frame.block()
@@ -77,33 +82,6 @@ def get_pointer_args(frame):
     return args
 
 
-def resolve_addresses(elf_path, function_under_test, layout):
-    gdb.execute(f"file {elf_path}", to_string=True)
-    gdb.execute(f"target remote {GDB_TARGET}", to_string=True)
-
-    fn_bp = gdb.Breakpoint(f"*{function_under_test}", internal=False)
-    gdb.execute("continue", to_string=True)
-
-    frame = gdb.selected_frame()
-    if frame.name() != function_under_test:
-        raise RuntimeError(
-            f"stopped in '{frame.name()}', expected '{function_under_test}'"
-        )
-    fn_bp.delete()
-
-    ptr_args = get_pointer_args(frame)
-    names = list(layout.keys())
-    if len(ptr_args) != len(names):
-        raise RuntimeError(
-            f"layout has {len(names)} buffers {names}, but "
-            f"{function_under_test} has {len(ptr_args)} pointer args "
-            f"{[s.name for s in ptr_args]} — order/count mismatch"
-        )
-
-    addr_of = {}
-    for name, sym in zip(names, ptr_args):
-        addr_of[name] = int(sym.value(frame))
-    return addr_of
 
 
 def random_fill(rng, field_mod, length):
@@ -118,56 +96,8 @@ def run_to_completion_and_dump(layout):
 
 
 # ---------------------------------------------------------------------------
-# probe mode
-# ---------------------------------------------------------------------------
-
-def run_probe():
-    elf_path = os.environ["GDB_DRIVER_ELF"]
-    witness_path = os.environ["GDB_DRIVER_WITNESS"]
-    func = os.environ["GDB_DRIVER_FUNC"]
-    field_mod = int(os.environ["GDB_DRIVER_FIELD_MOD"])
-    probe_buf = os.environ["GDB_DRIVER_PROBE_BUF"]
-    probe_len = int(os.environ["GDB_DRIVER_PROBE_LEN"])
-    probe_seed = int(os.environ["GDB_DRIVER_PROBE_SEED"])
-    probe_out = os.environ["GDB_DRIVER_PROBE_OUT"]
-
-    with open(witness_path) as f:
-        layout = json.load(f)["layout"]
-
-    addr_of = resolve_addresses(elf_path, func, layout)
-
-    rng = random.Random(probe_seed)
-    for name, spec in layout.items():
-        if spec.get("role") != "input":
-            continue
-        if name == probe_buf:
-            # only the first probe_len bytes of the probed buffer are
-            # randomized; everything past probe_len, and every other
-            # input buffer entirely, is left at its post-memset default
-            # (zero), so any output difference vs. the all-zero baseline
-            # can only be attributed to bytes within [0, probe_len).
-            vals = random_fill(rng, field_mod, probe_len)
-            write_bytes(addr_of[name], vals)
-        # all other input buffers: leave untouched (zero from memset)
-
-    gdb.execute("finish", to_string=True)
-
-    outputs = {}
-    for name, spec in layout.items():
-        if spec.get("role") == "output":
-            outputs[name] = read_bytes(addr_of[name], spec["length"])
-
-    with open(probe_out, "w") as f:
-        json.dump(outputs, f)
-
-    gdb.execute("kill", to_string=True)
-    print(f"[probe] {probe_buf} len={probe_len} seed={probe_seed} -> {probe_out}")
-
-
-# ---------------------------------------------------------------------------
 # collect mode
 # ---------------------------------------------------------------------------
-
 def run_collect():
     elf_path = os.environ["GDB_DRIVER_ELF"]
     witness_path = os.environ["GDB_DRIVER_WITNESS"]
@@ -183,44 +113,97 @@ def run_collect():
     with open(active_lengths_path) as f:
         active_lengths = json.load(f)
 
-    addr_of = resolve_addresses(elf_path, func, layout)
+    connect(elf_path)
+    # main_sym = gdb.lookup_global_symbol("main")
+    # if main_sym is None:
+    #     raise RuntimeError("could not resolve symbol 'main'")
+    main_entry = int(gdb.parse_and_eval("(unsigned long)&main")) & ~1  # clear Thumb bit
+    if main_entry == 0:
+        raise RuntimeError("could not resolve symbol 'main' via parse_and_eval")
 
-    # SAME seed must be used for correct and faulty runs of the same
-    # trial_id, so both variants see identical inputs -- the caller is
-    # responsible for passing the same GDB_DRIVER_TRIAL_SEED for both.
-   
+    bp_main = gdb.Breakpoint(f"*0x{main_entry:x}", internal=False)
+    gdb.execute("continue", to_string=True)
+    frame = gdb.selected_frame()
+    if frame.name() != "main":
+        raise RuntimeError(f"stopped in '{frame.name()}', expected 'main'")
+    bp_main.delete()
+    # print(gdb.execute("x/1i $pc", to_string=True), file=sys.stderr)  # sanity check
+
+    return_addr = int(gdb.parse_and_eval("$lr")) & ~1  # clear Thumb bit
+    ret_bp = gdb.Breakpoint(f"*0x{return_addr:x}", internal=False)  
+    # print(gdb.execute("disassemble main", to_string=True), file=sys.stderr)
+    # print(gdb.execute(f"info symbol {return_addr:#x}", to_string=True), file=sys.stderr)
+    # print(gdb.execute(f"print/x &__mbc_arg_add_f_a", to_string=True), file=sys.stderr)
+    # print(gdb.execute(f"print/x &__mbc_arg_add_f_b", to_string=True), file=sys.stderr)
     rng = random.Random(trial_seed)
     written_inputs = {}
+
+    # Patch scalar input anchors now -- main() hasn't executed any loads yet.
+    scalar_addr = {}
     for name, spec in layout.items():
-        if spec.get("role") != "input":
+        if spec.get("type") != "scalar":
             continue
-        fill_len = active_lengths.get(name, spec["length"])
-        vals = random_fill(rng, field_mod, fill_len)
-        write_bytes(addr_of[name], vals)
-        written_inputs[name] = vals   # <-- record what was actually written
+        addr = int(gdb.parse_and_eval(f"&{spec['anchor']}"))
+        scalar_addr[name] = addr
+        if spec.get("role") == "input":
+            val = rng.randrange(field_mod)
+            write_bytes(addr, [val])
+            readback = read_bytes(addr, 1)
+            # print(f"[debug] wrote {val} to {name}@0x{addr:x}, readback={readback}", file=sys.stderr)
+            written_inputs[name] = [val]
 
-    gdb.execute("finish", to_string=True)
+    # Patch pointer buffer inputs, if any (unchanged logic from before).
+    ptr_names = [n for n, s in layout.items() if s.get("type") != "scalar"]
+    ptr_addr = {}
+    if ptr_names:
+        fn_bp = gdb.Breakpoint(f"*{func}", internal=False)
+        gdb.execute("continue", to_string=True)
+        fframe = gdb.selected_frame()
+        if fframe.name() != func:
+            raise RuntimeError(f"stopped in '{fframe.name()}', expected '{func}'")
+        fn_bp.delete()
+        ptr_args = get_pointer_args(fframe)
+        if len(ptr_args) != len(ptr_names):
+            raise RuntimeError(
+                f"layout has {len(ptr_names)} pointer buffers {ptr_names}, but "
+                f"{func} has {len(ptr_args)} pointer args"
+            )
+        ptr_addr = {n: int(sym.value(fframe)) for n, sym in zip(ptr_names, ptr_args)}
+        for name, spec in layout.items():
+            if spec.get("type") == "scalar" or spec.get("role") != "input":
+                continue
+            fill_len = active_lengths.get(name, spec["length"])
+            vals = random_fill(rng, field_mod, fill_len)
+            write_bytes(ptr_addr[name], vals)
+            written_inputs[name] = vals
 
+    # Run until our manually-placed return-address breakpoint -- main()
+    # has fully completed, including its post-call store to the scalar
+    # output anchor, and the inferior is still alive.
+    gdb.execute("continue", to_string=True)
+    ret_bp.delete()
+
+    addr_of = {**scalar_addr, **ptr_addr}
     outputs = {}
     for name, spec in layout.items():
         if spec.get("role") == "output":
             outputs[name] = read_bytes(addr_of[name], spec["length"])
+            # print(f"[debug] read {name}@0x{addr_of[name]:x} = {outputs[name]}", file=sys.stderr)
 
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"{variant}_trial{trial_seed:06d}.json")
     with open(out_path, "w") as f:
-        json.dump({"inputs": written_inputs, "outputs": outputs}, f)  # <-- both now
-
-
+        json.dump({"inputs": written_inputs, "outputs": outputs}, f)
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 def main():
     mode = os.environ.get("GDB_DRIVER_MODE")
-    if mode == "probe":
-        run_probe()
-    elif mode == "collect":
+    # if mode == "probe":
+    #     run_probe()
+    
+    if mode == "collect":
         run_collect()
     else:
         print(f"[!] unknown or missing GDB_DRIVER_MODE: {mode!r}", file=sys.stderr)

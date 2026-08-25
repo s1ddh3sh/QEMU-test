@@ -1,4 +1,4 @@
-mayo:
+MAYO:
 
 python3 dist_tests/setup/extract_qemu_witness.py tests_mayo/mat_add/mat_add.ll
 
@@ -26,6 +26,16 @@ python3 dist_tests/correction_dependence_test.py \
     --active-len 78 \
     --secret-word-size 1 --out-word-size 1 \
     --auto-domain
+
+
+
+-----------------------------------------------------------
+
+
+
+
+
+
 
 
  python3 dist_tests/setup/extract_capture_witness.py tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/pqcrystals_dilithium2_ref_signature_internal.ll --function pqcrystals_dilithium2_ref_signature_internal \

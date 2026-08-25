@@ -46,9 +46,11 @@ def run_collect_trial(elf_path, witness_path, active_lengths_path, func,
     })
     driver_script = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                       "driver_dist.py")
+    print(driver_script)
     subprocess.run(
         ["gdb-multiarch", "-nx", "-batch", "-x", driver_script],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=env, 
+        # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     qemu_proc.terminate()
     qemu_proc.wait(timeout=5)

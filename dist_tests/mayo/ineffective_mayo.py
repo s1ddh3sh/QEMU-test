@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-correction_dependence_test.py
+ineffective_dependence_test.py
 
 Tests two different properties for every position.
 
-TEST 1: Correction dependence
+TEST 1: Ineffective dependence
 --------------------------------
 Does delta == 0 / delta != 0 depend on the secret value?
 
-    H0: secret and correction/divergence are independent
-    H1: secret and correction/divergence are dependent
+    H0: secret and Ineffective/divergence are independent
+    H1: secret and Ineffective/divergence are dependent
 
 Uses:
     - chi-square test when the table is sufficiently dense
@@ -47,7 +47,7 @@ Thus:
     H1:
         the two means differ.
 
-The correction test and leakage test answer different questions.
+The Ineffective test and leakage test answer different questions.
 """
 
 import argparse
@@ -283,7 +283,7 @@ def delta_hamming_weights(delta):
 
 
 # ---------------------------------------------------------------------
-# Build correction-dependence table
+# Build Ineffective-dependence table
 # ---------------------------------------------------------------------
 
 def build_table(
@@ -642,7 +642,7 @@ def permutation_test_full_table(
 
 
 # ---------------------------------------------------------------------
-# Correction dependence test
+# Ineffective dependence test
 # ---------------------------------------------------------------------
 
 def dependence_test(
@@ -904,7 +904,7 @@ if __name__ == "__main__":
         secret_max = args.secret_max
 
     # -------------------------------------------------------------
-    # Multiple-testing correction
+    # Multiple-testing Ineffective
     # -------------------------------------------------------------
 
     alpha_corrected = (
@@ -928,7 +928,7 @@ if __name__ == "__main__":
 
         # =========================================================
         # TEST 1:
-        # Secret dependence of correction event
+        # Secret dependence of Ineffective event
         # =========================================================
 
         table = build_table(
@@ -984,7 +984,7 @@ if __name__ == "__main__":
         result = {
             "position": pos,
 
-            # correction dependence
+            # Ineffective dependence
             "chi2": chi2,
             "chi_p": chi_p,
             "chi_verdict": chi_verdict,
@@ -1055,11 +1055,11 @@ if __name__ == "__main__":
             )
 
             # -----------------------------------------------------
-            # Correction dependence
+            # Ineffective dependence
             # -----------------------------------------------------
 
             print(
-                f"  [CORRECTION] "
+                f"  [Ineffective] "
                 f"chi2={r['chi2']}, "
                 f"p={r['chi_p']}, "
                 f"verdict={r['chi_verdict']}"
@@ -1119,7 +1119,7 @@ if __name__ == "__main__":
                 )
 
                 print(
-                    f"\n  correction table "
+                    f"\n  Ineffective table "
                     f"(rows={row_desc}, "
                     f"cols=[delta==0, delta!=0]):"
                 )
