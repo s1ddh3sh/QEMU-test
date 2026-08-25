@@ -137,14 +137,26 @@ def compute_delta(c, f, out_buf, active_len, word_size):
 
 
 def build_table(trials, secret_buf, secret_pos, out_buf, active_len, delta_pos,
-                 secret_min, secret_max, secret_word_size, out_word_size):
+                 secret_min, secret_max, secret_word_size, out_word_size,
+                 bucket_width=1):
     """
     Rows: secret value domain [secret_min, secret_max] (inclusive),
-    offset internally so row 0 == secret_min. Columns: delta==0 vs
+    offset internally so row 0 == secret_min, then optionally coarsened
+    into buckets of `bucket_width` consecutive values each (row =
+    (secret_val - secret_min) // bucket_width). Columns: delta==0 vs
     delta!=0 (the only thing binarized).
+
+    bucket_width > 1 trades resolution for statistical power: with a
+    domain far larger than the trial count (e.g. y's ~262144-value
+    range), per-integer rows would almost never repeat across trials,
+    making the test structurally powerless (see the s1-NTT-domain
+    failure mode). Bucketing asks a coarser but still meaningful
+    question -- does the secret's approximate value/band predict
+    correction, rather than its exact value.
     """
     field_mod = secret_max - secret_min + 1
-    table = np.zeros((field_mod, 2), dtype=int)  # col 0: delta==0, col 1: delta!=0
+    n_buckets = (field_mod + bucket_width - 1) // bucket_width
+    table = np.zeros((n_buckets, 2), dtype=int)  # col 0: delta==0, col 1: delta!=0
     for c, f in trials:
         secret_words = decode_words(get_buffer(c, secret_buf), secret_word_size)
         secret_val = secret_words[secret_pos]
@@ -157,7 +169,7 @@ def build_table(trials, secret_buf, secret_pos, out_buf, active_len, delta_pos,
                 f"not the raw eta-bounded secret), or the wrong buffer/"
                 f"word-size was given."
             )
-        row = secret_val - secret_min
+        row = (secret_val - secret_min) // bucket_width
         delta = compute_delta(c, f, out_buf, active_len, out_word_size)
         col = 0 if delta[delta_pos] == 0 else 1
         table[row, col] += 1
@@ -307,6 +319,14 @@ if __name__ == "__main__":
                           "data instead of requiring them explicitly. Use "
                           "when unsure of the buffer's actual range (e.g. "
                           "unsure if a poly is pre- or post-NTT).")
+    ap.add_argument("--secret-bucket-width", type=int, default=1,
+                     help="coarsen the secret domain into buckets of this "
+                          "many consecutive values each, trading resolution "
+                          "for statistical power. Use for large-domain "
+                          "buffers (e.g. y's ~262144-value range) where "
+                          "per-integer rows would almost never repeat "
+                          "across trials. Default 1 = no bucketing "
+                          "(original per-value behavior).")
     ap.add_argument("--n-perm", type=int, default=20000,
                      help="permutations for the sparse-table fallback test")
     ap.add_argument("--no-permutation-fallback", action="store_true",
@@ -344,6 +364,7 @@ if __name__ == "__main__":
         table = build_table(
             trials, args.secret_buf, pos, args.out_buf, args.active_len, pos,
             secret_min, secret_max, args.secret_word_size, args.out_word_size,
+            bucket_width=args.secret_bucket_width,
         )
         chi2, p, verdict = dependence_test(
             table, alpha_corrected,
@@ -359,4 +380,8 @@ if __name__ == "__main__":
         if flagged or (not settled_negative) or args.verbose:
             print(f"pos {r['position']}: chi2={r['chi2']}, p={r['p']}, verdict={r['verdict']}")
             if flagged or args.verbose:
-                print(f"    table (rows=secret {secret_min}..{secret_max}, cols=[delta==0, delta!=0]):\n{r['table']}")
+                bw = args.secret_bucket_width
+                row_desc = (f"secret {secret_min}..{secret_max}" if bw == 1
+                            else f"secret {secret_min}..{secret_max} bucketed "
+                                 f"into width-{bw} bands")
+                print(f"    table (rows={row_desc}, cols=[delta==0, delta!=0]):\n{r['table']}")

@@ -20,7 +20,6 @@ Usage:
     python3 extract_capture_witness.py dilithium2_sig.ll \
         --function pqcrystals_dilithium2_ref_signature_internal
 """
-
 import argparse
 import json
 import re
@@ -30,31 +29,72 @@ from typing import Dict, List, Tuple
 
 TYPE_SIZES = {"i8": 1, "i16": 2, "i32": 4, "i64": 8, "ptr": 8}
 
-
-ARRAY_ALLOCA_RE = re.compile(
-    r'%(?P<name>\w+)\s*=\s*alloca\s*\[\s*(?P<count>\d+)\s*x\s*(?P<type>i\d+|ptr)\s*\]'
+# Matches ANY alloca line, capturing everything after `alloca` up to
+# end-of-line -- the type text itself (scalar, ptr, or arbitrarily
+# nested array like `[4 x [256 x i32]]`) never contains a comma in
+# LLVM IR syntax (array dims use ` x `, not `,`), so the first comma
+# on the line always safely separates the type from trailing
+# `, align N` / `, !llvmbmc.var !N` metadata -- splitting on it is
+# sufficient without needing bracket-aware parsing at this stage.
+ALLOCA_LINE_RE = re.compile(
+    r'%(?P<name>\w+)\s*=\s*alloca\s+(?P<rest>[^\n]+)'
 )
 
-# Matches scalar allocas: %Name = alloca iK   (no brackets -- single value)
-SCALAR_ALLOCA_RE = re.compile(
-    r'%(?P<name>\w+)\s*=\s*alloca\s+(?P<type>i\d+|ptr)\s*,'
-)
+
+def parse_type_size(type_str: str) -> int:
+    """Recursively computes byte size for a (possibly nested) LLVM
+    array type string, e.g.:
+        "i32"                    -> 4
+        "ptr"                    -> 8
+        "[256 x i32]"            -> 1024
+        "[4 x [256 x i32]]"      -> 4096
+        "[2 x [4 x [256 x i32]]]"-> 8192
+    Raises ValueError for types it doesn't recognize (e.g. named
+    structs like %struct.foo) rather than guessing, so a genuinely
+    new shape fails loudly instead of silently returning a wrong size.
+    """
+    type_str = type_str.strip()
+    if type_str.startswith("["):
+        if not type_str.endswith("]"):
+            raise ValueError(f"malformed array type (unbalanced brackets): '{type_str}'")
+        inner = type_str[1:-1].strip()
+        m = re.match(r'(?P<count>\d+)\s*x\s*(?P<rest>.+)', inner, re.DOTALL)
+        if not m:
+            raise ValueError(f"couldn't parse array type '{type_str}' (expected 'N x TYPE')")
+        count = int(m.group("count"))
+        rest_size = parse_type_size(m.group("rest"))
+        return count * rest_size
+    if type_str in TYPE_SIZES:
+        return TYPE_SIZES[type_str]
+    raise ValueError(
+        f"don't know how to size type '{type_str}' -- if this is a named "
+        f"struct or other non-array type, extend parse_type_size() to "
+        f"resolve it (e.g. by looking up its %struct.X = type {{...}} "
+        f"definition and summing member sizes)."
+    )
 
 
 def extract_flat_allocas(ll_text: str) -> Dict[str, int]:
-    """{var_name: byte size} for both array allocas ([N x iK]) and
-    scalar allocas (bare iK, e.g. `%smlen = alloca i32`) -- main()
-    drivers mix both: byte-buffers as arrays, single scalars like a
-    length-output parameter (siglen) as plain scalar allocas."""
+    """{var_name: byte size} for every alloca in the text -- scalars
+    (`%x = alloca i32`), pointers (`%p = alloca ptr`), single-level
+    arrays (`%buf = alloca [78 x i8]`), and arbitrarily nested arrays
+    (`%z = alloca [4 x [256 x i32]]`, matching polyvecl/polyveck-style
+    locals in main()'s driver code) are all handled by the same
+    recursive parser. Allocas whose type can't be parsed (e.g. named
+    structs) are skipped rather than raising here -- they simply won't
+    appear in the returned dict, and derive_capture_witness() reports
+    a clear per-argument error later if one of those is actually
+    needed as a call argument."""
     out = {}
-    for m in ARRAY_ALLOCA_RE.finditer(ll_text):
-        elem_size = TYPE_SIZES.get(m.group("type"), 1)
-        out[m.group("name")] = int(m.group("count")) * elem_size
-    for m in SCALAR_ALLOCA_RE.finditer(ll_text):
+    for m in ALLOCA_LINE_RE.finditer(ll_text):
         name = m.group("name")
         if name in out:
-            continue  # already matched as an array alloca, don't overwrite
-        out[name] = TYPE_SIZES.get(m.group("type"), 1)
+            continue
+        type_str = m.group("rest").split(",", 1)[0].strip()
+        try:
+            out[name] = parse_type_size(type_str)
+        except ValueError:
+            continue  # unresolvable type (e.g. named struct) -- skip silently here
     return out
 
 
@@ -87,7 +127,6 @@ def find_fut_call(main_body: str, fn_name: str) -> List[Tuple[str, str]]:
     m = call_re.search(main_body)
     if not m:
         raise ValueError(f"Could not find call to @{fn_name} inside main()")
-
     args: List[Tuple[str, str]] = []
     for raw in m.group("args").split(","):
         raw = raw.strip()
@@ -156,9 +195,11 @@ def derive_capture_witness(main_ll_text: str, fut_ll_text: str, fn_name: str) ->
             if val not in allocas:
                 raise ValueError(
                     f"Call argument %{val} (param '{pname}') has no matching "
-                    f"flat alloca in main() -- cannot determine its byte length. "
-                    f"If this buffer is declared with a non-flat/nested type, "
-                    f"extend extract_flat_allocas() to handle it."
+                    f"alloca in main() whose type extract_flat_allocas() could "
+                    f"size -- cannot determine its byte length. If this buffer "
+                    f"is declared with a named struct type (e.g. "
+                    f"%struct.foo = type {{...}}), extend parse_type_size() to "
+                    f"resolve struct member layouts, not just array nesting."
                 )
             entry["length"] = allocas[val]
         else:  # imm
@@ -204,6 +245,7 @@ def main():
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(witness, f, indent=2)
+
     print(f"[+] wrote {out_path}")
     print(json.dumps(witness, indent=2))
 

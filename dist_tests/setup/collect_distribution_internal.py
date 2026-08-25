@@ -16,6 +16,7 @@ TRIAL_TIMEOUT_SEC = 30
 # still the source of truth and will raise if this list ever drifts.
 KNOWN_DISTRIBUTIONS = {
     "uniform_bytes", "eta2", "eta3", "eta4", "cbd_eta2", "cbd_eta3",
+    "uniform_gamma1_l2",
 }
 
 

@@ -104,6 +104,17 @@ def sample_cbd_range(rng, n, eta):
     return out
 
 
+def sample_uniform_gamma1_l2(rng, n):
+    """Dilithium2's y sampler (polyvecl_uniform_gamma1) reconstructs
+    each coefficient as GAMMA1 - t, t uniform in [0, 2*GAMMA1 - 1],
+    giving y_i in [-(GAMMA1-1), GAMMA1]. GAMMA1 = 2^17 = 131072 for
+    Dilithium2 specifically -- L3/L5 use GAMMA1 = 2^19, so this key
+    is NOT parameter-set-portable; add a separate
+    uniform_gamma1_l3/l5 key rather than reusing this one there."""
+    GAMMA1 = 131072
+    return [rng.randint(-(GAMMA1 - 1), GAMMA1) for _ in range(n)]
+
+
 DISTRIBUTIONS = {
     "uniform_bytes": sample_uniform_bytes,
     "eta2": lambda rng, n: sample_eta_range(rng, n, eta=2),
@@ -111,6 +122,7 @@ DISTRIBUTIONS = {
     "eta4": lambda rng, n: sample_eta_range(rng, n, eta=4),
     "cbd_eta2": lambda rng, n: sample_cbd_range(rng, n, eta=2),
     "cbd_eta3": lambda rng, n: sample_cbd_range(rng, n, eta=3),
+    "uniform_gamma1_l2": sample_uniform_gamma1_l2,
 }
 
 

@@ -1,0 +1,83 @@
+mayo:
+
+python3 dist_tests/setup/extract_qemu_witness.py tests_mayo/mat_add/mat_add.ll
+
+python3 dist_tests/setup/calibrate.py \
+    --witness tests_mayo/mat_add/qemu_witness.json \
+    --elf build/tests_mayo/mat_add/mat_add.elf \
+    --field-mod 16 \
+    --machine mps2-an386
+
+python3 dist_tests/setup/collect_distribution.py \
+    --witness tests_mayo/mat_add/qemu_witness.json \
+    --active-lengths tests_mayo/mat_add/active_lengths.json \
+    --correct-elf build/tests_mayo/mat_add/mat_add.elf \
+    --faulty-elf build/tests_mayo/mat_add/loopOrFuncSkip/mat_add_fnSkip_add_f_line8.elf \
+    --func mat_add \
+    --field-mod 16 \
+    -n 100 \
+    --outdir tests_mayo/mat_add/dist \
+    --machine mps2-an386
+
+
+python3 dist_tests/correction_dependence_test.py \
+    --dist-dir tests_mayo/mat_add/dist \
+    --secret-buf Ox --out-buf s \
+    --active-len 78 \
+    --secret-word-size 1 --out-word-size 1 \
+    --auto-domain
+
+
+ python3 dist_tests/setup/extract_capture_witness.py tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/pqcrystals_dilithium2_ref_signature_internal.ll --function pqcrystals_dilithium2_ref_signature_internal \
+ --out tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/pqcrystals_dilithium2_ref_signature_internal.json
+
+python3 dist_tests/setup/extract_capture_witness.py tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.ll --function pqcrystals_dilithium2_ref_polyvecl_add \
+--out tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.json                  
+
+ python3 dist_tests/setup/collect_distribution_internal.py \                       
+    --capture-witness tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/pqcrystals_dilithium2_ref_signature_internal.json \
+    --correct-elf build/tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/pqcrystals_dilithium2_ref_signature_internal.elf \
+    --faulty-elf build/tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/loopOrFuncSkip/pqcrystals_dilithium2_ref_signature_internal_fnSkip_pqcrystals_dilithium2_ref_polyvecl_pointwise_poly_montgomery_line52.elf \
+    --func pqcrystals_dilithium2_ref_signature_internal \
+    -n 200 \
+    --outdir tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/dist \
+    --machine mps2-an386 \
+    --pre-transform-spec '[{"label":"s1_pre_ntt","func":"pqcrystals_dilithium2_ref_polyvecl_ntt","arg_name":"v","size":4096},{"label":"s2_pre_ntt","func":"pqcrystals_dilithium2_ref_polyveck_ntt","arg_name":"v","size":4096}]'
+
+
+python3 dist_tests/setup/collect_distribution_internal.py \    --capture-witness tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.json \
+    --correct-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.elf \
+    --faulty-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/loopOrFuncSkip/pqcrystals_dilithium2_ref_polyvecl_add_fnSkip_pqcrystals_dilithium2_ref_poly_add_line7.elf \
+    --func pqcrystals_dilithium2_ref_polyvecl_add \
+    -n 200 \
+    --outdir tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/dist \
+    --machine mps2-an386
+
+python3 dist_tests/setup/collect_distribution_internal.py \                                                                                      
+    --capture-witness tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.json \
+    --correct-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/pqcrystals_dilithium2_ref_polyvecl_add.elf \
+    --faulty-elf build/tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/loopOrFuncSkip/pqcrystals_dilithium2_ref_polyvecl_add_fnSkip_pqcrystals_dilithium2_ref_poly_add_line7.elf \
+    --func pqcrystals_dilithium2_ref_polyvecl_add \
+    -n 100 \
+    --outdir tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/dist_y \
+    --machine mps2-an386 \
+    --dist-spec 'v=uniform_gamma1_l2'
+
+
+python3 dist_tests/correction_dependence_test.py \                                                                                               
+--dist-dir tests_dilithium/pqcrystals_dilithium2_ref_signature_internal/dist_preNTT \
+--secret-buf s1_pre_ntt --out-buf w1 \
+--active-len 1024 \
+--secret-word-size 4 --out-word-size 4 \
+--auto-domain --verbose > output.txt
+
+
+python3 dist_tests/correction_dependence_test.py \
+    --dist-dir tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/dist_y \
+    --secret-buf v --out-buf w \
+    --active-len 1024 \
+    --secret-word-size 4 --out-word-size 4 \
+    --secret-min -131071 --secret-max 131072 \
+    --secret-bucket-width 8192 \
+    --verbose
+
