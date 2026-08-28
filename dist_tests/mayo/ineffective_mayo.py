@@ -923,8 +923,26 @@ if __name__ == "__main__":
     # -------------------------------------------------------------
 
     results = []
+    sample_correct, _ = trials[0]
 
-    for pos in range(args.active_len):
+    out_len = len(decode_words(
+        get_buffer(sample_correct, args.out_buf), args.out_word_size
+    ))
+    secret_len = len(decode_words(
+        get_buffer(sample_correct, args.secret_buf), args.secret_word_size
+    ))
+
+    safe_len = min(args.active_len, out_len, secret_len)
+
+    if safe_len < args.active_len:
+        print(
+            f"[!] --active-len={args.active_len} exceeds available buffer "
+            f"length (out_buf '{args.out_buf}' has {out_len} words, "
+            f"secret_buf '{args.secret_buf}' has {secret_len} words); "
+            f"clamping position loop to {safe_len}."
+        )
+
+    for pos in range(safe_len):
 
         # =========================================================
         # TEST 1:

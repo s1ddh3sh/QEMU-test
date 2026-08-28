@@ -26,7 +26,7 @@ import subprocess
 import tempfile
 import time
 
-SKIP_CALIBRATION_BELOW = 2048  # buffers <= this size: just use full
+SKIP_CALIBRATION_BELOW = 128  # buffers <= this size: just use full
                                  # length directly, calibration overhead
                                  # isn't worth it for small buffers
 
@@ -37,12 +37,14 @@ def launch_qemu(elf_path, machine, gdb_port=1234):
          "-nographic", "-semihosting", "-S", "-gdb", f"tcp::{gdb_port}"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
-    time.sleep(0.3)  # let the gdbstub port open
+    time.sleep(0.3)
     return proc
 
 
+_DRIVER_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "driver_dist.py")
+
 def run_probe(elf_path, witness_path, func, field_mod, buf_name,
-               probe_len, seed, machine):
+               probe_len, seed, co_seed, machine):
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tf:
         probe_out = tf.name
 
@@ -57,71 +59,82 @@ def run_probe(elf_path, witness_path, func, field_mod, buf_name,
         "GDB_DRIVER_PROBE_BUF": buf_name,
         "GDB_DRIVER_PROBE_LEN": str(probe_len),
         "GDB_DRIVER_PROBE_SEED": str(seed),
+        "GDB_DRIVER_CO_SEED": str(co_seed),
         "GDB_DRIVER_PROBE_OUT": probe_out,
     })
-    subprocess.run(
-        ["gdb-multiarch", "-nx", "-batch", "-x", "driver_dist.py"],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    result = subprocess.run(
+        ["gdb-multiarch", "-nx", "-batch", "-x", _DRIVER_SCRIPT],
+        env=env, capture_output=True, text=True,
     )
     qemu_proc.terminate()
     qemu_proc.wait(timeout=5)
 
-    with open(probe_out) as f:
-        result = json.load(f)
-    os.unlink(probe_out)
-    return result
+    if not os.path.exists(probe_out) or os.path.getsize(probe_out) == 0:
+        raise RuntimeError(
+            f"probe (buf={buf_name}, len={probe_len}, seed={seed}) produced "
+            f"no output.\n--- gdb stdout ---\n{result.stdout}\n"
+            f"--- gdb stderr ---\n{result.stderr}"
+        )
 
+    with open(probe_out) as f:
+        result_json = json.load(f)
+    os.unlink(probe_out)
+    return result_json
 
 def calibrate_buffer(elf_path, witness_path, func, field_mod, buf_name,
                       full_length, machine, n_repeats=3, base_seed=0):
     """
-    Binary search the minimal prefix length L such that:
-      - probing with length L produces output DIFFERENT from the all-zero
-        baseline (i.e. some byte in [0, L) matters), and
-      - probing with length L-1 (or the last confirmed-inactive length)
-        produces output IDENTICAL to baseline.
-
-    Uses n_repeats different seeds per candidate length to guard against
-    a single unlucky random draw (e.g. randomly landing on the value 0,
-    which wouldn't change output even at a truly active position).
+    Find the minimal prefix length L such that zeroing everything from
+    index L onward still reproduces the SAME output as using the full
+    buffer -- i.e. the point past which additional bytes no longer
+    influence the FUT. This is different from "does prefix L differ
+    from an all-zero input", which is trivially true for L=1 whenever
+    byte 0 matters at all, and does not measure how far sensitivity
+    extends.
     """
-    baseline = run_probe(elf_path, witness_path, func, field_mod,
-                          buf_name, 0, base_seed, machine)
+    co_seed = base_seed
 
-    def differs_from_baseline(length):
+    # Reference: probe with the FULL buffer active (probe_len=full_length).
+    # Held fixed -- every candidate L is compared against this, not zero.
+    reference = run_probe(elf_path, witness_path, func, field_mod,
+                           buf_name, full_length, base_seed, co_seed, machine)
+
+    def matches_reference(length):
         for r in range(n_repeats):
             result = run_probe(elf_path, witness_path, func, field_mod,
-                                buf_name, length, base_seed + 1000 + r, machine)
-            if result != baseline:
-                return True
-        return False
+                                buf_name, length, base_seed, co_seed, machine)
+            # NOTE: same probe_seed as reference each time -- only the
+            # zeroed suffix differs between `length` and `full_length`,
+            # so a mismatch means some byte >= length genuinely mattered.
+            if result != reference:
+                return False
+        return True
 
-    # exponential search for an upper bound where sensitivity is confirmed
+    if matches_reference(0):
+        # Not sensitive to ANY byte of this buffer at all.
+        print(f"[!] {buf_name}: output identical to full-buffer reference "
+              f"even with prefix length 0 -- buffer may be unused.")
+        return 0
+
+    # Exponential growth: find an upper bound where output already
+    # matches the full-buffer reference.
     lo, hi = 0, 1
-    while hi < full_length and not differs_from_baseline(hi):
+    while hi < full_length and not matches_reference(hi):
         lo = hi
         hi = min(hi * 2, full_length)
 
-    if not differs_from_baseline(hi):
-        # never observed any sensitivity at all, even at full_length --
-        # this buffer may be entirely unused, OR the monotonic-prefix
-        # assumption doesn't hold (see module docstring). Report full
-        # length conservatively rather than 0, and flag for review.
-        print(f"[!] {buf_name}: no sensitivity detected up to full length "
-              f"{full_length} -- prefix-monotonicity assumption may not "
-              f"hold, or buffer is genuinely unused. Using full length.")
+    if not matches_reference(hi):
         return full_length
 
-    # binary search within (lo, hi]
+    # Binary search within (lo, hi] for the minimal L that matches.
     while hi - lo > 1:
         mid = (lo + hi) // 2
-        if differs_from_baseline(mid):
+        if matches_reference(mid):
             hi = mid
         else:
             lo = mid
 
     return hi
-
 
 def main():
     ap = argparse.ArgumentParser()

@@ -94,7 +94,90 @@ def run_to_completion_and_dump(layout):
     gdb.execute("finish", to_string=True)
     return None  # caller reads via addr_of after this returns
 
+def run_probe():
+    elf_path = os.environ["GDB_DRIVER_ELF"]
+    witness_path = os.environ["GDB_DRIVER_WITNESS"]
+    func = os.environ["GDB_DRIVER_FUNC"]
+    field_mod = int(os.environ["GDB_DRIVER_FIELD_MOD"])
+    probe_buf = os.environ["GDB_DRIVER_PROBE_BUF"]
+    probe_len = int(os.environ["GDB_DRIVER_PROBE_LEN"])
+    probe_seed = int(os.environ["GDB_DRIVER_PROBE_SEED"])
+    co_seed = int(os.environ["GDB_DRIVER_CO_SEED"])
+    probe_out = os.environ["GDB_DRIVER_PROBE_OUT"]
 
+    with open(witness_path) as f:
+        layout = json.load(f)["layout"]
+
+    connect(elf_path)
+
+    main_entry = int(gdb.parse_and_eval("(unsigned long)&main")) & ~1
+    bp_main = gdb.Breakpoint(f"*0x{main_entry:x}", internal=False)
+    gdb.execute("continue", to_string=True)
+    frame = gdb.selected_frame()
+    if frame.name() != "main":
+        raise RuntimeError(f"stopped in '{frame.name()}', expected 'main'")
+    bp_main.delete()
+
+    return_addr = int(gdb.parse_and_eval("$lr")) & ~1
+    ret_bp = gdb.Breakpoint(f"*0x{return_addr:x}", internal=False)
+
+    # Resolve every address FIRST -- before any writes -- so addr_of is
+    # fully populated before the randomization loop below touches it.
+    scalar_addr = {}
+    for name, spec in layout.items():
+        if spec.get("type") != "scalar":
+            continue
+        scalar_addr[name] = int(gdb.parse_and_eval(f"&{spec['anchor']}"))
+
+    ptr_names = [n for n, s in layout.items() if s.get("type") != "scalar"]
+    ptr_addr = {}
+    if ptr_names:
+        fn_bp = gdb.Breakpoint(f"*{func}", internal=False)
+        gdb.execute("continue", to_string=True)
+        fframe = gdb.selected_frame()
+        if fframe.name() != func:
+            raise RuntimeError(f"stopped in '{fframe.name()}', expected '{func}'")
+        fn_bp.delete()
+        ptr_args = get_pointer_args(fframe)
+        if len(ptr_args) != len(ptr_names):
+            raise RuntimeError(
+                f"layout has {len(ptr_names)} pointer buffers {ptr_names}, but "
+                f"{func} has {len(ptr_args)} pointer args"
+            )
+        ptr_addr = {n: int(sym.value(fframe)) for n, sym in zip(ptr_names, ptr_args)}
+
+    addr_of = {**scalar_addr, **ptr_addr}
+
+    # Now randomize: the probed buffer's prefix uses probe_seed (varies
+    # per repeat); every OTHER pointer-buffer input uses co_seed (fixed
+    # across the whole calibration of this buffer) -- leaving co-buffers
+    # at zero would mask multiplicative dependencies like mat_mul's O*x.
+    rng = random.Random(probe_seed)
+    co_rng = random.Random(co_seed)
+    for name, spec in layout.items():
+        if spec.get("role") != "input":
+            continue
+        if name == probe_buf:
+            vals = random_fill(rng, field_mod, probe_len)
+            write_bytes(addr_of[name], vals)
+        elif spec.get("type") != "scalar":
+            fill_len = spec["length"]
+            vals = random_fill(co_rng, field_mod, fill_len)
+            write_bytes(addr_of[name], vals)
+        # non-probed scalar inputs: left at compiled-in init_value
+
+    gdb.execute("continue", to_string=True)
+    ret_bp.delete()
+
+    outputs = {}
+    for name, spec in layout.items():
+        if spec.get("role") == "output":
+            outputs[name] = read_bytes(addr_of[name], spec["length"])
+
+    with open(probe_out, "w") as f:
+        json.dump(outputs, f)
+
+    print(f"[probe] {probe_buf} len={probe_len} seed={probe_seed} -> {probe_out}")
 # ---------------------------------------------------------------------------
 # collect mode
 # ---------------------------------------------------------------------------
@@ -200,8 +283,8 @@ def run_collect():
 
 def main():
     mode = os.environ.get("GDB_DRIVER_MODE")
-    # if mode == "probe":
-    #     run_probe()
+    if mode == "probe":
+        run_probe()
     
     if mode == "collect":
         run_collect()

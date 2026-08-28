@@ -91,3 +91,4 @@ LL_FILE="${TARGET_DIR}/${FOLDER_NAME}.ll"
 
 echo "Extracting qemu inputs for: $LL_FILE"
 python3 dist_tests/mayo/setup/extract_qemu_witness.py "$LL_FILE"
+

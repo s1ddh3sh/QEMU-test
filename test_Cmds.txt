@@ -1,14 +1,14 @@
 MAYO:
 
-python3 dist_tests/setup/extract_qemu_witness.py tests_mayo/mat_add/mat_add.ll
+python3 dist_tests/mayo/setup/extract_qemu_witness.py tests_mayo/mat_add/mat_add.ll
 
-python3 dist_tests/setup/calibrate.py \
+python3 dist_tests/mayo/setup/calibrate.py \
     --witness tests_mayo/mat_add/qemu_witness.json \
     --elf build/tests_mayo/mat_add/mat_add.elf \
     --field-mod 16 \
     --machine mps2-an386
 
-python3 dist_tests/setup/collect_distribution.py \
+python3 dist_tests/mayo/setup/collect_distribution.py \
     --witness tests_mayo/mat_add/qemu_witness.json \
     --active-lengths tests_mayo/mat_add/active_lengths.json \
     --correct-elf build/tests_mayo/mat_add/mat_add.elf \
@@ -20,7 +20,7 @@ python3 dist_tests/setup/collect_distribution.py \
     --machine mps2-an386
 
 
-python3 dist_tests/correction_dependence_test.py \
+python3 dist_tests/mayo/correction_mayo.py \
     --dist-dir tests_mayo/mat_add/dist \
     --secret-buf Ox --out-buf s \
     --active-len 78 \
@@ -28,7 +28,11 @@ python3 dist_tests/correction_dependence_test.py \
     --auto-domain
 
 
+./build.sh tests_mayo/mat_mul
 
+./dist_tests/mayo/collect_dist.sh  compute_M_and_VPV build/tests_mayo/compute_M_and_VPV/compute_M_and_VPV.elf build/tests_mayo/compute_M_and_VPV/loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3.elf Vdec
+
+./dist_tests/mayo/run_tests.sh compute_M_and_VPV build/tests_mayo/compute_M_and_VPV/compute_M_and_VPV.elf build/tests_mayo/compute_M_and_VPV/loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3.elf Vdec
 -----------------------------------------------------------
 
 

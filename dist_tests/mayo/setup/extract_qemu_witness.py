@@ -131,6 +131,15 @@ def find_ret_anchor(ll_text: str, fn_name: str) -> str:
         )
     return anchor_name
 
+def find_global_init(ll_text: str, anchor_name: str) -> int:
+    m = re.search(
+        r'@' + re.escape(anchor_name) +
+        r'\s*=\s*(?:dso_local\s+)?global\s+i\d+\s+(-?\d+)',
+        ll_text
+    )
+    if not m:
+        return 0
+    return int(m.group(1))
 
 def load_first_sample(json_path: Path) -> Dict[str, object]:
     with open(json_path) as f:
@@ -139,24 +148,30 @@ def load_first_sample(json_path: Path) -> Dict[str, object]:
             if line:
                 return json.loads(line)
     raise ValueError(f"No JSON objects found in {json_path}")
-
 def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict[str, dict]:
     allocas = extract_allocas(ll_text)
     call_args = find_fut_call(find_main_body(ll_text), fn_name)
 
     if "output" not in sample:
         raise ValueError(f"function_inputs sample for '{fn_name}' has no 'output' key")
-    output_key = sample["output"]
+
+    raw_output = sample["output"]
+    output_keys = raw_output if isinstance(raw_output, list) else [raw_output]
+    if not output_keys:
+        raise ValueError(f"function_inputs sample for '{fn_name}' has an empty 'output'")
 
     all_param_keys = [k for k in sample.keys() if k != "output"]
 
+    # Scalar-return detection: exactly one output key, not itself a real
+    # parameter, and the arg-count is short by exactly one.
     is_scalar_return = False
     if len(all_param_keys) == len(call_args):
         param_keys = all_param_keys
     elif (len(all_param_keys) == len(call_args) + 1
-          and output_key in all_param_keys):
+          and len(output_keys) == 1
+          and output_keys[0] in all_param_keys):
         is_scalar_return = True
-        param_keys = [k for k in all_param_keys if k != output_key]
+        param_keys = [k for k in all_param_keys if k != output_keys[0]]
     else:
         raise ValueError(
             f"Mismatch: function_inputs has {len(all_param_keys)} params "
@@ -166,8 +181,10 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
 
     key_to_arg = dict(zip(param_keys, call_args))
 
+    # Built ONCE, not per output key -- fixes the bug where a second
+    # output name wiped out everything the first had already set.
     layout = {}
-    ptr_keys = set()   # <-- tracks which keys are pointer-typed args
+    ptr_keys = set()
 
     for key, (kind, val) in key_to_arg.items():
         if kind == "ptr":
@@ -187,6 +204,7 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
                 "type": "scalar",
                 "anchor": anchor_name,
                 "length": byte_width,
+                "init_value": find_global_init(ll_text, anchor_name),
             }
 
         elif kind == "imm":
@@ -196,25 +214,28 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
                 f"for this argument."
             )
 
-    if not is_scalar_return and output_key not in ptr_keys:
-        raise ValueError(
-            f"'output' key '{output_key}' does not map to a pointer argument."
-        )
-
     if is_scalar_return:
         anchor = find_ret_anchor(ll_text, fn_name)
-        layout[output_key] = {
+        layout[output_keys[0]] = {
             "role": "output",
             "length": 1,
             "type": "scalar",
             "anchor": anchor,
         }
     else:
-        # non-scalar-return case: the pointer-arg entry currently marked
-        # role="input" for output_key needs to become role="output"
-        layout[output_key]["role"] = "output"
+        # Mark EVERY declared output key as role="output" -- this is the
+        # part that must loop over output_keys; building layout itself
+        # must not.
+        for output_key in output_keys:
+            if output_key not in ptr_keys:
+                raise ValueError(
+                    f"'output' key '{output_key}' does not map to a "
+                    f"pointer argument."
+                )
+            layout[output_key]["role"] = "output"
 
     return layout
+
 
 def build_qemu_witness(fn_name: str, layout: Dict[str, dict]) -> Dict[str, object]:
     return {"function": fn_name, "layout": layout}
