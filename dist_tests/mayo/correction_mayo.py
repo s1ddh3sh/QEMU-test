@@ -462,16 +462,6 @@ def pairwise_t_tests(
     groups,
     min_samples=2
 ):
-    """
-    Compare HW(delta) for every pair:
-
-        HW(delta | Ox=a)
-        versus
-        HW(delta | Ox=b)
-
-    using Welch's t-test.
-    """
-
     ox_values = sorted(
         ox for ox, vals in groups.items()
         if len(vals) >= min_samples
@@ -480,39 +470,55 @@ def pairwise_t_tests(
     results = []
 
     for i in range(len(ox_values)):
-
         for j in range(i + 1, len(ox_values)):
 
             a = ox_values[i]
             b = ox_values[j]
 
-            hwa = np.asarray(
-                [hw(x) for x in groups[a]],
-                dtype=float
-            )
+            hwa = np.asarray([hw(x) for x in groups[a]], dtype=float)
+            hwb = np.asarray([hw(x) for x in groups[b]], dtype=float)
 
-            hwb = np.asarray(
-                [hw(x) for x in groups[b]],
-                dtype=float
-            )
+            # Guard against degenerate small-N/zero-variance cases: Welch's
+            # t-test divides by sqrt(var_a/n_a + var_b/n_b). With n<=2 or a
+            # constant sample, that denominator can be exactly zero, giving
+            # a spurious t=+-inf, p=0.0 that looks like overwhelming
+            # significance but is really just a numerically undefined ratio.
+            # Require at least 3 samples per group (so sample variance has
+            # >=2 degrees of freedom) and a nonzero pooled variance.
+            if len(hwa) < 3 or len(hwb) < 3:
+                continue
 
-            result = ttest_ind(
-                hwa,
-                hwb,
-                equal_var=False
-            )
+            var_a = np.var(hwa, ddof=1)
+            var_b = np.var(hwb, ddof=1)
+            n_a, n_b = len(hwa), len(hwb)
+
+            denom = var_a / n_a + var_b / n_b
+            if denom <= 0 or not np.isfinite(denom):
+                # Both groups constant (or degenerate) -- no valid t-test
+                # can be formed; skip rather than record a spurious result.
+                continue
+
+            result = ttest_ind(hwa, hwb, equal_var=False)
+
+            t_val = float(result.statistic)
+            p_val = float(result.pvalue)
+
+            if not np.isfinite(t_val) or not np.isfinite(p_val):
+                # Should be rare now given the denom check above, but as a
+                # final safeguard, never report a non-finite statistic as
+                # a significant result.
+                continue
 
             results.append({
                 "ox_a": a,
                 "ox_b": b,
-                "t": float(result.statistic),
-                "p": float(result.pvalue),
+                "t": t_val,
+                "p": p_val,
                 "mean_hw_a": float(np.mean(hwa)),
                 "mean_hw_b": float(np.mean(hwb)),
-                "difference":
-                    float(np.mean(hwa) - np.mean(hwb)),
-                "n_a": len(hwa),
-                "n_b": len(hwb),
+                "difference": float(np.mean(hwa) - np.mean(hwb)),
+                "n_a": n_a,
+                "n_b": n_b,
             })
 
     return results
@@ -636,7 +642,7 @@ def main():
     ap.add_argument(
         "--min-samples",
         type=int,
-        default=2
+        default=5
     )
 
     ap.add_argument(

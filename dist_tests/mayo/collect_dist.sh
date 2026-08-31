@@ -4,13 +4,20 @@
 # dependence tests for a single MAYO function.
 #
 # Usage:
-#   ./collect_dist <func_name> <correct_elf> <faulty_elf> <secret_buf> [n_trials]
+#   ./collect_dist <func_name> <correct_elf> <faulty_elf> <secret_buf> \
+#       [n_trials] [--fixed-scalars name1,name2,...]
 #
 # Example:
 #   ./collect_dist mat_add \
 #       build/tests_mayo/mat_add/mat_add.elf \
 #       build/tests_mayo/mat_add/loopOrFuncSkip/mat_add_fnSkip_add_f_line8.elf \
 #       Ox
+#
+# Example with structural scalars pinned:
+#   ./collect_dist mat_mul \
+#       build/tests_mayo/mat_mul/mat_mul.elf \
+#       build/tests_mayo/mat_mul/loopOrFuncSkip/mat_mul_fnSkip_lincomb_line10.elf \
+#       x 400 --fixed-scalars colrow_ab,row_a,col_b
 #
 # Assumes:
 #   tests_mayo/<func_name>/qemu_witness.json   already exists
@@ -26,15 +33,34 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 
 if [[ $# -lt 4 ]]; then
-    echo "Usage: $0 <func_name> <correct_elf> <faulty_elf> <secret_buf> [n_trials]" >&2
+    echo "Usage: $0 <func_name> <correct_elf> <faulty_elf> <secret_buf> [n_trials] [--fixed-scalars name1,name2,...]" >&2
     exit 1
 fi
 
-FUNC_NAME="$1"
-CORRECT_ELF="$2"
-FAULTY_ELF="$3"
-SECRET_BUF="$4"
-N_TRIALS="${5:-100}"
+FUNC_NAME="$1"; shift
+CORRECT_ELF="$1"; shift
+FAULTY_ELF="$1"; shift
+SECRET_BUF="$1"; shift
+
+N_TRIALS=100
+FIXED_SCALARS=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --fixed-scalars)
+            if [[ $# -lt 2 ]]; then
+                echo "[!] --fixed-scalars requires a value" >&2
+                exit 1
+            fi
+            FIXED_SCALARS="$2"
+            shift 2
+            ;;
+        *)
+            N_TRIALS="$1"
+            shift
+            ;;
+    esac
+done
 
 WORD_SIZE=1          # MAYO default: everything is byte/GF(16)-packed
 FIELD_MOD=16
@@ -63,6 +89,10 @@ if [[ ! -f "$FAULTY_ELF" ]]; then
 fi
 
 mkdir -p "$OUT_DIR"
+
+if [[ -n "$FIXED_SCALARS" ]]; then
+    echo "[i] fixed-scalars: ${FIXED_SCALARS}"
+fi
 
 # ---------------------------------------------------------------------------
 # Derive --out-buf from the witness (the role:"output" entry name) and
@@ -110,20 +140,23 @@ PYEOF
 # ---------------------------------------------------------------------------
 
 echo "=== [1/3] calibrate: ${FUNC_NAME} ==="
-python3 "${SETUP_DIR}/calibrate.py" \
-    --witness "$WITNESS" \
-    --elf "$CORRECT_ELF" \
-    --field-mod "$FIELD_MOD" \
-    --machine "$MACHINE" \
-    --out "$ACTIVE_LENGTHS"
 echo "
 python3 "${SETUP_DIR}/calibrate.py" \
     --witness "$WITNESS" \
     --elf "$CORRECT_ELF" \
     --field-mod "$FIELD_MOD" \
     --machine "$MACHINE" \
-    --out "$ACTIVE_LENGTHS"
+    --out "$ACTIVE_LENGTHS" \
+    --fixed-scalars "$FIXED_SCALARS"
 "
+python3 "${SETUP_DIR}/calibrate.py" \
+    --witness "$WITNESS" \
+    --elf "$CORRECT_ELF" \
+    --field-mod "$FIELD_MOD" \
+    --machine "$MACHINE" \
+    --out "$ACTIVE_LENGTHS" \
+    --fixed-scalars "$FIXED_SCALARS"
+
 if [[ ! -f "$ACTIVE_LENGTHS" ]]; then
     echo "[!] calibrate.py did not produce $ACTIVE_LENGTHS" >&2
     exit 1
@@ -139,16 +172,6 @@ echo "[i] derived --out-buf=${OUT_BUF} --active-len=${ACTIVE_LEN}"
 # ---------------------------------------------------------------------------
 
 echo "=== [2/3] collect_distribution: ${FUNC_NAME} (n=${N_TRIALS}) ==="
-python3 "${SETUP_DIR}/collect_distribution.py" \
-    --witness "$WITNESS" \
-    --active-lengths "$ACTIVE_LENGTHS" \
-    --correct-elf "$CORRECT_ELF" \
-    --faulty-elf "$FAULTY_ELF" \
-    --func "$FUNC_NAME" \
-    --field-mod "$FIELD_MOD" \
-    -n "$N_TRIALS" \
-    --outdir "$DIST_DIR" \
-    --machine "$MACHINE"
 echo "
 python3 "${SETUP_DIR}/collect_distribution.py" \
     --witness "$WITNESS" \
@@ -159,13 +182,25 @@ python3 "${SETUP_DIR}/collect_distribution.py" \
     --field-mod "$FIELD_MOD" \
     -n "$N_TRIALS" \
     --outdir "$DIST_DIR" \
-    --machine "$MACHINE"
+    --machine "$MACHINE" \
+    --fixed-scalars "$FIXED_SCALARS"
 "
+python3 "${SETUP_DIR}/collect_distribution.py" \
+    --witness "$WITNESS" \
+    --active-lengths "$ACTIVE_LENGTHS" \
+    --correct-elf "$CORRECT_ELF" \
+    --faulty-elf "$FAULTY_ELF" \
+    --func "$FUNC_NAME" \
+    --field-mod "$FIELD_MOD" \
+    -n "$N_TRIALS" \
+    --outdir "$DIST_DIR" \
+    --machine "$MACHINE" \
+    --fixed-scalars "$FIXED_SCALARS"
+
 n_pairs=$(ls "${DIST_DIR}"/correct_trial*.json 2>/dev/null | wc -l)
 if [[ "$n_pairs" -eq 0 ]]; then
     echo "[!] no trial pairs were written to $DIST_DIR -- aborting before running tests" >&2
     exit 1
 fi
 echo "[i] ${n_pairs} correct_trial*.json files present in ${DIST_DIR}"
-
 echo "=== done: ${FUNC_NAME} ==="

@@ -121,7 +121,7 @@ echo "
 python3 "${TEST_DIR}/correction_mayo.py" \
     --dist-dir "$DIST_DIR" \
     --secret-buf "$SECRET_BUF" --out-buf "$OUT_BUF" \
-    --active-len "$ACTIVE_LEN" \
+    --active-len "$ACTIVE_LEN"  \
     --secret-word-size "$WORD_SIZE" --out-word-size "$WORD_SIZE" \
     --auto-domain \
     | tee "$CORRECTION_OUT"
@@ -130,7 +130,7 @@ echo "
 python3 "${TEST_DIR}/ineffective_mayo.py" \
     --dist-dir "$DIST_DIR" \
     --secret-buf "$SECRET_BUF" --out-buf "$OUT_BUF" \
-    --active-len "$ACTIVE_LEN" \
+    --active-len "$ACTIVE_LEN"  \
     --secret-word-size "$WORD_SIZE" --out-word-size "$WORD_SIZE" \
     --auto-domain \
     | tee "$INEFFECTIVE_OUT"
@@ -143,6 +143,7 @@ python3 "${TEST_DIR}/correction_mayo.py" \
     --secret-word-size "$WORD_SIZE" --out-word-size "$WORD_SIZE" \
     --auto-domain \
     | tee "$CORRECTION_OUT"
+sleep 2
 mkdir -p "$(dirname "$INEFFECTIVE_OUT")"
 python3 "${TEST_DIR}/ineffective_mayo.py" \
     --dist-dir "$DIST_DIR" \

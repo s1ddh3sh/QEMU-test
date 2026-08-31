@@ -16,9 +16,9 @@ search -- not implemented here, flagged as a known limitation.
 
 Usage:
     python3 calibrate.py --witness results/mat_add/qemu_witness.json \
-        --elf correct.elf --field-mod 16 --machine mps2-an386
+        --elf correct.elf --field-mod 16 --machine mps2-an386 \
+        --fixed-scalars m_vec_limbs,colrow_ab
 """
-
 import argparse
 import json
 import os
@@ -43,11 +43,11 @@ def launch_qemu(elf_path, machine, gdb_port=1234):
 
 _DRIVER_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "driver_dist.py")
 
+
 def run_probe(elf_path, witness_path, func, field_mod, buf_name,
-               probe_len, seed, co_seed, machine):
+               probe_len, seed, co_seed, machine, fixed_scalars=""):
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tf:
         probe_out = tf.name
-
     qemu_proc = launch_qemu(elf_path, machine)
     env = os.environ.copy()
     env.update({
@@ -61,6 +61,7 @@ def run_probe(elf_path, witness_path, func, field_mod, buf_name,
         "GDB_DRIVER_PROBE_SEED": str(seed),
         "GDB_DRIVER_CO_SEED": str(co_seed),
         "GDB_DRIVER_PROBE_OUT": probe_out,
+        "GDB_DRIVER_FIXED_SCALARS": fixed_scalars,
     })
     result = subprocess.run(
         ["gdb-multiarch", "-nx", "-batch", "-x", _DRIVER_SCRIPT],
@@ -68,21 +69,21 @@ def run_probe(elf_path, witness_path, func, field_mod, buf_name,
     )
     qemu_proc.terminate()
     qemu_proc.wait(timeout=5)
-
     if not os.path.exists(probe_out) or os.path.getsize(probe_out) == 0:
         raise RuntimeError(
             f"probe (buf={buf_name}, len={probe_len}, seed={seed}) produced "
             f"no output.\n--- gdb stdout ---\n{result.stdout}\n"
             f"--- gdb stderr ---\n{result.stderr}"
         )
-
     with open(probe_out) as f:
         result_json = json.load(f)
     os.unlink(probe_out)
     return result_json
 
+
 def calibrate_buffer(elf_path, witness_path, func, field_mod, buf_name,
-                      full_length, machine, n_repeats=3, base_seed=0):
+                      full_length, machine, n_repeats=3, base_seed=0,
+                      fixed_scalars=""):
     """
     Find the minimal prefix length L such that zeroing everything from
     index L onward still reproduces the SAME output as using the full
@@ -94,15 +95,18 @@ def calibrate_buffer(elf_path, witness_path, func, field_mod, buf_name,
     """
     co_seed = base_seed
 
+    def probe(length, seed):
+        return run_probe(elf_path, witness_path, func, field_mod,
+                          buf_name, length, seed, co_seed, machine,
+                          fixed_scalars)
+
     # Reference: probe with the FULL buffer active (probe_len=full_length).
     # Held fixed -- every candidate L is compared against this, not zero.
-    reference = run_probe(elf_path, witness_path, func, field_mod,
-                           buf_name, full_length, base_seed, co_seed, machine)
+    reference = probe(full_length, base_seed)
 
     def matches_reference(length):
         for r in range(n_repeats):
-            result = run_probe(elf_path, witness_path, func, field_mod,
-                                buf_name, length, base_seed, co_seed, machine)
+            result = probe(length, base_seed)
             # NOTE: same probe_seed as reference each time -- only the
             # zeroed suffix differs between `length` and `full_length`,
             # so a mismatch means some byte >= length genuinely mattered.
@@ -136,6 +140,7 @@ def calibrate_buffer(elf_path, witness_path, func, field_mod, buf_name,
 
     return hi
 
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--witness", required=True)
@@ -143,6 +148,16 @@ def main():
     ap.add_argument("--field-mod", type=int, default=16)
     ap.add_argument("--machine", default="mps2-an386")
     ap.add_argument("--out", default=None)
+    ap.add_argument(
+        "--fixed-scalars",
+        default="",
+        help="Comma-separated list of scalar layout names (structural "
+             "dimensions like m_vec_limbs, colrow_ab, row_a, col_b) that "
+             "must stay at their compiled-in init_value during calibration "
+             "instead of being randomized -- otherwise the binary search "
+             "can corrupt/misjudge sensitivity by varying a parameter that "
+             "should be held fixed.",
+    )
     args = ap.parse_args()
 
     with open(args.witness) as f:
@@ -159,11 +174,11 @@ def main():
             active_lengths[name] = full_len
             print(f"[i] {name}: length {full_len} <= threshold, skipping calibration")
             continue
-
         print(f"[i] calibrating {name} (full length {full_len})...")
         active_len = calibrate_buffer(args.elf, args.witness, func,
                                        args.field_mod, name, full_len,
-                                       args.machine)
+                                       args.machine,
+                                       fixed_scalars=args.fixed_scalars)
         active_lengths[name] = active_len
         print(f"[i] {name}: active length = {active_len} / {full_len}")
 

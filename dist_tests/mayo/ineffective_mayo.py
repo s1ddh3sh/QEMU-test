@@ -448,23 +448,15 @@ def leakage_t_test(
     n0 = len(group_zero)
     n1 = len(group_nonzero)
 
-    if n0 < 2 or n1 < 2:
+    if n0 < 3 or n1 < 3:
         return {
             "t": None,
             "p": None,
-            "mean_zero": (
-                float(np.mean(group_zero))
-                if n0 > 0 else None
-            ),
-            "mean_nonzero": (
-                float(np.mean(group_nonzero))
-                if n1 > 0 else None
-            ),
+            "mean_zero": (float(np.mean(group_zero)) if n0 > 0 else None),
+            "mean_nonzero": (float(np.mean(group_nonzero)) if n1 > 0 else None),
             "n_zero": n0,
             "n_nonzero": n1,
-            "verdict": (
-                "insufficient samples for Welch t-test"
-            ),
+            "verdict": "insufficient samples for Welch t-test",
         }
 
     mean0 = float(np.mean(group_zero))
@@ -473,17 +465,47 @@ def leakage_t_test(
     var0 = float(np.var(group_zero, ddof=1))
     var1 = float(np.var(group_nonzero, ddof=1))
 
+    # Guard against degenerate/zero-variance groups: Welch's denominator
+    # sqrt(var0/n0 + var1/n1) can be exactly zero when both groups have
+    # zero variance (e.g. every trial in both groups has an identical
+    # HW(delta)), producing a spurious t=+-inf, p=0.0 that looks like
+    # overwhelming significance but is really an undefined ratio, not a
+    # genuine effect. scipy's "catastrophic cancellation" warning is the
+    # same symptom surfacing from the moment calculation.
+    denom = var0 / n0 + var1 / n1
+    if denom <= 0 or not np.isfinite(denom):
+        return {
+            "t": None,
+            "p": None,
+            "mean_zero": mean0,
+            "mean_nonzero": mean1,
+            "var_zero": var0,
+            "var_nonzero": var1,
+            "n_zero": n0,
+            "n_nonzero": n1,
+            "mean_difference": mean0 - mean1,
+            "verdict": "degenerate variance -- t-test undefined",
+        }
+
     t_stat, p_value = ttest_ind(
-        group_zero,
-        group_nonzero,
-        equal_var=False,
-        alternative="two-sided"
+        group_zero, group_nonzero, equal_var=False, alternative="two-sided"
     )
 
-    if p_value < alpha:
-        verdict = "leakage detected"
-    else:
-        verdict = "no leakage detected"
+    if not np.isfinite(t_stat) or not np.isfinite(p_value):
+        return {
+            "t": None,
+            "p": None,
+            "mean_zero": mean0,
+            "mean_nonzero": mean1,
+            "var_zero": var0,
+            "var_nonzero": var1,
+            "n_zero": n0,
+            "n_nonzero": n1,
+            "mean_difference": mean0 - mean1,
+            "verdict": "non-finite t-statistic -- discarded",
+        }
+
+    verdict = "leakage detected" if p_value < alpha else "no leakage detected"
 
     return {
         "t": float(t_stat),
@@ -497,7 +519,6 @@ def leakage_t_test(
         "mean_difference": mean0 - mean1,
         "verdict": verdict,
     }
-
 
 # ---------------------------------------------------------------------
 # Automatically detect domain

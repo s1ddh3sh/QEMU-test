@@ -9,7 +9,8 @@ Usage:
     python3 collect_distribution.py --witness results/compute_P3/qemu_witness.json \
         --active-lengths results/compute_P3/active_lengths.json \
         --correct-elf correct.elf --faulty-elf faulty.elf \
-        --func compute_P3 --field-mod 16 -n 400 --outdir results/compute_P3/dist
+        --func compute_P3 --field-mod 16 -n 400 --outdir results/compute_P3/dist \
+        --fixed-scalars m_vec_limbs,colrow_ab
 """
 
 import argparse
@@ -30,7 +31,8 @@ def launch_qemu(elf_path, machine, gdb_port=1234):
 
 
 def run_collect_trial(elf_path, witness_path, active_lengths_path, func,
-                       field_mod, trial_seed, variant, out_dir, machine):
+                       field_mod, trial_seed, variant, out_dir, machine,
+                       fixed_scalars):
     qemu_proc = launch_qemu(elf_path, machine)
     env = os.environ.copy()
     env.update({
@@ -43,13 +45,14 @@ def run_collect_trial(elf_path, witness_path, active_lengths_path, func,
         "GDB_DRIVER_TRIAL_SEED": str(trial_seed),
         "GDB_DRIVER_VARIANT": variant,
         "GDB_DRIVER_OUTDIR": out_dir,
+        "GDB_DRIVER_FIXED_SCALARS": fixed_scalars,
     })
     driver_script = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                       "driver_dist.py")
     print(driver_script)
     subprocess.run(
         ["gdb-multiarch", "-nx", "-batch", "-x", driver_script],
-        env=env, 
+        env=env,
         # stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     qemu_proc.terminate()
@@ -67,6 +70,14 @@ def main():
     ap.add_argument("-n", type=int, default=400)
     ap.add_argument("--outdir", required=True)
     ap.add_argument("--machine", default="mps2-an386")
+    ap.add_argument(
+        "--fixed-scalars",
+        default="",
+        help="Comma-separated list of scalar layout names (e.g. structural "
+             "dimensions like m_vec_limbs, colrow_ab, row_a, col_b) that "
+             "must stay at their compiled-in init_value on every trial "
+             "instead of being randomized like a normal fuzzed input.",
+    )
     args = ap.parse_args()
     os.makedirs(args.outdir, exist_ok=True)
     for i in range(args.n):
@@ -74,10 +85,10 @@ def main():
         print(f"=== trial {i} (seed={seed}) ===")
         run_collect_trial(args.correct_elf, args.witness, args.active_lengths,
                            args.func, args.field_mod, seed, "correct",
-                           args.outdir, args.machine)
+                           args.outdir, args.machine, args.fixed_scalars)
         run_collect_trial(args.faulty_elf, args.witness, args.active_lengths,
                            args.func, args.field_mod, seed, "faulty",
-                           args.outdir, args.machine)
+                           args.outdir, args.machine, args.fixed_scalars)
 
     print(f"[i] done. {args.n} trial pairs in {args.outdir}")
 
