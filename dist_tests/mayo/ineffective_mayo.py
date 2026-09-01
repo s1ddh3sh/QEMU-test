@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ineffective_dependence_test.py
+ineffective_dependence_test_mayo.py
 
 Tests two different properties for every position.
 

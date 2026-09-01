@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-correction_dependence_test.py
+correction_dependence_test_mayo.py
 
 Correction-dependence test for paired correct/faulty executions.
 
@@ -54,21 +54,6 @@ so, ideally,
     dist(delta | Ox=a) = {a}
 
 and every pair a != b should be distinguishable.
-
-The code also supports the generalized trial schemas used by
-the Dilithium collection code:
-
-    pre_transform
-    captured
-    inputs
-    outputs
-
-For Dilithium, use e.g.:
-
-    --secret-buf s1_pre_ntt
-    --out-buf z
-    --secret-word-size 4
-    --out-word-size 4
 
 For MAYO:
 
