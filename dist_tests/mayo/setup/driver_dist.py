@@ -6,7 +6,9 @@ driver_dist.py — gdb batch-mode driver with two modes:
             dump outputs. Used by calibrate.py for binary search.
   collect : write a random prefix (per active_lengths.json) of EVERY
             input buffer, run, dump outputs. Used for N-trial data
-            collection against correct/faulty ELF pairs.
+            collection against correct/faulty ELF pairs, and for the
+            paired secret-sweep collector (collect_paired_sweep.py) via
+            the GDB_DRIVER_OVERRIDE_* env vars below.
 
 Address recovery: pointer buffers are resolved off the FUT's raw-entry
 breakpoint frame (debug info required on the FUT itself). Scalar
@@ -63,6 +65,16 @@ collect mode additionally needs:
     GDB_DRIVER_TRIAL_SEED      RNG seed for this trial (int)
     GDB_DRIVER_VARIANT         "correct" | "faulty"
     GDB_DRIVER_OUTDIR          results directory
+
+collect mode optionally supports a single-position override, used by the
+paired secret-sweep collector to hold a background input fixed while
+forcing ONE buffer's ONE position to an explicit value (rather than the
+normal randomized fill), for EITHER a pointer buffer OR a scalar-anchor
+buffer:
+    GDB_DRIVER_OVERRIDE_BUF   name of the buffer/scalar to override
+    GDB_DRIVER_OVERRIDE_POS   byte position within that buffer to
+                              override (scalars are always position 0)
+    GDB_DRIVER_OVERRIDE_VAL   the value to force at that position
 
 Witness layout entries support two extra optional keys, on top of the
 usual "role"/"length"/"type"/"anchor"/"init_value":
@@ -136,6 +148,20 @@ def get_fixed_scalars():
     return set(s for s in raw.split(",") if s)
 
 
+def get_override():
+    """
+    Returns (override_buf, override_pos, override_val). override_buf is
+    "" if no override was requested (the common case for normal
+    collect_distribution.py trials) -- callers should treat an empty
+    override_buf as "never matches any layout name" and skip the
+    override branch entirely.
+    """
+    override_buf = os.environ.get("GDB_DRIVER_OVERRIDE_BUF", "")
+    override_pos = int(os.environ.get("GDB_DRIVER_OVERRIDE_POS", "-1"))
+    override_val = int(os.environ.get("GDB_DRIVER_OVERRIDE_VAL", "-1"))
+    return override_buf, override_pos, override_val
+
+
 def break_at_main_true_entry():
     """
     Resolve main()'s TRUE entry address via parse_and_eval (bypassing
@@ -164,22 +190,13 @@ def break_at_main_true_entry():
     return return_addr
 
 
-def resolve_scalar_addrs(layout):
-    scalar_addr = {}
-    for name, spec in layout.items():
-        if spec.get("type") != "scalar":
-            continue
-        scalar_addr[name] = int(gdb.parse_and_eval(f"&{spec['anchor']}"))
-    return scalar_addr
-
-
 def resolve_pointer_addrs(func, layout):
     """
     Break at the FUT's raw entry and resolve every pointer-typed layout
-    entry off the frame's pointer arguments. Returns {} (and sets no
-    breakpoint) if there are no pointer buffers at all -- callers must
-    check this before assuming a callee frame exists to `continue`/return
-    from.
+    entry off the frame's pointer arguments. Returns ({}, []) (and sets
+    no breakpoint) if there are no pointer buffers at all -- callers must
+    check ptr_names before assuming a callee frame exists to
+    `continue`/return from.
     """
     ptr_names = [n for n, s in layout.items() if s.get("type") != "scalar"]
     if not ptr_names:
@@ -232,7 +249,12 @@ def run_probe():
 
     # Resolve every address FIRST -- before any writes -- so addr_of is
     # fully populated before the randomization loop below touches it.
-    scalar_addr = resolve_scalar_addrs(layout)
+    scalar_addr = {}
+    for name, spec in layout.items():
+        if spec.get("type") != "scalar":
+            continue
+        scalar_addr[name] = int(gdb.parse_and_eval(f"&{spec['anchor']}"))
+
     ptr_addr, ptr_names = resolve_pointer_addrs(func, layout)
     addr_of = {**scalar_addr, **ptr_addr}
 
@@ -246,10 +268,6 @@ def run_probe():
     rng = random.Random(probe_seed)
     co_rng = random.Random(co_seed)
 
-    # Scalars: probed buffer (if scalar) gets rng; fixed scalars stay at
-    # init_value; every other scalar gets co_rng so it's still varied
-    # (but reproducibly) rather than left at a potentially-unrepresentative
-    # zero/default.
     for name, spec in layout.items():
         if spec.get("type") != "scalar" or spec.get("role") != "input":
             continue
@@ -262,9 +280,6 @@ def run_probe():
             val = co_rng.randrange(field_mod)
         write_bytes(addr, [val])
 
-    # Pointer buffers: probed buffer (if a pointer buffer) gets rng;
-    # every other pointer buffer gets co_rng, fixed across this
-    # calibration run.
     for name in ptr_names:
         spec = layout[name]
         also_in = spec.get("also_input")
@@ -307,6 +322,7 @@ def run_collect():
     out_dir = os.environ["GDB_DRIVER_OUTDIR"]
 
     fixed_scalars = get_fixed_scalars()
+    override_buf, override_pos, override_val = get_override()
 
     with open(witness_path) as f:
         layout = json.load(f)["layout"]
@@ -324,6 +340,11 @@ def run_collect():
     # -----------------------------------------------------------------
     # Scalar inputs: patch now, at main()'s true entry, before any load
     # instruction that would consume them has executed.
+    #
+    # Override applies here too (scalars are always a single byte at
+    # position 0), NOT just to pointer buffers -- this is the fix for
+    # add_f/sub_f's paired sweep silently ignoring the override, since
+    # both a and b are scalar-anchor-backed, not pointer buffers.
     # -----------------------------------------------------------------
     scalar_addr = {}
     for name, spec in layout.items():
@@ -339,6 +360,12 @@ def run_collect():
             # -- must stay at its compiled-in value every trial, not be
             # randomized over the field domain.
             val = spec.get("init_value", 0)
+        elif name == override_buf and override_pos == 0:
+            # Paired secret-sweep override: force this scalar to an
+            # explicit value instead of randomizing it. Scalars are
+            # always a single byte, so "position 0" is the only valid
+            # override position for them.
+            val = override_val
         else:
             val = rng.randrange(field_mod)
 
@@ -348,6 +375,9 @@ def run_collect():
     # -----------------------------------------------------------------
     # Pointer buffer inputs (and also_input buffers, e.g. an in-place
     # accumulator that is both written before AND read after the call).
+    #
+    # Override applies to a single byte position within the buffer, if
+    # requested and if this is the named override buffer.
     # -----------------------------------------------------------------
     ptr_addr, ptr_names = resolve_pointer_addrs(func, layout)
 
@@ -361,6 +391,10 @@ def run_collect():
         fill_len = active_lengths.get(name, spec["length"])
         vals = random_fill(rng, field_mod, fill_len)
         write_bytes(ptr_addr[name], vals)
+
+        if name == override_buf and 0 <= override_pos < len(vals):
+            vals[override_pos] = override_val
+            write_bytes(ptr_addr[name] + override_pos, [override_val])
 
         # also_input buffers are recorded under a distinct "<name>_pre"
         # key so they never collide with the genuine post-call value
