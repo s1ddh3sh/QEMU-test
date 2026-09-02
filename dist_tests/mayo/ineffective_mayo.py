@@ -80,7 +80,7 @@ def load_sweep(dist_dir, out_buf, active_len, out_word_size):
         fo = fo[:active_len]
         delta = np.bitwise_xor(co, fo)
 
-        d[sv] = (delta == 0)
+        d[sv] = ((delta & 15) == 0)
 
     return d
 def main():
