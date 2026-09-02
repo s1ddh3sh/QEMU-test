@@ -33,7 +33,7 @@ fi
 FUNC_NAME="$1"; shift
 SECRET_BUF="$1"; shift
 
-SECRET_POS=""
+SECRET_POS=0
 ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 FIXED_SCALARS=""
 SEED=0

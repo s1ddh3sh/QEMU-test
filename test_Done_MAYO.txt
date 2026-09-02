@@ -1,1 +1,1 @@
-add_f, sub_f, mat_add, mat_mul(doubt), lincomb, P1_times_O, P1_times_Vt, m_vec_add, m_vec_mul_add
+add_f, sub_f, mat_add, mat_mul, lincomb, P1_times_O, P1_times_Vt, m_vec_add, m_vec_mul_add
