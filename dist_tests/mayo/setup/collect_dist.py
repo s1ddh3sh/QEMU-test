@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-collect_paired_sweep.py — sweeps a chosen secret position through every
+collect_dist.py — sweeps a chosen secret position through every
 value in [0, field_mod), running both correct.elf and faulty.elf at each
 value, with ONE shared background input p held fixed across the entire
 sweep (same trial_seed for every run).
@@ -15,7 +15,7 @@ for how multi-seed data would be tested; single-seed output is meant to be
 read directly).
 
 Usage:
-    python3 collect_paired_sweep.py --witness .../qemu_witness.json \
+    python3 collect_dist.py --witness .../qemu_witness.json \
         --active-lengths .../active_lengths.json \
         --correct-elf correct.elf --faulty-elf faulty.elf \
         --func m_vec_add --field-mod 16 \
@@ -28,6 +28,10 @@ import json
 import os
 import subprocess
 import time
+
+
+class RunFailed(Exception):
+    """Raised when a single correct/faulty run doesn't produce output."""
 
 
 def launch_qemu(elf_path, machine, gdb_port=1234):
@@ -63,16 +67,42 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
         "GDB_DRIVER_OVERRIDE_POS": str(secret_pos),
         "GDB_DRIVER_OVERRIDE_VAL": str(secret_val),
     })
-    subprocess.run(
-        ["gdb-multiarch", "-nx", "-batch", "-x", _DRIVER_SCRIPT],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
-    qemu_proc.terminate()
-    qemu_proc.wait(timeout=5)
+    try:
+        # CHANGED: capture output and enforce a timeout instead of
+        # DEVNULL-ing everything -- previously any gdb/driver error
+        # (address resolution failure, target crash, python traceback
+        # inside driver_dist.py, etc.) was completely invisible, and the
+        # caller had no way to know a run had failed at all.
+        result = subprocess.run(
+            ["gdb-multiarch", "-nx", "-batch", "-x", _DRIVER_SCRIPT],
+            env=env, capture_output=True, text=True, timeout=60,
+        )
+    finally:
+        qemu_proc.terminate()
+        try:
+            qemu_proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            qemu_proc.kill()
+            qemu_proc.wait(timeout=5)
 
     produced = os.path.join(os.path.dirname(out_path), f"{variant}_trial{seed:06d}.json")
-    if os.path.exists(produced):
-        os.replace(produced, out_path)
+
+    # CHANGED: this used to be a silent no-op ("if exists: rename, else:
+    # nothing") -- a failed run and a successful one printed the exact
+    # same "s={sval}: correct + faulty" progress line from the caller,
+    # with zero indication anything had gone wrong. Now it's a hard
+    # error with gdb's actual output attached, since that's the only
+    # place the real failure reason (a Python traceback from
+    # driver_dist.py, a gdb.MemoryError, a crashed target, etc) exists.
+    if not os.path.exists(produced):
+        raise RunFailed(
+            f"{variant} run for {secret_buf}[{secret_pos}]={secret_val} "
+            f"(seed={seed}) produced no output file (expected {produced}).\n"
+            f"gdb exit code: {result.returncode}\n"
+            f"--- gdb stdout ---\n{result.stdout}\n"
+            f"--- gdb stderr ---\n{result.stderr}"
+        )
+    os.replace(produced, out_path)
 
 
 def main():
@@ -100,16 +130,41 @@ def main():
           f"(shared across the whole sweep)")
     print(f"[i] total executions: {args.field_mod} * 2 = {args.field_mod * 2}")
 
+    failures = []
     for sval in range(args.field_mod):
         c_path = os.path.join(args.outdir, f"correct_sv{sval:02d}.json")
         f_path = os.path.join(args.outdir, f"faulty_sv{sval:02d}.json")
-        print(f"  s={sval}: correct + faulty")
-        run_one(args.correct_elf, args.witness, args.active_lengths, args.func,
-                args.field_mod, args.seed, "correct", c_path, args.machine,
-                args.fixed_scalars, args.secret_buf, args.secret_pos, sval)
-        run_one(args.faulty_elf, args.witness, args.active_lengths, args.func,
-                args.field_mod, args.seed, "faulty", f_path, args.machine,
-                args.fixed_scalars, args.secret_buf, args.secret_pos, sval)
+        print(f"  s={sval}: correct + faulty", flush=True)
+        for variant, elf_path, out_path in (
+            ("correct", args.correct_elf, c_path),
+            ("faulty", args.faulty_elf, f_path),
+        ):
+            try:
+                run_one(elf_path, args.witness, args.active_lengths, args.func,
+                        args.field_mod, args.seed, variant, out_path, args.machine,
+                        args.fixed_scalars, args.secret_buf, args.secret_pos, sval)
+            except RunFailed as e:
+                # CHANGED: don't let one failed run silently vanish and
+                # don't abort the whole sweep on the first failure either
+                # -- report EVERY failure so the pattern (all of them?
+                # just one sval? just one variant?) is visible, which is
+                # itself useful diagnostic signal.
+                print(f"[!] FAILED: {variant} sval={sval}\n{e}", flush=True)
+                failures.append((variant, sval, str(e)))
+
+    if failures:
+        print(
+            f"\n[!] {len(failures)}/{args.field_mod * 2} runs failed to "
+            f"produce output. NO correct_sv*.json / faulty_sv*.json files "
+            f"exist for the failed (variant, sval) pairs -- see the "
+            f"per-failure gdb output above for the real cause (common "
+            f"culprits: the secret-buf/secret-pos override hitting an "
+            f"address that overlaps/aliases a different buffer due to a "
+            f"qemu_witness.json layout bug, or the target crashing "
+            f"outright). Fix the underlying issue and re-run -- do not "
+            f"trust an empty dist_paired dir silently."
+        )
+        raise SystemExit(1)
 
     print(f"[i] done. {args.field_mod} secret values x 2 variants "
           f"= {args.field_mod * 2} runs in {args.outdir}")
