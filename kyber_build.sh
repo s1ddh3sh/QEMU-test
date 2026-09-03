@@ -13,6 +13,19 @@ fi
 
 TARGET_DIR="$1"
 
+KYBER_RANDOMBYTES_OBJ="obj/common/kyber_randombytes.c.o"
+
+mkdir -p "$(dirname "$KYBER_RANDOMBYTES_OBJ")"
+arm-none-eabi-gcc \
+    -c common/kyber_randombytes.c \
+    -ffreestanding \
+    -fno-builtin \
+    -mcpu=cortex-m4 \
+    -mthumb \
+    -mfloat-abi=hard \
+    -mfpu=fpv4-sp-d16 \
+    -o "$KYBER_RANDOMBYTES_OBJ"
+
 # Verify directory exists
 if [ ! -d "$TARGET_DIR" ]; then
     echo "Error: Directory '$TARGET_DIR' not found."
@@ -47,9 +60,15 @@ find "$TARGET_DIR" -type f -name "*.ll" | while read -r INPUT; do
       "$INPUT" \
       -o "${BUILD_DIR}/${FILENAME}.o"
 
+        # Use the deterministic bare-metal implementation instead of the LLVM copy.
+        arm-none-eabi-objcopy \
+            --redefine-sym randombytes=kyber_llvm_randombytes \
+            "${BUILD_DIR}/${FILENAME}.o"
+
     # Link object file into ELF
     arm-none-eabi-gcc \
         "${BUILD_DIR}/${FILENAME}.o" \
+        "$KYBER_RANDOMBYTES_OBJ" \
         obj/common/assert_stub.o \
         -Lobj \
         -lpqm4hal \
