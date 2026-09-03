@@ -1,22 +1,47 @@
 #!/usr/bin/env bash
 #
 # run_correction_paired.sh — run the paired correction-fault query
-# (correction_mayo.py) for a single MAYO function, against every
+# (correction_kyber.py) for a single Kyber function, against every
 # already-collected single-background secret sweep for that function --
 # one sweep per faulty ELF variant found alongside the correct ELF.
 #
 # Usage:
 #   ./run_correction_paired.sh <func_name> <secret_buf> \
-#       [--out-buf NAME] [--elf-dir DIR]
+#       [--out-buf NAME] [--elf-dir DIR] [--out-word-size 1|2|4] \
+#       [--diff-mode xor|mod-sub] [--modulus N]
 #
-# ELF layout assumed (default --elf-dir is build/tests_mayo/<func_name>):
+# ELF layout assumed (default --elf-dir is build/tests_kyber/<func_name>):
 #   <elf-dir>/<func_name>.elf   -- the correct build
 #   <elf-dir>/*.elf             -- every other .elf is a faulty variant
+#
+# NOTE: func_name is the function's full/mangled symbol name (e.g.
+# pqcrystals_kyber768_ref_dec), matching both the ELF and the
+# tests_kyber/<func_name> witness directory -- see extract_qemu_witness.py
+# and collect_dist.sh.
+#
+# Kyber-specific vs. the mayo version:
+#   - dist_tests/kyber instead of dist_tests/mayo, tests_kyber instead
+#     of tests_mayo, build/tests_kyber instead of build/tests_mayo.
+#   - --out-word-size is no longer a flat hardcoded 1. Kyber's output
+#     buffers span three genuinely different units -- raw byte strings
+#     (ciphertext/pk/sk/message/shared-secret, word-size 1), R_q
+#     poly/polyvec coefficients (int16_t, word-size 2), and a scalar
+#     'return' anchor (int, word-size matches its declared anchor
+#     width, usually 4) -- so it's now AUTO-DERIVED per --out-buf from
+#     its witness layout entry (its "type":"scalar" length, or its
+#     "distribution" if it's an R_q-shaped one), with --out-word-size
+#     still available to force a specific value.
+#   - --diff-mode/--modulus (correction_kyber.py only -- see its module
+#     docstring for why this doesn't matter for the ineffective test):
+#     auto-derived the same way -- "mod-sub" (mod --modulus, default
+#     3329 = KYBER_Q) for an R_q coefficient out-buf, "xor" for
+#     everything else (byte strings, the scalar return). Override with
+#     --diff-mode/--modulus if the auto-pick isn't what you want.
 
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 <func_name> <secret_buf> [--out-buf NAME] [--elf-dir DIR]" >&2
+    echo "Usage: $0 <func_name> <secret_buf> [--out-buf NAME] [--elf-dir DIR] [--out-word-size 1|2|4] [--diff-mode xor|mod-sub] [--modulus N]" >&2
     exit 1
 fi
 
@@ -24,18 +49,23 @@ FUNC_NAME="$1"; shift
 SECRET_BUF="$1"; shift
 
 OUT_BUF_OVERRIDE=""
-ELF_DIR="build/tests_mayo/${FUNC_NAME}"
+ELF_DIR="build/tests_kyber/${FUNC_NAME}"
+WORD_SIZE_OVERRIDE=""
+DIFF_MODE_OVERRIDE=""
+MODULUS=3329
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --out-buf) OUT_BUF_OVERRIDE="$2"; shift 2 ;;
         --elf-dir) ELF_DIR="$2"; shift 2 ;;
+        --out-word-size) WORD_SIZE_OVERRIDE="$2"; shift 2 ;;
+        --diff-mode) DIFF_MODE_OVERRIDE="$2"; shift 2 ;;
+        --modulus) MODULUS="$2"; shift 2 ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
 
-WORD_SIZE=1
-TEST_DIR="dist_tests/mayo"
-OUT_DIR="tests_mayo/${FUNC_NAME}"
+TEST_DIR="dist_tests/kyber"
+OUT_DIR="tests_kyber/${FUNC_NAME}"
 WITNESS="${OUT_DIR}/qemu_witness.json"
 ACTIVE_LENGTHS="${OUT_DIR}/active_lengths.json"
 
@@ -47,7 +77,8 @@ CORRECT_ELF="${ELF_DIR}/${FUNC_NAME}.elf"
 [[ -f "$CORRECT_ELF" ]] || { echo "[!] correct elf not found: $CORRECT_ELF" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
-# Derive --out-buf/--active-len once (per-function, not per faulty ELF).
+# Derive --out-buf/--active-len/--out-word-size/--diff-mode once
+# (per-function, not per faulty ELF).
 # ---------------------------------------------------------------------------
 
 MAX_SAFE_FALLBACK_LEN=4096
@@ -109,6 +140,56 @@ sys.exit(1)
 PYEOF
 }
 
+# Auto-picks --out-word-size and --diff-mode for OUT_BUF from its witness
+# layout entry: a scalar (e.g. the "return" anchor) uses its own declared
+# byte width (clamped to a supported 1/2/4); an R_q-shaped "distribution"
+# (any coefficient/NTT/Montgomery/reduced/CBD/message-embedding/matrix
+# domain -- see driver_dist.py's _DISTRIBUTION_TABLE, which this list must
+# stay in sync with) is a poly of int16_t coefficients, word-size 2,
+# diff-mode mod-sub; anything else (a plain byte-string buffer, or no
+# declared distribution at all) is word-size 1, diff-mode xor. Prints
+# "WORD_SIZE DIFF_MODE" on one line.
+derive_word_size_and_diff_mode() {
+    python3 - "$WITNESS" "$OUT_BUF" <<'PYEOF'
+import json, sys
+witness_path, out_buf = sys.argv[1], sys.argv[2]
+
+POLY_DISTRIBUTIONS = {
+    "centered binomial distribution, eta1",
+    "centered binomial distribution, eta2",
+    "message embedded in R_q = Z_q[X]/(X^n + 1)",
+    "R_q = Z_q[X]/(X^n + 1), coefficient domain",
+    "R_q = Z_q[X]/(X^n + 1), coefficient domain polyvec",
+    "R_q = Z_q[X]/(X^n + 1), NTT domain",
+    "R_q = Z_q[X]/(X^n + 1), NTT domain polyvec",
+    "R_q = Z_q[X]/(X^n + 1), poly",
+    "R_q = Z_q[X]/(X^n + 1), polyvec",
+    "R_q = Z_q[X]/(X^n + 1), Montgomery domain",
+    "R_q = Z_q[X]/(X^n + 1), reduced coefficients",
+    "R_q = Z_q[X]/(X^n + 1), reduced polynomial",
+    "R_q = Z_q[X]/(X^n + 1), reduced polyvec",
+    "uniform polynomial matrix in R_q",
+}
+
+with open(witness_path) as f:
+    layout = json.load(f)["layout"]
+spec = layout[out_buf]
+
+if spec.get("type") == "scalar":
+    length = spec.get("length", 1)
+    word_size = length if length in (1, 2, 4) else 1
+    diff_mode = "xor"
+elif spec.get("distribution") in POLY_DISTRIBUTIONS:
+    word_size = 2
+    diff_mode = "mod-sub"
+else:
+    word_size = 1
+    diff_mode = "xor"
+
+print(f"{word_size} {diff_mode}")
+PYEOF
+}
+
 if [[ -n "$OUT_BUF_OVERRIDE" ]]; then
     validate_out_buf
     OUT_BUF="$OUT_BUF_OVERRIDE"
@@ -117,7 +198,11 @@ else
 fi
 ACTIVE_LEN="$(derive_active_len)"
 
-echo "[i] derived --out-buf=${OUT_BUF} --active-len=${ACTIVE_LEN}"
+read -r AUTO_WORD_SIZE AUTO_DIFF_MODE <<< "$(derive_word_size_and_diff_mode)"
+WORD_SIZE="${WORD_SIZE_OVERRIDE:-$AUTO_WORD_SIZE}"
+DIFF_MODE="${DIFF_MODE_OVERRIDE:-$AUTO_DIFF_MODE}"
+
+echo "[i] derived --out-buf=${OUT_BUF} --active-len=${ACTIVE_LEN} --out-word-size=${WORD_SIZE} --diff-mode=${DIFF_MODE}"
 
 # ---------------------------------------------------------------------------
 # rel_stem: path of an ELF relative to a base dir, minus .elf. Must match
@@ -172,11 +257,13 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     mkdir -p "$(dirname "$CORRECTION_PAIRED_OUT")"
 
     echo "=== correction (paired) test: ${FUNC_NAME} / ${faulty_stem} ==="
-    python3 -u "${TEST_DIR}/correction_mayo.py" \
+    python3 -u "${TEST_DIR}/correction_kyber.py" \
         --dist-dir "$DIST_PAIRED_DIR" \
         --out-buf "$OUT_BUF" \
         --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" \
+        --diff-mode "$DIFF_MODE" \
+        --modulus "$MODULUS" \
         2>&1 | tee "$CORRECTION_PAIRED_OUT"
 
     echo "=== done: ${FUNC_NAME} / ${faulty_stem} ==="

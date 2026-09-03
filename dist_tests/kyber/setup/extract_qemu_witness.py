@@ -358,6 +358,14 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
         if key in layout and key in distributions:
             layout[key]["distribution"] = distributions[key]
 
+
+        in_key = f"{key}_in"
+        if key in layout and in_key in distributions:
+            post = layout[key].get("distribution")
+            layout[key]["distribution"] = distributions[in_key]
+            if post is not None:
+                layout[key]["output_distribution"] = post
+
     if is_scalar_return:
         anchor = find_ret_anchor(ll_text, fn_name)
         layout["return"] = {

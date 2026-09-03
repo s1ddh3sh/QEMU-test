@@ -1,25 +1,47 @@
 #!/usr/bin/env bash
 #
 # run_ineffective_paired.sh — run the paired ineffective-dependence test
-# (ineffective_mayo.py) for a single MAYO function, against every
+# (ineffective_kyber.py) for a single Kyber function, against every
 # already-collected single-background secret sweep for that function --
 # one sweep per faulty ELF variant found alongside the correct ELF.
 #
 # Usage:
 #   ./run_ineffective_paired.sh <func_name> <secret_buf> \
-#       [--out-buf NAME] [--elf-dir DIR]
+#       [--out-buf NAME] [--elf-dir DIR] [--out-word-size 1|2|4] \
+#       [--diff-mode xor|mod-sub] [--modulus N]
 #
-# ELF layout assumed (default --elf-dir is build/tests_mayo/<func_name>):
+# ELF layout assumed (default --elf-dir is build/tests_kyber/<func_name>):
 #   <elf-dir>/<func_name>.elf   -- the correct build
 #   <elf-dir>/*.elf             -- every other .elf is a faulty variant
 #
+# NOTE: func_name is the function's full/mangled symbol name (e.g.
+# pqcrystals_kyber768_ref_dec), matching both the ELF and the
+# tests_kyber/<func_name> witness directory -- see extract_qemu_witness.py
+# and collect_dist.sh.
+#
 # Assumes trials already exist for each faulty ELF:
-#   tests_mayo/<func_name>/qemu_witness.json
-#   tests_mayo/<func_name>/active_lengths.json
-#   tests_mayo/<func_name>/<faulty_elf_stem>/dist_paired/{correct,faulty}_sv*.json
+#   tests_kyber/<func_name>/qemu_witness.json
+#   tests_kyber/<func_name>/active_lengths.json
+#   tests_kyber/<func_name>/<faulty_elf_stem>/dist_paired/{correct,faulty}_sv*.json
 #
 # Example:
-#   ./run_ineffective_paired.sh mat_add in
+#   ./run_ineffective_paired.sh pqcrystals_kyber768_ref_indcpa_dec c
+#
+# Kyber-specific vs. the mayo version:
+#   - dist_tests/kyber instead of dist_tests/mayo, tests_kyber instead
+#     of tests_mayo, build/tests_kyber instead of build/tests_mayo.
+#   - --out-word-size is no longer a flat hardcoded 1 -- it's AUTO-
+#     DERIVED per --out-buf from its witness layout entry (its
+#     "type":"scalar" length, or its "distribution" if it's an
+#     R_q-shaped one -- see ineffective_kyber.py's module docstring for
+#     why word-size matters for Kyber's int16_t poly coefficients), with
+#     --out-word-size still available to force a specific value.
+#   - --diff-mode/--modulus are accepted and forwarded to
+#     ineffective_kyber.py for consistency with run_correction_paired.sh
+#     (same auto-derivation: "mod-sub" for an R_q coefficient out-buf,
+#     "xor" otherwise), even though ineffective_kyber.py's result is
+#     identical either way -- it only ever checks delta==0, and both
+#     modes agree exactly on when that holds.
 
 set -euo pipefail
 
@@ -28,7 +50,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 <func_name> <secret_buf> [--out-buf NAME] [--elf-dir DIR]" >&2
+    echo "Usage: $0 <func_name> <secret_buf> [--out-buf NAME] [--elf-dir DIR] [--out-word-size 1|2|4] [--diff-mode xor|mod-sub] [--modulus N]" >&2
     exit 1
 fi
 
@@ -36,7 +58,10 @@ FUNC_NAME="$1"; shift
 SECRET_BUF="$1"; shift
 
 OUT_BUF_OVERRIDE=""
-ELF_DIR="build/tests_mayo/${FUNC_NAME}"
+ELF_DIR="build/tests_kyber/${FUNC_NAME}"
+WORD_SIZE_OVERRIDE=""
+DIFF_MODE_OVERRIDE=""
+MODULUS=3329
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --out-buf)
@@ -55,6 +80,30 @@ while [[ $# -gt 0 ]]; do
             ELF_DIR="$2"
             shift 2
             ;;
+        --out-word-size)
+            if [[ $# -lt 2 ]]; then
+                echo "[!] --out-word-size requires a value" >&2
+                exit 1
+            fi
+            WORD_SIZE_OVERRIDE="$2"
+            shift 2
+            ;;
+        --diff-mode)
+            if [[ $# -lt 2 ]]; then
+                echo "[!] --diff-mode requires a value" >&2
+                exit 1
+            fi
+            DIFF_MODE_OVERRIDE="$2"
+            shift 2
+            ;;
+        --modulus)
+            if [[ $# -lt 2 ]]; then
+                echo "[!] --modulus requires a value" >&2
+                exit 1
+            fi
+            MODULUS="$2"
+            shift 2
+            ;;
         *)
             echo "[!] unrecognized argument: $1" >&2
             exit 1
@@ -62,10 +111,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-WORD_SIZE=1
-
-TEST_DIR="dist_tests/mayo"
-OUT_DIR="tests_mayo/${FUNC_NAME}"
+TEST_DIR="dist_tests/kyber"
+OUT_DIR="tests_kyber/${FUNC_NAME}"
 
 WITNESS="${OUT_DIR}/qemu_witness.json"
 ACTIVE_LENGTHS="${OUT_DIR}/active_lengths.json"
@@ -91,8 +138,9 @@ if [[ ! -f "$CORRECT_ELF" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Derive --out-buf from the witness (unless overridden) and --active-len
-# from active_lengths.json[secret_buf]. These are per-function, not
+# Derive --out-buf from the witness (unless overridden), --active-len from
+# active_lengths.json[secret_buf], and --out-word-size/--diff-mode from
+# OUT_BUF's own witness layout entry. These are per-function, not
 # per-faulty-ELF, so derived once up front and reused for every sweep.
 #
 # SAFETY: if secret_buf was never calibrated, falling back to the witness's
@@ -167,6 +215,50 @@ sys.exit(1)
 PYEOF
 }
 
+# Auto-picks --out-word-size and --diff-mode for OUT_BUF -- see the module
+# comment above for what these mean; this list of "R_q-shaped" distribution
+# strings must stay in sync with driver_dist.py's _DISTRIBUTION_TABLE.
+derive_word_size_and_diff_mode() {
+    python3 - "$WITNESS" "$OUT_BUF" <<'PYEOF'
+import json, sys
+witness_path, out_buf = sys.argv[1], sys.argv[2]
+
+POLY_DISTRIBUTIONS = {
+    "centered binomial distribution, eta1",
+    "centered binomial distribution, eta2",
+    "message embedded in R_q = Z_q[X]/(X^n + 1)",
+    "R_q = Z_q[X]/(X^n + 1), coefficient domain",
+    "R_q = Z_q[X]/(X^n + 1), coefficient domain polyvec",
+    "R_q = Z_q[X]/(X^n + 1), NTT domain",
+    "R_q = Z_q[X]/(X^n + 1), NTT domain polyvec",
+    "R_q = Z_q[X]/(X^n + 1), poly",
+    "R_q = Z_q[X]/(X^n + 1), polyvec",
+    "R_q = Z_q[X]/(X^n + 1), Montgomery domain",
+    "R_q = Z_q[X]/(X^n + 1), reduced coefficients",
+    "R_q = Z_q[X]/(X^n + 1), reduced polynomial",
+    "R_q = Z_q[X]/(X^n + 1), reduced polyvec",
+    "uniform polynomial matrix in R_q",
+}
+
+with open(witness_path) as f:
+    layout = json.load(f)["layout"]
+spec = layout[out_buf]
+
+if spec.get("type") == "scalar":
+    length = spec.get("length", 1)
+    word_size = length if length in (1, 2, 4) else 1
+    diff_mode = "xor"
+elif spec.get("distribution") in POLY_DISTRIBUTIONS:
+    word_size = 2
+    diff_mode = "mod-sub"
+else:
+    word_size = 1
+    diff_mode = "xor"
+
+print(f"{word_size} {diff_mode}")
+PYEOF
+}
+
 if [[ -n "$OUT_BUF_OVERRIDE" ]]; then
     validate_out_buf
     OUT_BUF="$OUT_BUF_OVERRIDE"
@@ -175,7 +267,11 @@ else
 fi
 ACTIVE_LEN="$(derive_active_len)"
 
-echo "[i] derived --out-buf=${OUT_BUF} --active-len=${ACTIVE_LEN}"
+read -r AUTO_WORD_SIZE AUTO_DIFF_MODE <<< "$(derive_word_size_and_diff_mode)"
+WORD_SIZE="${WORD_SIZE_OVERRIDE:-$AUTO_WORD_SIZE}"
+DIFF_MODE="${DIFF_MODE_OVERRIDE:-$AUTO_DIFF_MODE}"
+
+echo "[i] derived --out-buf=${OUT_BUF} --active-len=${ACTIVE_LEN} --out-word-size=${WORD_SIZE} --diff-mode=${DIFF_MODE}"
 
 # ---------------------------------------------------------------------------
 # rel_stem: path of an ELF relative to a base dir, minus .elf. Must match
@@ -230,11 +326,13 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     mkdir -p "$(dirname "$INEFFECTIVE_PAIRED_OUT")"
 
     echo "=== ineffective (paired) test: ${FUNC_NAME} / ${faulty_stem} ==="
-    python3 -u "${TEST_DIR}/ineffective_mayo.py" \
+    python3 -u "${TEST_DIR}/ineffective_kyber.py" \
         --dist-dir "$DIST_PAIRED_DIR" \
         --out-buf "$OUT_BUF" \
         --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" \
+        --diff-mode "$DIFF_MODE" \
+        --modulus "$MODULUS" \
         2>&1 | tee "$INEFFECTIVE_PAIRED_OUT"
 
     echo "=== done: ${FUNC_NAME} / ${faulty_stem} ==="
