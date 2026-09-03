@@ -258,7 +258,7 @@ def main():
 
     fn_name = ll_path.stem
 
-    inputs_json = Path("function_inputs") / f"{fn_name}.json"
+    inputs_json = Path("mayo_function_inputs") / f"{fn_name}.json"
     if not inputs_json.exists():
         print(f"[!] function_inputs file not found: {inputs_json}", file=sys.stderr)
         sys.exit(1)
