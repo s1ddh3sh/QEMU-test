@@ -87,13 +87,13 @@ DIST_PAIRED_DIR="${OUT_DIR}/${FAULTY_STEM}/dist_paired"
 
 mkdir -p "$OUT_DIR"
 
-echo "=== [1/2] calibrate: ${FUNC_NAME} ==="
-python3 "${SETUP_DIR}/calibrate.py" \
-    --witness "$WITNESS" --elf "$CORRECT_ELF" \
-    --field-mod "$FIELD_MOD" --machine "$MACHINE" \
-    --out "$ACTIVE_LENGTHS" --fixed-scalars "$FIXED_SCALARS"
+# echo "=== [1/2] calibrate: ${FUNC_NAME} ==="
+# python3 "${SETUP_DIR}/calibrate.py" \
+#     --witness "$WITNESS" --elf "$CORRECT_ELF" \
+#     --field-mod "$FIELD_MOD" --machine "$MACHINE" \
+#     --out "$ACTIVE_LENGTHS" --fixed-scalars "$FIXED_SCALARS"
 
-echo "=== [2/2] collect_dist: ${FUNC_NAME} / $(basename "$FAULTY_ELF") ==="
+# echo "=== [2/2] collect_dist: ${FUNC_NAME} / $(basename "$FAULTY_ELF") ==="
 python3 "${SETUP_DIR}/collect_dist.py" \
     --witness "$WITNESS" --active-lengths "$ACTIVE_LENGTHS" \
     --correct-elf "$CORRECT_ELF" --faulty-elf "$FAULTY_ELF" \

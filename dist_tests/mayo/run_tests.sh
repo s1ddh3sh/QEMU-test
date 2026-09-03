@@ -32,7 +32,10 @@ fi
 
 FUNC_NAME="$1"; shift
 SECRET_BUF="$1"; shift
-
+OUT_DIR="tests_mayo/${FUNC_NAME}"
+SETUP_DIR="dist_tests/mayo/setup"
+WITNESS="${OUT_DIR}/qemu_witness.json"
+ACTIVE_LENGTHS="${OUT_DIR}/active_lengths.json"
 SECRET_POS=0
 ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 FIXED_SCALARS=""
@@ -99,6 +102,11 @@ done
 # ---------------------------------------------------------------------------
 # [1/3] collect_dist.sh, once per faulty ELF
 # ---------------------------------------------------------------------------
+echo "=== calibrate: ${FUNC_NAME} ==="
+python3 "${SETUP_DIR}/calibrate.py" \
+    --witness "$WITNESS" --elf "$CORRECT_ELF" \
+    --field-mod 16 --machine mps2-an386 \
+    --out "$ACTIVE_LENGTHS" --fixed-scalars "$FIXED_SCALARS"
 
 echo ""
 echo "########## [1/3] collect_dist.sh (${#FAULTY_ELFS[@]} faulty ELF(s)) ##########"
