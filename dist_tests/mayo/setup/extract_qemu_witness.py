@@ -21,23 +21,103 @@ TYPE_SIZES = {
     "ptr": 8,
 }
 
-# Matches: %Name = alloca [N x <type>] ... !llvmbmc.var !NNN
-ALLOCA_RE = re.compile(
-    r'%(?P<name>\w+)\s*=\s*alloca\s*\[\s*(?P<count>\d+)\s*x\s*(?P<type>i\d+|ptr|[%\w.]+)\s*\]'
-    r'[^\n]*?!llvmbmc\.var'
-)
+# Matches the START of any alloca statement we care about: %name = alloca
+# What follows -- an array type "[N x TYPE]" (possibly nested, e.g. a
+# matrix's "[M x [N x i8]]"), or a bare scalar type like "i32" (e.g.
+# `%siglen = alloca i32, ...` for a `size_t *siglen` out-param) -- is
+# parsed separately below, since a single regex can't handle both an
+# arbitrary nesting depth and the "no brackets at all" scalar case.
+ALLOCA_START_RE = re.compile(r'%(?P<name>\w+)\s*=\s*alloca\s+')
+
+
+def _find_matching_bracket(text: str, open_idx: int) -> int:
+    """text[open_idx] must be '['. Returns the index of its matching ']'."""
+    depth = 0
+    for i in range(open_idx, len(text)):
+        if text[i] == '[':
+            depth += 1
+        elif text[i] == ']':
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ValueError("unbalanced '[' in alloca type")
+
+
+def _parse_array_type(type_text: str):
+    """
+    type_text is the content INSIDE one outer [...], e.g. "1184 x i8" or
+    "3 x [256 x i16]" (a nested/matrix array: 3 rows of 256 i16 each).
+    Recurses through nested array dimensions and returns
+    (total_element_count, base_type_str) with the dimensions multiplied
+    out -- e.g. "3 x [256 x i16]" -> (768, "i16").
+    """
+    m = re.match(r'\s*(\d+)\s*x\s*(.*)$', type_text, re.DOTALL)
+    if not m:
+        raise ValueError(f"cannot parse array type: {type_text!r}")
+    count = int(m.group(1))
+    rest = m.group(2).strip()
+    if rest.startswith('['):
+        end = _find_matching_bracket(rest, 0)
+        inner_count, inner_base = _parse_array_type(rest[1:end])
+        return count * inner_count, inner_base
+    return count, rest
+
 
 def extract_allocas(ll_text: str) -> Dict[str, int]:
-    """{var_name: raw alloca total byte size}, in first-appearance order."""
+    """{var_name: raw alloca total byte size}, in first-appearance order.
+
+    Handles three alloca shapes, all requiring !llvmbmc.var on the same
+    statement to be picked up at all:
+      - array:        %buf = alloca [1184 x i8], ..., !llvmbmc.var !N
+      - nested array:  %mat = alloca [3 x [256 x i16]], ..., !llvmbmc.var !N
+      - scalar:        %siglen = alloca i32, ..., !llvmbmc.var !N
+    """
     allocas = {}
-    for m in ALLOCA_RE.finditer(ll_text):
+    for m in ALLOCA_START_RE.finditer(ll_text):
         var_name = m.group("name")
-        count = int(m.group("count"))
-        elem_type = m.group("type")
-        
-        # Calculate element byte size (defaults to 1 if custom/unknown struct)
-        elem_size = TYPE_SIZES.get(elem_type, 1)
-        allocas[var_name] = count * elem_size
+        pos = m.end()
+
+        line_end = ll_text.find('\n', pos)
+        if line_end == -1:
+            line_end = len(ll_text)
+
+        after_alloca = ll_text[pos:line_end]
+        stripped = after_alloca.lstrip()
+        leading_ws = len(after_alloca) - len(stripped)
+
+        if stripped.startswith('['):
+            # Array form (possibly nested) -- bracket-match to find the
+            # true end of the type, which may extend past this line only
+            # in pathological formatting; in practice always same-line.
+            open_idx = pos + leading_ws
+            try:
+                close_idx = _find_matching_bracket(ll_text, open_idx)
+            except ValueError:
+                continue
+            stmt_tail_end = ll_text.find('\n', close_idx)
+            if stmt_tail_end == -1:
+                stmt_tail_end = len(ll_text)
+            if '!llvmbmc.var' not in ll_text[close_idx:stmt_tail_end]:
+                continue
+            type_text = ll_text[open_idx + 1:close_idx]
+            try:
+                count, base_type = _parse_array_type(type_text)
+            except ValueError:
+                continue
+            elem_size = TYPE_SIZES.get(base_type, 1)
+            allocas[var_name] = count * elem_size
+        else:
+            # Scalar form: no brackets at all -- `alloca i32, align 16,
+            # !llvmbmc.var !N`. The type is the first token; whatever
+            # follows (align, !llvmbmc.var, ...) is on the same line.
+            if '!llvmbmc.var' not in after_alloca:
+                continue
+            type_m = re.match(r'([%\w.]+)', stripped)
+            if not type_m:
+                continue
+            base_type = type_m.group(1)
+            allocas[var_name] = TYPE_SIZES.get(base_type, 1)
+
     return allocas
 
 
@@ -76,13 +156,13 @@ def find_fut_call(main_body: str, fn_name: str) -> List[Tuple[str, str]]:
         raw = raw.strip()
         if not raw:
             continue
-        
+
         # Updated regex to match optional parameter attributes like `nonnull`, `nocapture`
         pm = re.search(r'ptr\s+(?:[\w\s]+\s+)?%(?P<ptr>\w+)', raw)
         if pm:
             args.append(("ptr", pm.group("ptr")))
             continue
-        
+
         im = re.search(r'i\d+\s+(?P<imm>-?\d+)', raw)
         if im:
             args.append(("imm", im.group("imm")))

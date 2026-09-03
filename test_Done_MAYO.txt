@@ -2,5 +2,51 @@ add_f, sub_f, mat_add, mat_mul, lincomb, P1_times_O, P1_times_Vt, m_vec_add, m_v
 mul_add_m_upper_triangular_mat_x_mat, mul_add_m_upper_triangular_mat_x_mat_trans
 mul_add_mat_trans_x_m_mat, pqmayo_MAYO_1_ref_mayo_keypair_compact, shake256
 pqmayo_MAYO_1_ref_mayo_keypair
-Error:
-P1P1t_times_O, 
+
+
+
+Kyber Failed directories:
+  tests_mayo/aes128_ctr
+  tests_mayo/AES_128_CTR
+  tests_mayo/aes_ctr
+  tests_mayo/aes_ctr4x
+  tests_mayo/aes_ecb4x
+  tests_mayo/br_range_dec32le
+  tests_mayo/br_range_enc32le
+  tests_mayo/ef_unpack_m_vec
+  tests_mayo/eval_public_map
+  tests_mayo/example_mayo
+  tests_mayo/keccak_squeezeblocks
+  tests_mayo/lincomb.24
+  tests_mayo/mat_mul.21
+  tests_mayo/mayo_generic_m_calculate_PS
+  tests_mayo/mayo_generic_m_calculate_SPS
+  tests_mayo/m_calculate_PS_SPS
+  tests_mayo/m_extract_element
+  tests_mayo/mul_f.23
+  tests_mayo/mul_fx8
+  tests_mayo/m_vec_add.18
+  tests_mayo/m_vec_mul_add_x
+  tests_mayo/m_vec_mul_add_x_inv
+  tests_mayo/m_vec_multiply_bins
+  tests_mayo/pack_m_vecs
+  tests_mayo/pqmayo_MAYO_1_ref_mayo_open
+  tests_mayo/pqmayo_MAYO_1_ref_mayo_verify
+  tests_mayo/pqmayo_MAYO_1_ref_m_upper
+  tests_mayo/pqmayo_MAYO_1_ref_sample_solution
+  tests_mayo/randombytes
+  tests_mayo/randombytes_nist
+  tests_mayo/shake256_squeezeblocks
+  tests_mayo/transpose_16x16_nibbles
+  tests_mayo/unpack_m_vecs
+  tests_mayo/vec_mul_add_u64
+
+
+
+
+Kyber Failed directories:
+  tests_kyber/pqcrystals_kyber768_ref_verify
+  tests_kyber/randombytes
+  tests_kyber/test_invalid_ciphertext
+  tests_kyber/test_invalid_sk_a
+  tests_kyber/test_keys
