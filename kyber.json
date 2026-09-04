@@ -1,0 +1,13 @@
+{
+    "cbd2":{
+        "secret-buf": "buf"
+    },
+    "keccak_absorb":{
+        "secret-buf": "in",
+        "fixed-scalars": "inlen,pos,r"
+    },
+    "keccak_absorb_once":{
+        "secret-buf": "in",
+        "fixed-scalars": "inlen,p,r"
+    }
+}
