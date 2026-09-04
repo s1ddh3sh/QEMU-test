@@ -31,7 +31,11 @@ build_one_dir() {
             echo "[!] No .ll files found under '$TARGET_DIR'." >&2
             exit 1
         fi
-
+        TOP_BUILD_DIR="build/${TARGET_DIR}"
+        if [ -d "$TOP_BUILD_DIR" ]; then
+            echo "[i] removing stale build directory: $TOP_BUILD_DIR"
+            rm -rf "$TOP_BUILD_DIR"
+        fi
         for INPUT in "${LL_FILES[@]}"; do
             echo "=========================================="
             echo "Processing: $INPUT"

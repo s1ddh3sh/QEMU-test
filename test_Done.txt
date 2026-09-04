@@ -2,10 +2,22 @@ mayo tests done:
 add_f, sub_f, mat_add, mat_mul, lincomb, P1_times_O, P1_times_Vt, m_vec_add, m_vec_mul_add
 mul_add_m_upper_triangular_mat_x_mat, mul_add_m_upper_triangular_mat_x_mat_trans
 mul_add_mat_trans_x_m_mat, pqmayo_MAYO_1_ref_mayo_keypair_compact, shake256
-pqmayo_MAYO_1_ref_mayo_keypair, inverse_f, compute_A, P1P1t_times_O
+pqmayo_MAYO_1_ref_mayo_keypair, inverse_f, compute_A, P1P1t_times_O,
 
 mayo errors:
-compute_M_and_VPV, compute_rhs, compute_P3, 
+compute_M_and_VPV, compute_rhs, compute_P3, pqmayo_MAYO_1_ref_mayo_sign,
+shake256_squeezeblocks
+"pqmayo_MAYO_1_ref_mayo_sign":{
+  "secret-buf":"sm"
+}
+"shake256_squeezeblocks":{
+  "secret-buf":"state",
+  "fixed-scalars":"nblocks"
+}
+kyber tests done:
+
+
+
 
 mayo TODO:
   tests_mayo/aes128_ctr

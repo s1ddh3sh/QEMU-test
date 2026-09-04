@@ -1,3 +1,4 @@
 obj
 build
 tests*
+fault_detection_report.md
