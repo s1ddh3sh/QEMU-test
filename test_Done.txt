@@ -15,8 +15,14 @@ shake256_squeezeblocks
   "fixed-scalars":"nblocks"
 }
 kyber tests done:
+cbd2, keccak_absorb, keccak_absorb_once, keccak_squeeze, pack_ciphertext,
+pqcrystals_kyber_fips202_ref_sha3_256, pqcrystals_kyber768_ref_barrett_reduce, pqcrystals_kyber768_ref_basemul,
+pqcrystals_kyber768_ref_dec
 
 
+
+kyber errors:
+pqcrystals_kyber768_ref_enc (timeout)
 
 
 mayo TODO:

@@ -34,7 +34,7 @@
     "pqcrystals_kyber768_ref_dec":{
         "secret-buf":"sk"
     },
-    "pqcrystals_kyber768_ref_enc":{
-        "secret-buf":"pk"
+    "pqcrystals_kyber768_ref_enc_derand":{
+        "secret-buf":"ss"
     }
 }
