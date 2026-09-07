@@ -36,5 +36,9 @@
     },
     "pqcrystals_kyber768_ref_enc_derand":{
         "secret-buf":"ss"
+    },
+    "pqcrystals_kyber768_ref_gen_matrix":{
+        "secret-buf":"ss",
+        "fixed-scalars":"transposed"
     }
 }

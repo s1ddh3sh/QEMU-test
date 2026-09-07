@@ -9,6 +9,10 @@
         "secret-buf":"m",
         "fixed-scalars":"mdeclen"
     },
+    "EF":{
+        "secret-buf":"A_pre",
+        "fixed-scalars":"nrows,ncols"
+    },
     "inverse_f":{
         "secret-buf":"a"
     },

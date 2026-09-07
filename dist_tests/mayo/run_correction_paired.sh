@@ -9,9 +9,23 @@
 #   ./run_correction_paired.sh <func_name> <secret_buf> \
 #       [--out-buf NAME] [--elf-dir DIR]
 #
+# NAMESPACE NOTE (_pre suffix):
+#   For in-place functions -- those whose layout marks a buffer
+#   "role": "output" with "also_input": true -- the collector captures a
+#   pre-call snapshot of that buffer under the slot name "<buf>_pre".
+#   That slot name exists only in the collected JSON records; it is NOT a
+#   layout key, so it will never appear in qemu_witness.json or (usually)
+#   in active_lengths.json. This script therefore resolves a "_pre"
+#   secret-buf by first trying the literal name, then falling back to the
+#   base buffer name for the purposes of the length lookup.
+#
 # ELF layout assumed (default --elf-dir is build/tests_mayo/<func_name>):
 #   <elf-dir>/<func_name>.elf   -- the correct build
 #   <elf-dir>/*.elf             -- every other .elf is a faulty variant
+#
+# Example:
+#   ./run_correction_paired.sh mat_add in
+#   ./run_correction_paired.sh EF A_pre        # in-place function
 
 set -euo pipefail
 
@@ -22,6 +36,10 @@ fi
 
 FUNC_NAME="$1"; shift
 SECRET_BUF="$1"; shift
+
+# Base (layout-namespace) name of the secret buffer: "A_pre" -> "A".
+# Identical to SECRET_BUF when no _pre suffix is present.
+SECRET_BUF_BASE="${SECRET_BUF%_pre}"
 
 OUT_BUF_OVERRIDE=""
 ELF_DIR="build/tests_mayo/${FUNC_NAME}"
@@ -73,6 +91,23 @@ validate_out_buf() {
     python3 - "$WITNESS" "$OUT_BUF_OVERRIDE" <<'PYEOF'
 import json, sys
 witness_path, requested = sys.argv[1], sys.argv[2]
+
+# A "_pre" slot is the pre-call snapshot of an in-place buffer. It is by
+# construction byte-identical between the correct and faulty runs (same
+# inputs, captured before either build has done anything), so
+# Delta(s) = correct XOR faulty would be identically zero for every s and
+# every position. The correction test would then report "no pair
+# disagrees" -- i.e. a clean, secret-independent correction -- no matter
+# how leaky the function actually is. Refuse it outright.
+if requested.endswith("_pre"):
+    print(f"[!] --out-buf '{requested}' is a pre-call snapshot slot; it is "
+          f"identical in the correct and faulty runs, so Delta(s) would be "
+          f"identically zero for every secret value and the test would "
+          f"report a spurious clean result. Use "
+          f"--out-buf '{requested[:-4]}' (the post-call buffer) instead.",
+          file=sys.stderr)
+    sys.exit(1)
+
 with open(witness_path) as f:
     layout = json.load(f)["layout"]
 if requested not in layout:
@@ -87,24 +122,75 @@ PYEOF
 }
 
 derive_active_len() {
-    python3 - "$ACTIVE_LENGTHS" "$SECRET_BUF" "$WITNESS" "$MAX_SAFE_FALLBACK_LEN" <<'PYEOF'
+    python3 - "$ACTIVE_LENGTHS" "$SECRET_BUF" "$SECRET_BUF_BASE" "$WITNESS" "$MAX_SAFE_FALLBACK_LEN" <<'PYEOF'
 import json, sys
-active_path, secret_buf, witness_path, max_fallback = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+
+active_path  = sys.argv[1]
+secret_buf   = sys.argv[2]
+secret_base  = sys.argv[3]
+witness_path = sys.argv[4]
+max_fallback = int(sys.argv[5])
+
+# Try the literal name first (calibrate.py may have recorded the _pre slot
+# explicitly), then the layout-namespace base name.
+candidates = [secret_buf]
+if secret_base != secret_buf:
+    candidates.append(secret_base)
+
+
+def note_fallback(resolved):
+    if resolved != secret_buf:
+        print(f"[i] secret-buf '{secret_buf}' is a capture-slot name with no "
+              f"layout entry; resolved its length via the base buffer "
+              f"'{resolved}'.", file=sys.stderr)
+
+
 with open(active_path) as f:
     active_lengths = json.load(f)
-if secret_buf in active_lengths:
-    print(active_lengths[secret_buf]); sys.exit(0)
+
+for name in candidates:
+    if name in active_lengths:
+        note_fallback(name)
+        print(active_lengths[name])
+        sys.exit(0)
+
 with open(witness_path) as f:
     layout = json.load(f)["layout"]
-if secret_buf in layout:
-    full_len = layout[secret_buf]["length"]
+
+for name in candidates:
+    if name not in layout:
+        continue
+
+    spec = layout[name]
+
+    # If we only got here by stripping a _pre suffix, the base buffer had
+    # better actually be an in-place buffer -- otherwise no pre-call
+    # snapshot is captured for it and the collected records will not
+    # contain this slot at all.
+    if name != secret_buf:
+        is_inplace = spec.get("also_input") is True or spec.get("role") == "input"
+        if not is_inplace:
+            print(f"[!] '{secret_buf}' resolves to layout entry '{name}', but "
+                  f"'{name}' is role='{spec.get('role')}' without "
+                  f"also_input:true -- no pre-call snapshot is captured for "
+                  f"it, so the collected records are unlikely to contain "
+                  f"'{secret_buf}'.", file=sys.stderr)
+
+    note_fallback(name)
+
+    full_len = spec["length"]
     if full_len > max_fallback:
         print(f"[!] secret-buf '{secret_buf}' was never calibrated and its full "
               f"declared length ({full_len}) exceeds the safety cap ({max_fallback}); "
               f"capping --active-len to {max_fallback}.", file=sys.stderr)
         full_len = max_fallback
-    print(full_len); sys.exit(0)
-print(f"[!] secret-buf '{secret_buf}' not found in active_lengths.json or witness", file=sys.stderr)
+    print(full_len)
+    sys.exit(0)
+
+tried = " / ".join(f"'{c}'" for c in candidates)
+print(f"[!] secret-buf {tried} not found in active_lengths.json or witness "
+      f"(active_lengths keys: {sorted(active_lengths.keys())}; "
+      f"layout keys: {sorted(layout.keys())})", file=sys.stderr)
 sys.exit(1)
 PYEOF
 }
@@ -118,6 +204,15 @@ fi
 ACTIVE_LEN="$(derive_active_len)"
 
 echo "[i] derived --out-buf=${OUT_BUF} --active-len=${ACTIVE_LEN}"
+
+# Delta(s) is measured on OUT_BUF. If the secret sweep and the output
+# resolve to the same underlying in-place buffer, that is expected -- but
+# say so, so whoever reads correction_paired_result.txt later knows the
+# swept buffer and the measured buffer share storage.
+if [[ "$SECRET_BUF" != "$SECRET_BUF_BASE" && "$SECRET_BUF_BASE" == "$OUT_BUF" ]]; then
+    echo "[i] in-place function: sweeping '${SECRET_BUF}' (pre-call snapshot) " \
+         "and measuring Delta(s) on '${OUT_BUF}' (post-call), same buffer."
+fi
 
 # ---------------------------------------------------------------------------
 # rel_stem: path of an ELF relative to a base dir, minus .elf. Must match
