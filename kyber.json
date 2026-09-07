@@ -30,5 +30,11 @@
     "pqcrystals_kyber768_ref_basemul":{
         "secret-buf": "a",
         "fixed-scalars": "zeta"
+    },
+    "pqcrystals_kyber768_ref_dec":{
+        "secret-buf":"sk"
+    },
+    "pqcrystals_kyber768_ref_enc":{
+        "secret-buf":"pk"
     }
 }
