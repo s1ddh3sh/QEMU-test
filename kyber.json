@@ -9,5 +9,26 @@
     "keccak_absorb_once":{
         "secret-buf": "in",
         "fixed-scalars": "inlen,p,r"
+    },
+    "keccak_squeeze":{
+        "secret-buf": "s",
+        "fixed-scalars": "outlen,pos,r"
+    },
+    "load64":{
+        "secret-buf": "x"
+    },
+    "pack_ciphertext":{
+        "secret-buf": "b"
+    },
+    "pqcrystals_kyber_fips202_ref_sha3_256":{
+        "secret-buf": "in",
+        "fixed-scalars": "inlen"
+    },
+    "pqcrystals_kyber768_ref_barrett_reduce":{
+        "secret-buf": "a"
+    },
+    "pqcrystals_kyber768_ref_basemul":{
+        "secret-buf": "a",
+        "fixed-scalars": "zeta"
     }
 }
