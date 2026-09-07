@@ -40,5 +40,11 @@
     "pqcrystals_kyber768_ref_gen_matrix":{
         "secret-buf":"ss",
         "fixed-scalars":"transposed"
+    },
+    "pqcrystals_kyber768_ref_indcpa_dec":{
+        "secret-buf":"sk"
+    },
+    "pqcrystals_kyber768_ref_indcpa_enc":{
+        "secret-buf":"m"
     }
 }
