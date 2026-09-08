@@ -1,6 +1,6 @@
 # Fault Detection Report
 
-Generated 2026-09-08 05:52 UTC.
+Generated 2026-09-08 06:27 UTC.
 
 Detection pattern: `pos [0-9]+: [0-9]+/[0-9]+ pairs disagree` — presence means at least one
 output position showed `X/Y pairs disagree` with `X > 0` in the
