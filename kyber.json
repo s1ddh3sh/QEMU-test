@@ -46,5 +46,8 @@
     },
     "pqcrystals_kyber768_ref_indcpa_enc":{
         "secret-buf":"m"
+    },
+    "pqcrystals_kyber768_ref_poly_add":{
+        "secret-buf":"b"
     }
 }

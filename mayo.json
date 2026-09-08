@@ -1,6 +1,6 @@
 {
     "add_f":{
-        "secret-buf": "a"
+        "secret-buf": "b"
     },
     "compute_A":{
         "secret-buf": "VtL"
@@ -72,7 +72,7 @@
         "fixed-scalars":"outlen,inlen"
     },
     "sub_f":{
-        "secret-buf":"a"
+        "secret-buf":"b"
     }
     
 }

@@ -1,6 +1,6 @@
 # Fault Detection Report
 
-Generated 2026-09-08 04:38 UTC.
+Generated 2026-09-08 05:26 UTC.
 
 Detection pattern: `pos [0-9]+: [0-9]+/[0-9]+ pairs disagree` — presence means at least one
 output position showed `X/Y pairs disagree` with `X > 0` in the
@@ -596,8 +596,8 @@ _No result files found._
 
 | Fault | Correction test | Ineffective test |
 |---|---|---|
-| `sub_f_line0_opA` | — | — |
-| `sub_f_line0_opB` | ✅ | ✅ |
+| `sub_f_line0_opA` | ✅ | ✅ |
+| `sub_f_line0_opB` | — | — |
 | `sub_f_line0_undef` | ✅ | ✅ |
 | `sub_f_line0_zero` | ✅ | ✅ |
 
