@@ -1,6 +1,6 @@
 # Fault Detection Report
 
-Generated 2026-09-08 05:26 UTC.
+Generated 2026-09-08 05:52 UTC.
 
 Detection pattern: `pos [0-9]+: [0-9]+/[0-9]+ pairs disagree` — presence means at least one
 output position showed `X/Y pairs disagree` with `X > 0` in the
@@ -799,7 +799,13 @@ _No result files found._
 
 | Fault | Correction test | Ineffective test |
 |---|---|---|
+| `pqcrystals_kyber768_ref_poly_add_line10_mem` | ✅ | — |
+| `pqcrystals_kyber768_ref_poly_add_line5_mem` | — | — |
+| `pqcrystals_kyber768_ref_poly_add_line7_mem` | ✅ | — |
 | `pqcrystals_kyber768_ref_poly_add_line8_opA` | ✅ | — |
+| `pqcrystals_kyber768_ref_poly_add_line8_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_add_line8_undef` | ✅ | — |
+| `pqcrystals_kyber768_ref_poly_add_line8_zero` | ✅ | — |
 
 ### pqcrystals_kyber768_ref_poly_basemul_montgomery
 
@@ -971,6 +977,6 @@ _No result files found._
 
 ## Summary
 
-- Fault folders scanned: **360**
-- Correction-test detections: **151**
+- Fault folders scanned: **366**
+- Correction-test detections: **155**
 - Ineffective-test detections: **143**
