@@ -49,5 +49,11 @@
     },
     "pqcrystals_kyber768_ref_poly_add":{
         "secret-buf":"b"
+    },
+    "pqcrystals_kyber768_ref_poly_basemul_montgomery":{
+        "secret-buf":"b"
+    },
+    "pqcrystals_kyber768_ref_poly_tomsg":{
+        "secret-buf":"a"
     }
 }
