@@ -55,5 +55,11 @@
     },
     "pqcrystals_kyber768_ref_poly_tomsg":{
         "secret-buf":"a"
+    },
+    "pqcrystals_kyber768_ref_poly_cbd_eta1":{
+        "secret-buf":"buf"
+    },
+    "pqcrystals_kyber768_ref_poly_cbd_eta2":{
+        "secret-buf":"buf"
     }
 }

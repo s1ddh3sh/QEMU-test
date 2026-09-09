@@ -1,6 +1,6 @@
 # Fault Detection Report
 
-Generated 2026-09-08 07:32 UTC.
+Generated 2026-09-09 03:56 UTC.
 
 Detection pattern: `pos [0-9]+: [0-9]+/[0-9]+ pairs disagree` — presence means at least one
 output position showed `X/Y pairs disagree` with `X > 0` in the
@@ -198,6 +198,18 @@ _No result files found._
 | `compute_P3_fnSkip_P1_times_O_line0` | — | — |
 
 ### compute_rhs
+
+_No result files found._
+
+### ct_64_is_greater_than
+
+_No result files found._
+
+### ct_compare_64
+
+_No result files found._
+
+### ct_compare_8
 
 _No result files found._
 
@@ -452,6 +464,14 @@ _No result files found._
 
 _No result files found._
 
+### mul_table
+
+_No result files found._
+
+### mul_table.22
+
+_No result files found._
+
 ### m_vec_add
 
 | Fault | Correction test | Ineffective test |
@@ -621,6 +641,10 @@ _No result files found._
 |---|---|---|
 | `cbd2_line27_mem` | ✅ | ✅ |
 
+### fqmul
+
+_No result files found._
+
 ### keccak_absorb
 
 | Fault | Correction test | Ineffective test |
@@ -635,13 +659,33 @@ _No result files found._
 | `keccak_absorb_once_fnSkip_load64_line23` | — | — |
 | `keccak_absorb_once_line38_mem` | ✅ | ✅ |
 
+### KeccakF1600_StatePermute
+
+_No result files found._
+
+### keccak_finalize
+
+_No result files found._
+
+### keccak_init
+
+_No result files found._
+
 ### keccak_squeeze
 
 | Fault | Correction test | Ineffective test |
 |---|---|---|
 | `keccak_squeeze_line27_mem` | ✅ | ✅ |
 
+### keccak_squeezeblocks
+
+_No result files found._
+
 ### load64
+
+_No result files found._
+
+### main
 
 _No result files found._
 
@@ -692,6 +736,10 @@ _No result files found._
 | `pqcrystals_kyber768_ref_basemul_line7_mem` | ✅ | — |
 
 ### pqcrystals_kyber768_ref_cmov
+
+_No result files found._
+
+### pqcrystals_kyber768_ref_cmov_int16
 
 _No result files found._
 
@@ -791,6 +839,10 @@ _No result files found._
 
 _No result files found._
 
+### pqcrystals_kyber768_ref_montgomery_reduce
+
+_No result files found._
+
 ### pqcrystals_kyber768_ref_ntt
 
 _No result files found._
@@ -816,7 +868,9 @@ _No result files found._
 
 ### pqcrystals_kyber768_ref_poly_cbd_eta1
 
-_No result files found._
+| Fault | Correction test | Ineffective test |
+|---|---|---|
+| `pqcrystals_kyber768_ref_poly_cbd_eta1_fnSkip_cbd2_line0` | ✅ | ✅ |
 
 ### pqcrystals_kyber768_ref_poly_cbd_eta2
 
@@ -874,6 +928,37 @@ _No result files found._
 | Fault | Correction test | Ineffective test |
 |---|---|---|
 | `pqcrystals_kyber768_ref_poly_tomsg_line13_mem` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line16_opA` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line16_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line16_undef` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line16_zero` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line18_opA` | ✅ | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line18_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line18_undef` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line18_zero` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line19_opA` | ✅ | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line19_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line19_undef` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line19_zero` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line20_opA` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line20_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line20_undef` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line20_zero` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line21_opA` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line21_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line21_undef` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line21_zero` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line22_opA` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line22_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line22_undef` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line22_zero` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line24_mem` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line26_opA` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line26_opB` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line26_undef` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line26_zero` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line27_mem` | — | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line5_mem` | — | — |
 
 ### pqcrystals_kyber768_ref_polyvec_add
 
@@ -930,6 +1015,10 @@ _No result files found._
 
 _No result files found._
 
+### pqcrystals_kyber_fips202_ref_shake128_squeezeblocks
+
+_No result files found._
+
 ### pqcrystals_kyber_fips202_ref_shake256
 
 _No result files found._
@@ -942,7 +1031,19 @@ _No result files found._
 
 _No result files found._
 
+### pqcrystals_kyber_fips202_ref_shake256_finalize
+
+_No result files found._
+
+### pqcrystals_kyber_fips202_ref_shake256_init
+
+_No result files found._
+
 ### pqcrystals_kyber_fips202_ref_shake256_squeeze
+
+_No result files found._
+
+### pqcrystals_kyber_fips202_ref_shake256_squeezeblocks
 
 _No result files found._
 
@@ -980,6 +1081,6 @@ _No result files found._
 
 ## Summary
 
-- Fault folders scanned: **368**
-- Correction-test detections: **156**
-- Ineffective-test detections: **143**
+- Fault folders scanned: **400**
+- Correction-test detections: **159**
+- Ineffective-test detections: **144**
