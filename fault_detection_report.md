@@ -1,6 +1,6 @@
 # Fault Detection Report
 
-Generated 2026-09-09 03:56 UTC.
+Generated 2026-09-09 12:36 UTC.
 
 Detection pattern: `pos [0-9]+: [0-9]+/[0-9]+ pairs disagree` — presence means at least one
 output position showed `X/Y pairs disagree` with `X > 0` in the
@@ -685,10 +685,6 @@ _No result files found._
 
 _No result files found._
 
-### main
-
-_No result files found._
-
 ### pack_ciphertext
 
 | Fault | Correction test | Ineffective test |
@@ -874,7 +870,9 @@ _No result files found._
 
 ### pqcrystals_kyber768_ref_poly_cbd_eta2
 
-_No result files found._
+| Fault | Correction test | Ineffective test |
+|---|---|---|
+| `pqcrystals_kyber768_ref_poly_cbd_eta2_fnSkip_cbd2_line0` | ✅ | ✅ |
 
 ### pqcrystals_kyber768_ref_poly_compress
 
@@ -932,11 +930,11 @@ _No result files found._
 | `pqcrystals_kyber768_ref_poly_tomsg_line16_opB` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line16_undef` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line16_zero` | — | — |
-| `pqcrystals_kyber768_ref_poly_tomsg_line18_opA` | ✅ | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line18_opA` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line18_opB` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line18_undef` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line18_zero` | — | — |
-| `pqcrystals_kyber768_ref_poly_tomsg_line19_opA` | ✅ | — |
+| `pqcrystals_kyber768_ref_poly_tomsg_line19_opA` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line19_opB` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line19_undef` | — | — |
 | `pqcrystals_kyber768_ref_poly_tomsg_line19_zero` | — | — |
@@ -1081,6 +1079,6 @@ _No result files found._
 
 ## Summary
 
-- Fault folders scanned: **400**
-- Correction-test detections: **159**
-- Ineffective-test detections: **144**
+- Fault folders scanned: **401**
+- Correction-test detections: **158**
+- Ineffective-test detections: **145**

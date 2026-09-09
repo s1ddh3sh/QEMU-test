@@ -52,7 +52,7 @@ SECRET_BUF="$1"; shift
 SECRET_POS=0
 FIXED_SCALARS=""
 SEED=0
-FIELD_MOD=256
+FIELD_MOD=3329
 KYBER_K=3
 
 while [[ $# -gt 0 ]]; do

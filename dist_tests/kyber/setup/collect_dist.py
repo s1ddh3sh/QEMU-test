@@ -254,7 +254,7 @@ def main():
     ap.add_argument(
         "--field-mod",
         type=int,
-        default=256,
+        default=3329,
         help=(
             "number of values to sweep the secret element through. "
             "For Kyber int16_t polynomial coefficients in R_q, use "
