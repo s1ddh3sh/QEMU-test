@@ -116,11 +116,11 @@ DIST_PAIRED_DIR="${OUT_DIR}/${FAULTY_STEM}/dist_paired"
 mkdir -p "$OUT_DIR"
 
 # if [[ ! -f "$ACTIVE_LENGTHS" || "$RECALIBRATE" == "1" ]]; then
-    echo "=== [1/2] calibrate: ${FUNC_NAME} ==="
-    python3 "${SETUP_DIR}/calibrate.py" \
-        --witness "$WITNESS" --elf "$CORRECT_ELF" \
-        --field-mod "$FIELD_MOD" --machine "$MACHINE" \
-        --fixed-scalars "$FIXED_SCALARS"
+    # echo "=== [1/2] calibrate: ${FUNC_NAME} ==="
+    # python3 "${SETUP_DIR}/calibrate.py" \
+    #     --witness "$WITNESS" --elf "$CORRECT_ELF" \
+    #     --field-mod "$FIELD_MOD" --machine "$MACHINE" \
+    #     --fixed-scalars "$FIXED_SCALARS"
 # else
     # echo "=== [1/2] calibrate: skipped (${ACTIVE_LENGTHS} exists; pass --recalibrate to force) ==="
 # fi

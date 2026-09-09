@@ -108,12 +108,12 @@ buffer:
                               override (scalars are always position 0)
     GDB_DRIVER_OVERRIDE_VAL   the value to force at that position
 
-    NOTE (Dilithium): the override is a BYTE-level override, and a
-    Dilithium coefficient spans FOUR bytes. Sweeping "the secret" at
-    byte position 4*i touches only the low byte of coefficient i, which
-    is the right granularity for a byte-sweep fault analysis but is NOT
-    the same as sweeping a whole coefficient's value. Choose
-    --secret-pos accordingly (4*i for coefficient i's low byte).
+    NOTE (Dilithium): the override is normally a BYTE-level override, but
+    for a coefficient-shaped target buffer the whole int32_t coefficient
+    containing override_pos is first zeroed, and then override_pos is
+    overwritten with GDB_DRIVER_OVERRIDE_VAL. Thus sv=0 deterministically
+    represents coefficient == 0. For non-coefficient/byte-string buffers,
+    only the selected byte is changed.
 
 Witness layout entries support two extra optional keys, on top of the
 usual "role"/"length"/"type"/"anchor"/"init_value":
@@ -715,8 +715,10 @@ def run_collect():
     # [0, field_mod) fill otherwise.
     #
     # Override applies to a single byte position within the buffer, if
-    # requested and if this is the named override buffer. Remember a
-    # coefficient is 4 bytes: position 4*i is coefficient i's low byte.
+    # requested and if this is the named override buffer. For a
+    # coefficient-shaped buffer, zero the entire 4-byte int32_t coefficient
+    # containing that position before writing the swept byte. This makes
+    # override_val == 0 a deterministic coefficient-zero sweep value.
     # -----------------------------------------------------------------
     ptr_addr, ptr_names = resolve_pointer_addrs(func, layout)
 
@@ -729,11 +731,31 @@ def run_collect():
 
         fill_len = active_lengths.get(name, spec["length"])
         vals = sample_for_distribution(spec.get("distribution"), fill_len, rng, field_mod)
-        write_bytes(ptr_addr[name], vals)
 
         if name == override_buf and 0 <= override_pos < len(vals):
+            dist = spec.get("distribution")
+            entry = _lookup_distribution(dist) if dist else None
+            is_coeff_shaped = entry is not None and entry[0] != "bytes"
+
+            if is_coeff_shaped:
+                # A Dilithium coefficient is an int32_t (4 bytes). The
+                # background sample has already filled the whole buffer.
+                # For a coefficient-shaped target, zero the ENTIRE
+                # coefficient containing override_pos before writing the
+                # swept byte. This makes sv=0 mean coefficient == 0,
+                # rather than merely setting its low byte to zero while
+                # retaining sampled/sign-extended upper bytes.
+                coeff_base = (override_pos // COEFF_BYTES) * COEFF_BYTES
+                vals[coeff_base:coeff_base + COEFF_BYTES] = [0] * COEFF_BYTES
+
             vals[override_pos] = override_val
-            write_bytes(ptr_addr[name] + override_pos, [override_val])
+
+        # Write the complete post-override buffer so the recorded input and
+        # target memory are identical. In particular, for coefficient-shaped
+        # buffers the other three bytes of the swept coefficient are now
+        # deterministic zeroes rather than whatever the background sample
+        # happened to contain.
+        write_bytes(ptr_addr[name], vals)
 
         # also_input buffers are recorded under a distinct "<name>_pre"
         # key so they never collide with the genuine post-call value
