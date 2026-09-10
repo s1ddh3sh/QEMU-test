@@ -177,8 +177,18 @@ def _parse_array_type(type_text: str):
     return count, rest
 
 
-def extract_allocas(ll_text: str) -> Dict[str, int]:
-    """{var_name: raw alloca total byte size}, in first-appearance order.
+def extract_allocas(ll_text: str) -> Tuple[Dict[str, int], set]:
+    """Returns (sizes, scalar_ptr_names):
+
+      sizes: {var_name: raw alloca total byte size}, in first-appearance
+        order.
+      scalar_ptr_names: the subset of `sizes` keys that came from
+        SCALAR_ALLOCA_RE rather than the array form -- i.e. a POINTER
+        argument whose traced root was itself a scalar local (e.g. a
+        `size_t *siglen` out-parameter), not a byte buffer. derive_layout
+        uses this to mark such an argument "type": "scalar_ptr" plus an
+        "init_value" pulled from the sample, rather than treating it as
+        an ordinary variable-content pointer buffer.
 
     Handles arbitrarily nested array types (e.g. a Dilithium polyvec's
     `[K x [256 x i32]]` or a matrix's `[K x [L x [256 x i32]]]`) via the
@@ -215,14 +225,16 @@ def extract_allocas(ll_text: str) -> Dict[str, int]:
         elem_size = TYPE_SIZES.get(base_type, 1)
         allocas[var_name] = count * elem_size
 
+    scalar_ptr_names = set()
     for m in SCALAR_ALLOCA_RE.finditer(ll_text):
         var_name = m.group("name")
         if var_name in allocas:
             continue  # already captured by the array form above
         base_type = m.group("type")
         allocas[var_name] = TYPE_SIZES.get(base_type, 4)
+        scalar_ptr_names.add(var_name)
 
-    return allocas
+    return allocas, scalar_ptr_names
 
 
 # Keys that are metadata on a function_inputs sample, never real call
@@ -338,6 +350,52 @@ def find_global_init(ll_text: str, anchor_name: str) -> int:
     return int(m.group(1))
 
 
+def _resolve_scalar_init_value(key: str, sample: Dict[str, object],
+                                ll_text: str, anchor_name: str) -> int:
+    """
+    A scalar argument's init_value SHOULD come from the LLVM global's
+    own baked-in initializer (find_global_init) -- that's literally
+    what gets loaded at runtime. In practice that initializer can be
+    WRONG: the harness generator computes it from a POSITIONAL index
+    into the testcase's own key/value pairs (see createDynamicDriverFunction
+    in the C++ IR-mutation tool), and if that indexing doesn't line up
+    with the JSON's actual key order -- e.g. because the JSON library
+    used there doesn't preserve insertion order -- the wrong sample
+    value gets baked in for a given argument, silently.
+
+    The function_inputs SAMPLE itself is unambiguous: sample[key] is,
+    by construction, the value recorded for exactly this argument at
+    trace time, with no positional-indexing step to get wrong. Prefer
+    it. Only fall back to the LLVM global if the sample doesn't have a
+    plain-number value under this key (defensive; shouldn't happen for
+    a genuine scalar argument), and print a loud, specific warning
+    whenever the two sources disagree -- that disagreement is exactly
+    the symptom of the harness-generator bug described above, and
+    silently picking one value without saying so would hide it again
+    the next time it happens for some other argument.
+    """
+    global_val = find_global_init(ll_text, anchor_name)
+    sample_val = sample.get(key)
+    if isinstance(sample_val, bool) or not isinstance(sample_val, int):
+        # Not a plain integer in the sample (missing, or unexpectedly a
+        # list/string) -- fall back to the LLVM global silently, since
+        # there's nothing more authoritative to compare against.
+        return global_val
+    if sample_val != global_val:
+        print(
+            f"[!] '{key}': the LLVM harness baked init_value={global_val} "
+            f"into its anchor global, but the function_inputs sample "
+            f"recorded {sample_val} for this argument. Using the "
+            f"SAMPLE's value ({sample_val}) -- it's the direct record of "
+            f"what was actually traced, whereas the baked global comes "
+            f"from a positional lookup in the harness generator that can "
+            f"silently misalign with the JSON's actual key order. If "
+            f"you rely on the .ll file's baked constant elsewhere, this "
+            f"mismatch is worth tracking down at the source."
+        )
+    return sample_val
+
+
 def load_first_sample(json_path: Path) -> Dict[str, object]:
     with open(json_path) as f:
         for line in f:
@@ -368,7 +426,7 @@ def split_sample_keys(sample: Dict[str, object]) -> Tuple[List[str], set]:
 
 
 def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict[str, dict]:
-    allocas = extract_allocas(ll_text)
+    allocas, scalar_ptr_names = extract_allocas(ll_text)
     call_args = find_fut_call(find_main_body(ll_text), fn_name)
 
     if "output" not in sample:
@@ -414,6 +472,36 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
             layout[key] = {"role": "input", "length": allocas[var_name]}
             ptr_keys.add(key)
 
+            if var_name in scalar_ptr_names:
+                # A POINTER to a single scalar (e.g. a size_t*
+                # out-length parameter), not a byte buffer -- see
+                # extract_allocas()'s scalar_ptr_names docstring. Kept
+                # as an ordinary pointer for role/length purposes (it's
+                # still resolved via the real runtime pointer argument
+                # in resolve_pointer_addrs, exactly like any other
+                # buffer, and driver_dist.py's `!= "scalar"` filter
+                # still routes it through that path unchanged) --
+                # marked with a DISTINCT "type": "scalar_ptr" (not the
+                # anchor-based "scalar" that register arguments use
+                # below) plus "init_value" purely as documentation of
+                # its observed fixed value. Deliberately NOT "scalar":
+                # that type means "register-backed, resolved via a
+                # compile-time anchor global" throughout this codebase,
+                # and this argument has no such anchor -- its address
+                # only exists at runtime via the real pointer argument.
+                sample_val = sample.get(key)
+                if isinstance(sample_val, bool) or not isinstance(sample_val, int):
+                    print(
+                        f"[!] '{key}' is a scalar-shaped pointer "
+                        f"argument, but its sample value ({sample_val!r}) "
+                        f"isn't a plain integer; leaving it as a plain "
+                        f"pointer buffer without a 'type'/'init_value' "
+                        f"hint."
+                    )
+                else:
+                    layout[key]["type"] = "scalar_ptr"
+                    layout[key]["init_value"] = sample_val
+
         elif kind == "reg":
             anchor_name, byte_width = find_arg_anchor(ll_text, val)
             layout[key] = {
@@ -421,7 +509,8 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
                 "type": "scalar",
                 "anchor": anchor_name,
                 "length": byte_width,
-                "init_value": find_global_init(ll_text, anchor_name),
+                "init_value": _resolve_scalar_init_value(
+                    key, sample, ll_text, anchor_name),
             }
 
         elif kind == "imm":

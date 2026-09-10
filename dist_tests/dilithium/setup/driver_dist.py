@@ -546,12 +546,16 @@ def resolve_pointer_addrs(func, layout):
     if not ptr_names:
         return {}, []
 
-    fn_bp = gdb.Breakpoint(f"*{func}", internal=False)
+    fn_bp = gdb.Breakpoint(func, internal=False)
     gdb.execute("continue", to_string=True)
 
     frame = gdb.selected_frame()
     if frame.name() != func:
         raise RuntimeError(f"stopped in '{frame.name()}', expected '{func}'")
+    try:
+        print(f"[debug] live frame arg prelen = {frame.read_var('prelen')}")
+    except gdb.error as e:
+        print(f"[debug] could not read live prelen: {e}")
     fn_bp.delete()
 
     ptr_args = get_pointer_args(frame)
@@ -591,33 +595,21 @@ def run_probe():
     return_addr = break_at_main_true_entry()
     ret_bp = gdb.Breakpoint(f"*0x{return_addr:x}", internal=False)
 
-    # Resolve every address FIRST -- before any writes -- so addr_of is
-    # fully populated before the randomization loop below touches it.
+    rng = random.Random(probe_seed)
+    co_rng = random.Random(co_seed)
+
+    # Resolve scalar addresses AND write their values BEFORE continuing
+    # anywhere -- these are loaded by value inside main(), before the
+    # call, so they must land before resolve_pointer_addrs()'s `continue`
+    # runs execution past those loads.
     scalar_addr = {}
     for name, spec in layout.items():
         if spec.get("type") != "scalar":
             continue
-        scalar_addr[name] = int(gdb.parse_and_eval(f"&{spec['anchor']}"))
-
-    ptr_addr, ptr_names = resolve_pointer_addrs(func, layout)
-    addr_of = {**scalar_addr, **ptr_addr}
-
-    # The probed buffer's prefix uses probe_seed (varies per repeat so
-    # calibrate.py's n_repeats can guard against unlucky coincidences);
-    # every OTHER pointer-buffer input uses co_seed, held fixed across
-    # the whole calibration of one buffer -- leaving co-buffers at zero
-    # would mask multiplicative dependencies (e.g. a poly product: an
-    # all-zero co-buffer forces the product to zero regardless of the
-    # buffer being probed, making it appear insensitive up to its full
-    # declared length). Always a plain uniform byte fill, regardless of
-    # any declared "distribution" -- see module docstring.
-    rng = random.Random(probe_seed)
-    co_rng = random.Random(co_seed)
-
-    for name, spec in layout.items():
-        if spec.get("type") != "scalar" or spec.get("role") != "input":
+        addr = int(gdb.parse_and_eval(f"&{spec['anchor']}"))
+        scalar_addr[name] = addr
+        if spec.get("role") != "input":
             continue
-        addr = scalar_addr[name]
         if name in fixed_scalars:
             val = spec.get("init_value", 0)
         elif name == probe_buf:
@@ -626,6 +618,11 @@ def run_probe():
             val = co_rng.randrange(field_mod)
         write_bytes(addr, [val])
 
+    # safe to continue to the FUT entry -- scalars are already
+    # committed to memory before any load instruction consumes them.
+    ptr_addr, ptr_names = resolve_pointer_addrs(func, layout)
+    addr_of = {**scalar_addr, **ptr_addr}
+
     for name in ptr_names:
         spec = layout[name]
         also_in = spec.get("also_input")
@@ -633,7 +630,11 @@ def run_probe():
         if not is_input:
             continue
         addr = ptr_addr[name]
-        if name == probe_buf:
+        if spec.get("type") == "scalar_ptr":
+            width = spec.get("length", 4)
+            init = spec.get("init_value", 0) & ((1 << (8 * width)) - 1)
+            vals = [(init >> (8 * i)) & 0xFF for i in range(width)]
+        elif name == probe_buf:
             vals = random_fill(rng, field_mod, probe_len)
         else:
             vals = random_fill(co_rng, field_mod, spec["length"])
@@ -759,7 +760,15 @@ def run_collect():
         is_input = spec.get("role") == "input" or also_in
         if not is_input:
             continue
-
+        if spec.get("type") == "scalar_ptr":
+            width = spec.get("length", 4)
+            init = spec.get("init_value", 0) & ((1 << (8 * width)) - 1)
+            vals = [(init >> (8 * i)) & 0xFF for i in range(width)]
+            if name == override_buf and 0 <= override_pos < len(vals):
+                vals[override_pos] = override_val
+            write_bytes(ptr_addr[name], vals)
+            written_inputs[name] = vals
+            continue
         fill_len = active_lengths.get(name, spec["length"])
         vals = sample_for_distribution(spec.get("distribution"), fill_len, rng, field_mod)
 

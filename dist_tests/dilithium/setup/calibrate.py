@@ -117,6 +117,10 @@ def run_probe(elf_path, witness_path, func, field_mod, buf_name,
             ["gdb-multiarch", "-nx", "-batch", "-x", _DRIVER_SCRIPT],
             env=env, capture_output=True, text=True, timeout=60,
         )
+        # if result.stdout:
+        #     print(result.stdout)
+        # if result.stderr:
+        #     print(result.stderr)
     finally:
         qemu_proc.terminate()
         try:
@@ -305,6 +309,10 @@ def main():
         if s.get("role") != "input" and not s.get("also_input"):
             continue
         full_len = s["length"]
+        if s.get("type") == "scalar_ptr":
+            active_lengths[name] = full_len
+            print(f"[i] {name}: scalar_ptr with baked init_value, skipping calibration")
+            continue
         if full_len <= SKIP_CALIBRATION_BELOW:
             active_lengths[name] = full_len
             print(f"[i] {name}: length {full_len} <= threshold, skipping calibration")
@@ -313,7 +321,7 @@ def main():
         try:
             active_len = calibrate_buffer(args.elf, args.witness, func,
                                            args.field_mod, name, full_len,
-                                           args.machine,
+                                           args.machine,1,
                                            fixed_scalars=args.fixed_scalars,
                                            max_probe_len=args.max_probe_len)
         except CalibrationFailed as e:

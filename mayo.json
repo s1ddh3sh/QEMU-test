@@ -73,6 +73,9 @@
     },
     "sub_f":{
         "secret-buf":"b"
+    },
+    "compute_rhs":{
+        "secret-buf":"vPv"
     }
     
 }
