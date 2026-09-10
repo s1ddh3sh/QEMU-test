@@ -20,6 +20,16 @@ Dilithium-specific vs the Kyber version:
     DILITHIUM_MODE == 2, so in practice every sample this script reads
     was captured at mode 2 (K = L = 4, ETA = 2, GAMMA1 = 2^17,
     GAMMA2 = (Q-1)/88). Layout extraction itself is mode-agnostic.
+  - Not every harness-created local is an ARRAY alloca: an
+    out-parameter like a `size_t *siglen` traces back to a plain
+    scalar local in the original code (`size_t siglen;`), so
+    createDynamicDriverFunction faithfully reproduces a SCALAR
+    `alloca i32` (or i64/i16/i8) for it, not `alloca [N x i8]`. See
+    SCALAR_ALLOCA_RE / extract_allocas() below -- missing this form
+    entirely used to make such a variable silently absent from the
+    alloca table, surfacing as "Call argument %X has no matching
+    alloca with !llvmbmc.var in main()" even though the alloca is
+    right there, correctly tagged.
 
 Sample format (as written by trace.h's PRINT_ARGS):
 
@@ -90,6 +100,22 @@ ALLOCA_RE = re.compile(
 # i32]]]` -- which the recursive walker handles for free.
 ALLOCA_START_RE = re.compile(r'%(?P<name>\w+)\s*=\s*alloca\s*\[')
 
+# Matches: %Name = alloca <scalarType>, ... !llvmbmc.var !NNN -- the SAME
+# harness-tagging convention as ALLOCA_START_RE's array form, but for a
+# pointer argument whose traced root was itself a SCALAR local (not a
+# byte array). This is exactly the `size_t *siglen`-style out-parameter
+# case described in the module docstring: the traced root allocated a
+# plain `i32` (or i64/i16/i8) in the original code, so
+# createDynamicDriverFunction reproduces `alloca i32` verbatim rather
+# than wrapping it in an array. Without also matching this form,
+# extract_allocas() drops such a variable from its table ENTIRELY (not
+# merely with the wrong size -- absent), which is what surfaces
+# downstream as a spurious "no matching alloca" error in derive_layout()
+# even though the alloca is present and correctly tagged.
+SCALAR_ALLOCA_RE = re.compile(
+    r'%(?P<name>\w+)\s*=\s*alloca\s+(?P<type>i\d+|ptr)\s*(?:,[^\n]*)?!llvmbmc\.var'
+)
+
 # Dilithium symbol names are namespaced per DILITHIUM_NAMESPACE(s) in
 # params.h/config.h (pqcrystals_dilithium2_ref_##s / dilithium3 /
 # dilithium5) or, for the fips202 primitives,
@@ -155,8 +181,12 @@ def extract_allocas(ll_text: str) -> Dict[str, int]:
     """{var_name: raw alloca total byte size}, in first-appearance order.
 
     Handles arbitrarily nested array types (e.g. a Dilithium polyvec's
-    `[K x [256 x i32]]` or a matrix's `[K x [L x [256 x i32]]]`),
-    unlike a single flat regex.
+    `[K x [256 x i32]]` or a matrix's `[K x [L x [256 x i32]]]`) via the
+    ALLOCA_START_RE bracket-walker, AND plain scalar allocas (e.g.
+    `alloca i32` for a `size_t *` out-parameter's traced-back root) via
+    SCALAR_ALLOCA_RE -- see that regex's comment for why both forms are
+    required; a single-flat-regex or array-only approach silently
+    drops the scalar case entirely rather than merely mis-sizing it.
     """
     allocas = {}
     for m in ALLOCA_START_RE.finditer(ll_text):
@@ -184,6 +214,14 @@ def extract_allocas(ll_text: str) -> Dict[str, int]:
 
         elem_size = TYPE_SIZES.get(base_type, 1)
         allocas[var_name] = count * elem_size
+
+    for m in SCALAR_ALLOCA_RE.finditer(ll_text):
+        var_name = m.group("name")
+        if var_name in allocas:
+            continue  # already captured by the array form above
+        base_type = m.group("type")
+        allocas[var_name] = TYPE_SIZES.get(base_type, 4)
+
     return allocas
 
 
