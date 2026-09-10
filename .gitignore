@@ -1,3 +1,4 @@
 obj
 build
 tests*
+__pycache__

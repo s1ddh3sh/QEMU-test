@@ -108,12 +108,20 @@ buffer:
                               override (scalars are always position 0)
     GDB_DRIVER_OVERRIDE_VAL   the value to force at that position
 
-    NOTE (Dilithium): the override is normally a BYTE-level override, but
-    for a coefficient-shaped target buffer the whole int32_t coefficient
-    containing override_pos is first zeroed, and then override_pos is
-    overwritten with GDB_DRIVER_OVERRIDE_VAL. Thus sv=0 deterministically
-    represents coefficient == 0. For non-coefficient/byte-string buffers,
-    only the selected byte is changed.
+    NOTE (Dilithium): for a COEFFICIENT-SHAPED target buffer (see
+    is_coeff_shaped below), the WHOLE 4-byte int32_t coefficient
+    containing override_pos is overwritten with the two's-complement
+    little-endian encoding of GDB_DRIVER_OVERRIDE_VAL -- not just the
+    single byte at override_pos. This is what makes sv=0..field_mod-1
+    sweep genuine COEFFICIENT VALUES rather than only that coefficient's
+    low byte: writing override_val into one byte alone (after zeroing
+    the other three) can only ever represent values in [0, 255], no
+    matter how large --field-mod is, since the un-written bytes stay at
+    zero regardless of override_val. Encoding the full word from
+    override_val instead lets a sweep with --field-mod 8380417
+    (Dilithium Q) genuinely cover the coefficient's entire domain. For a
+    non-coefficient (byte-string) buffer, only the single byte at
+    override_pos is changed, same as a plain byte-level override.
 
 Witness layout entries support two extra optional keys, on top of the
 usual "role"/"length"/"type"/"anchor"/"init_value":
@@ -337,6 +345,8 @@ _DISTRIBUTION_TABLE = {
         ("poly_signed", GAMMA1 - BETA),
     "coefficients bounded by gamma1 - beta": ("poly_signed", GAMMA1 - BETA),
     "coefficients bounded by gamma2 - beta": ("poly_signed", GAMMA2 - BETA),
+    "c*s1, coefficients bounded by beta": ("poly_signed", BETA),
+    "coefficients bounded by beta": ("poly_signed", BETA),
     "high bits w1, coefficients in [0, (q-1)/(2*gamma2))": ("w1", None),
     "w1 high bits": ("w1", None),
     "low bits w0, coefficients bounded by gamma2": ("poly_signed", GAMMA2),
@@ -443,6 +453,16 @@ def sample_for_distribution(dist_name, length, rng, field_mod):
     elif len(out) > length:
         out = out[:length]
     return out
+
+
+def _is_coeff_shaped(dist_name):
+    """True if dist_name is a poly/coefficient-shaped distribution
+    (int32_t coefficients), False for a byte-string one, None if
+    dist_name is falsy/unrecognized (treated as byte-oriented)."""
+    if not dist_name:
+        return False
+    entry = _lookup_distribution(dist_name)
+    return entry is not None and entry[0] != "bytes"
 
 
 # ---------------------------------------------------------------------------
@@ -675,8 +695,10 @@ def run_collect():
     #
     # Override applies here too, NOT just to pointer buffers -- a
     # scalar-anchor-backed argument targeted by a paired sweep would
-    # otherwise silently ignore the override. It overrides the LOW byte
-    # (position 0) of a multi-byte scalar.
+    # otherwise silently ignore the override. Scalars are never treated
+    # as coefficient-shaped (a coefficient lives in a poly/polyvec
+    # buffer, not a bare scalar anchor), so this remains a plain
+    # single-byte override of position 0.
     # -----------------------------------------------------------------
     scalar_addr = {}
     for name, spec in layout.items():
@@ -714,11 +736,20 @@ def run_collect():
     # a byte string, ...), falling back to a plain uniform
     # [0, field_mod) fill otherwise.
     #
-    # Override applies to a single byte position within the buffer, if
-    # requested and if this is the named override buffer. For a
-    # coefficient-shaped buffer, zero the entire 4-byte int32_t coefficient
-    # containing that position before writing the swept byte. This makes
-    # override_val == 0 a deterministic coefficient-zero sweep value.
+    # Override: for a COEFFICIENT-SHAPED target buffer, the WHOLE
+    # 4-byte int32_t coefficient containing override_pos is overwritten
+    # with override_val's own two's-complement little-endian encoding
+    # -- NOT just the single byte at override_pos. This is the critical
+    # difference from a plain byte-level override (which this driver
+    # used to do, and which byte-string buffers still get): writing
+    # override_val into ONE byte of an otherwise-zeroed coefficient can
+    # only ever produce coefficient values in [0, 255], no matter how
+    # large --field-mod is asked to sweep, since the other 3 bytes never
+    # change. Writing the FULL word means sv=0..field_mod-1 sweeps
+    # genuine coefficient values across that whole range (e.g.
+    # --field-mod 8380417 for Dilithium's Q covers the coefficient's
+    # entire domain). For a non-coefficient (byte-string) buffer, only
+    # the single byte at override_pos is changed, unchanged from before.
     # -----------------------------------------------------------------
     ptr_addr, ptr_names = resolve_pointer_addrs(func, layout)
 
@@ -733,28 +764,12 @@ def run_collect():
         vals = sample_for_distribution(spec.get("distribution"), fill_len, rng, field_mod)
 
         if name == override_buf and 0 <= override_pos < len(vals):
-            dist = spec.get("distribution")
-            entry = _lookup_distribution(dist) if dist else None
-            is_coeff_shaped = entry is not None and entry[0] != "bytes"
-
-            if is_coeff_shaped:
-                # A Dilithium coefficient is an int32_t (4 bytes). The
-                # background sample has already filled the whole buffer.
-                # For a coefficient-shaped target, zero the ENTIRE
-                # coefficient containing override_pos before writing the
-                # swept byte. This makes sv=0 mean coefficient == 0,
-                # rather than merely setting its low byte to zero while
-                # retaining sampled/sign-extended upper bytes.
+            if _is_coeff_shaped(spec.get("distribution")):
                 coeff_base = (override_pos // COEFF_BYTES) * COEFF_BYTES
-                vals[coeff_base:coeff_base + COEFF_BYTES] = [0] * COEFF_BYTES
+                vals[coeff_base:coeff_base + COEFF_BYTES] = _int32_le(override_val)
+            else:
+                vals[override_pos] = override_val
 
-            vals[override_pos] = override_val
-
-        # Write the complete post-override buffer so the recorded input and
-        # target memory are identical. In particular, for coefficient-shaped
-        # buffers the other three bytes of the swept coefficient are now
-        # deterministic zeroes rather than whatever the background sample
-        # happened to contain.
         write_bytes(ptr_addr[name], vals)
 
         # also_input buffers are recorded under a distinct "<name>_pre"

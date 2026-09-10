@@ -15,6 +15,15 @@ sweep coefficient i's low byte, pass --secret-pos $((4*i)). Sweeping an
 arbitrary position is still meaningful (it's a byte-granular fault
 analysis), but position i is NOT coefficient i.
 
+For a COEFFICIENT-SHAPED secret buffer (see driver_dist.py's
+_lookup_distribution/is_coeff_shaped check), the override writes the
+FULL 4-byte little-endian encoding of secret_val into the coefficient
+containing secret_pos -- not just secret_pos's own byte -- so sv=0..
+field_mod-1 sweeps genuine coefficient VALUES 0..field_mod-1, letting
+--field-mod 8380417 (Dilithium Q) cover the coefficient's entire
+domain. For a non-coefficient (byte-string) secret buffer, only the
+single byte at secret_pos is overridden, same as before.
+
 Cost: field_mod * 2 QEMU boots total (e.g. 256 * 2 = 512 for a full-byte
 sweep) -- enough to look up every (s1, s2) pair's raw output bytes, since
 all pairs share the same field_mod already-computed per-value results.
@@ -29,7 +38,7 @@ Usage:
         --witness tests_dilithium/pqcrystals_dilithium2_ref_poly_ntt/qemu_witness.json \
         --active-lengths tests_dilithium/pqcrystals_dilithium2_ref_poly_ntt/active_lengths.json \
         --correct-elf correct.elf --faulty-elf faulty.elf \
-        --func pqcrystals_dilithium2_ref_poly_ntt --field-mod 256 \
+        --func pqcrystals_dilithium2_ref_poly_ntt --field-mod 8380417 \
         --dilithium-mode 2 --secret-buf a --secret-pos 0 \
         --outdir tests_dilithium/pqcrystals_dilithium2_ref_poly_ntt/dist_paired
 """
@@ -126,7 +135,9 @@ def main():
         help="number of values to sweep the secret position through, "
              "and the fallback uniform-byte range for any input with no "
              "declared 'distribution' (default: %(default)s, i.e. a "
-             "full byte sweep/fill)",
+             "full byte sweep/fill). Pass 8380417 (Dilithium Q) to sweep "
+             "a coefficient-shaped secret buffer's ENTIRE domain -- see "
+             "module docstring on the full-word override.",
     )
     ap.add_argument(
         "--dilithium-mode", type=int, default=2, choices=(2, 3, 5),
@@ -144,7 +155,12 @@ def main():
     ap.add_argument("--secret-pos", type=int, required=True,
                      help="BYTE position within secret-buf to sweep. "
                           "Coefficients are int32_t, so coefficient i's "
-                          "low byte is at position 4*i.")
+                          "low byte is at position 4*i. For a "
+                          "coefficient-shaped buffer, the WHOLE "
+                          "coefficient containing this byte gets "
+                          "overridden (see driver_dist.py), so any "
+                          "position within it (typically 4*i) selects "
+                          "coefficient i.")
     ap.add_argument("--seed", type=int, default=0,
                      help="single shared background seed p for every run")
     args = ap.parse_args()
@@ -157,10 +173,11 @@ def main():
           f"{args.dilithium_mode}")
     if args.secret_pos % 4 != 0:
         print(f"[i] note: --secret-pos {args.secret_pos} is not a multiple "
-              f"of 4, so it targets a HIGH byte of coefficient "
-              f"{args.secret_pos // 4} rather than a coefficient's low "
-              f"byte. Intentional for a byte-granular fault sweep; "
-              f"surprising if you meant coefficient {args.secret_pos}.")
+              f"of 4; for a coefficient-shaped buffer this still selects "
+              f"coefficient {args.secret_pos // 4} (the whole coefficient "
+              f"is overridden regardless of which of its 4 bytes "
+              f"secret_pos points at), but for a byte-string buffer it "
+              f"targets a specific byte with no coefficient meaning.")
     print(f"[i] total executions: {args.field_mod} * 2 = {args.field_mod * 2}")
 
     failures = []

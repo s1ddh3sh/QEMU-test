@@ -1,86 +1,84 @@
 #!/usr/bin/env bash
 #
-# run_early_stop.sh — run dist_and_test.py for one Kyber function against
-# EVERY faulty ELF found alongside the correct one, taking only the
-# function name and the secret buffer to sweep. The correct ELF, the set
-# of faulty ELFs, the output buffer, word size, diff mode, field-mod, and
-# module rank are all auto-derived; override flags are available for the
-# cases where an auto-pick is wrong.
+# run_early_stop.sh — run dist_and_test.py for one Dilithium function
+# against EVERY faulty ELF found alongside the correct one, taking only
+# the function name and the secret buffer to sweep. The correct ELF, the
+# set of faulty ELFs, the output buffer, word size, diff mode, field-mod,
+# and Dilithium parameter set are all auto-derived; override flags are
+# available for the cases where an auto-pick is wrong.
 #
 # Usage:
 #   ./run_early_stop.sh <func_name> <secret_buf> \
-#       [--elf-dir DIR] [--secret-pos POS] [--secret-word-size 1|2] \
-#       [--field-mod N] [--out-buf NAME] [--out-word-size 1|2|4] \
+#       [--elf-dir DIR] [--secret-pos POS] [--field-mod N] \
+#       [--out-buf NAME] [--out-word-size 1|2|4] \
 #       [--diff-mode xor|mod-sub] [--modulus N] \
 #       [--test ineffective|correction|both] [--require any|all] \
-#       [--seed N] [--fixed-scalars name1,name2,...] [--kyber-k 2|3|4]
+#       [--seed N] [--fixed-scalars name1,name2,...] [--dilithium-mode 2|3|5]
 #
 # Example:
-#   ./run_early_stop.sh pqcrystals_kyber768_ref_poly_tomsg a
+#   ./run_early_stop.sh pqcrystals_dilithium2_ref_poly_add a
 #
 # NOTE: func_name is the function's full/mangled symbol name (e.g.
-# pqcrystals_kyber768_ref_poly_tomsg), matching both the tests_kyber/
+# pqcrystals_dilithium2_ref_poly_add), matching both the tests_dilithium/
 # <func_name> witness directory and (via rel_stem, same convention as
-# collect_dist.sh/run_pipeline.sh) each faulty ELF's dist_paired output
-# directory.
+# collect_dist.sh) each faulty ELF's dist_paired output directory.
 #
-# ELF discovery (same convention as run_pipeline.sh):
-#   --elf-dir DIR   defaults to build/tests_kyber/<func_name>.
+# ELF discovery (same convention as Kyber's run_pipeline.sh):
+#   --elf-dir DIR   defaults to build/tests_dilithium/<func_name>.
 #   correct ELF     ${ELF_DIR}/${func_name}.elf -- must exist.
 #   faulty ELFs     every OTHER *.elf found anywhere under ELF_DIR
-#                   (recursively -- faulty builds are not necessarily
-#                   immediate siblings of the correct ELF, e.g.
-#                   binOpFault/*_opA.elf), swept in turn.
+#                   (recursively), swept in turn.
 #
-# secret_buf is now a REQUIRED positional argument (like collect_dist.sh)
-# rather than auto-derived, since auto-picking "the first non-scalar
-# input buffer" can silently pick the wrong buffer for a function with
-# more than one candidate input.
+# secret_buf is a REQUIRED positional argument (like collect_dist.sh),
+# not auto-derived.
 #
-# What's still auto-derived and how (once, reused for every faulty ELF,
-# since these depend only on the function/witness, not on which fault is
+# What's auto-derived and how (once, reused for every faulty ELF, since
+# these depend only on the function/witness, not on which fault is
 # injected):
-# What's still auto-derived and how (once, reused for every faulty ELF,
-# since these depend only on the function/witness, not on which fault is
-# injected):
-#   --secret-pos   0 (byte/word offset within --secret-buf, per
-#                  --secret-word-size).
-#   --secret-word-size
-#                  2 if --secret-buf's distribution is R_q-shaped
-#                  (Kyber's int16_t poly.coeffs), so --secret-pos is
-#                  treated as a COEFFICIENT index and the override value
-#                  is written as a full signed int16_t rather than just
-#                  overwriting one byte of it; 1 (plain byte override)
-#                  otherwise. Independent of --out-word-size, since the
-#                  secret and output buffers can be shaped differently
-#                  (e.g. poly_tomsg's R_q-shaped 'a' input vs its
-#                  byte-string 'msg' output).
+#   --secret-pos   0 (byte position within --secret-buf). For a
+#                  coefficient-shaped secret buffer, driver_dist.py
+#                  overrides the WHOLE 4-byte coefficient containing
+#                  this position (see driver_dist.py's is_coeff_shaped
+#                  fix), so position 0 selects coefficient 0 regardless.
 #   --out-buf      first role:output entry in the witness layout.
 #   --active-len   OUT_BUF's own full declared length from the witness --
-#                  NOT the secret buffer's calibrated active length. The
-#                  point of this sweep is to scan the WHOLE output for a
-#                  divergent position, so it isn't bounded by how far the
-#                  secret buffer's sensitivity was calibrated to extend.
+#                  NOT the secret buffer's calibrated active length, so
+#                  the sweep scans the WHOLE output for a divergent
+#                  position.
 #   --out-word-size / --diff-mode
 #                  from OUT_BUF's witness entry: a scalar uses its own
-#                  declared byte width; an R_q-shaped "distribution" (see
-#                  driver_dist.py's _DISTRIBUTION_TABLE, which this list
-#                  must stay in sync with) is word-size 2 / mod-sub
-#                  (Kyber's int16_t coefficients); anything else is
-#                  word-size 1 / xor.
-#   --field-mod    3329 (KYBER_Q) if --secret-buf's distribution is
-#                  R_q-shaped (so the sweep covers the coefficient's full
-#                  domain, not just a byte's worth of it -- see the
-#                  field-mod=256-vs-3329 issue this exists to avoid);
+#                  declared byte width; a poly/coefficient-shaped
+#                  "distribution" (see driver_dist.py's
+#                  _DISTRIBUTION_TABLE, which the set below must stay in
+#                  sync with) is word-size 4 / mod-sub (Dilithium's
+#                  int32_t coefficients); anything else is word-size 1 /
+#                  xor.
+#   --field-mod    8380417 (Dilithium Q) if --secret-buf's distribution
+#                  is coefficient-shaped -- the driver's override now
+#                  writes the FULL 4-byte coefficient from the swept
+#                  value (see driver_dist.py), so this sweeps the
+#                  coefficient's ENTIRE domain, not just its low byte.
 #                  256 otherwise (byte-string secret buffers).
-#   --kyber-k      parsed from func_name's kyber512/768/1024 substring
-#                  (2/3/4 respectively), defaulting to 3 if absent --
-#                  only affects KYBER_ETA1 background sampling.
+#   --dilithium-mode
+#                  parsed from func_name's dilithium2/3/5 substring
+#                  (defaulting to 2, since trace.h only emits
+#                  PRINT_ARGS/witnesses under DILITHIUM_MODE == 2) --
+#                  only affects background sampling parameters
+#                  (K/L/ETA/TAU/GAMMA1/GAMMA2/OMEGA).
+#
+# WARNING: a full field-mod=8380417 sweep is field_mod*2 ~= 16.7 million
+# QEMU boots in the worst case (no hit ever found). Early stopping
+# usually terminates this in tens to low thousands of trials in
+# practice (see the Kyber poly_tomsg case this tooling was built
+# around, which stopped at sv=833 out of 3329) -- but a fault that is
+# GENUINELY undetectable by either test will run the full sweep. Expect
+# that to take a long time; consider capping --field-mod for an initial
+# pass if you want a faster (but less complete) first look.
 
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 <func_name> <secret_buf> [--elf-dir DIR] [--secret-pos POS] [--field-mod N] [--out-buf NAME] [--out-word-size 1|2|4] [--diff-mode xor|mod-sub] [--modulus N] [--test ineffective|correction|both] [--require any|all] [--seed N] [--fixed-scalars n1,n2,...] [--kyber-k 2|3|4]" >&2
+    echo "Usage: $0 <func_name> <secret_buf> [--elf-dir DIR] [--secret-pos POS] [--field-mod N] [--out-buf NAME] [--out-word-size 1|2|4] [--diff-mode xor|mod-sub] [--modulus N] [--test ineffective|correction|both] [--require any|all] [--seed N] [--fixed-scalars n1,n2,...] [--dilithium-mode 2|3|5]" >&2
     exit 1
 fi
 
@@ -89,23 +87,21 @@ SECRET_BUF="$1"; shift
 
 ELF_DIR_OVERRIDE=""
 SECRET_POS=0
-SECRET_WORD_SIZE_OVERRIDE=""
 FIELD_MOD_OVERRIDE=""
 OUT_BUF_OVERRIDE=""
 WORD_SIZE_OVERRIDE=""
 DIFF_MODE_OVERRIDE=""
-MODULUS=3329
+MODULUS=8380417
 TEST=both
 REQUIRE=all
 SEED=0
 FIXED_SCALARS=""
-KYBER_K_OVERRIDE=""
+DILITHIUM_MODE_OVERRIDE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --elf-dir) ELF_DIR_OVERRIDE="$2"; shift 2 ;;
         --secret-pos) SECRET_POS="$2"; shift 2 ;;
-        --secret-word-size) SECRET_WORD_SIZE_OVERRIDE="$2"; shift 2 ;;
         --field-mod) FIELD_MOD_OVERRIDE="$2"; shift 2 ;;
         --out-buf) OUT_BUF_OVERRIDE="$2"; shift 2 ;;
         --out-word-size) WORD_SIZE_OVERRIDE="$2"; shift 2 ;;
@@ -115,7 +111,7 @@ while [[ $# -gt 0 ]]; do
         --require) REQUIRE="$2"; shift 2 ;;
         --seed) SEED="$2"; shift 2 ;;
         --fixed-scalars) FIXED_SCALARS="$2"; shift 2 ;;
-        --kyber-k) KYBER_K_OVERRIDE="$2"; shift 2 ;;
+        --dilithium-mode) DILITHIUM_MODE_OVERRIDE="$2"; shift 2 ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
@@ -127,12 +123,12 @@ done
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SETUP_DIR="dist_tests/kyber/setup"
+SETUP_DIR="dist_tests/dilithium/setup"
 MACHINE=mps2-an386
-OUT_DIR="tests_kyber/${FUNC_NAME}"
+OUT_DIR="tests_dilithium/${FUNC_NAME}"
 WITNESS="${OUT_DIR}/qemu_witness.json"
 ACTIVE_LENGTHS="${OUT_DIR}/active_lengths.json"
-ELF_DIR="${ELF_DIR_OVERRIDE:-build/tests_kyber/${FUNC_NAME}}"
+ELF_DIR="${ELF_DIR_OVERRIDE:-build/tests_dilithium/${FUNC_NAME}}"
 CORRECT_ELF="${ELF_DIR}/${FUNC_NAME}.elf"
 
 [[ -d "$ELF_DIR" ]] || { echo "[!] elf dir not found: $ELF_DIR" >&2; exit 1; }
@@ -140,10 +136,7 @@ CORRECT_ELF="${ELF_DIR}/${FUNC_NAME}.elf"
 [[ -f "$WITNESS" ]] || { echo "[!] qemu_witness.json not found: $WITNESS (run extract_qemu_witness.py first)" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
-# Discover every faulty ELF anywhere under ELF_DIR (faulty builds are not
-# necessarily immediate children of the correct ELF -- can be nested
-# several directories deep, e.g. binOpFault/*_opA.elf), same convention
-# as run_pipeline.sh.
+# Discover every faulty ELF anywhere under ELF_DIR.
 # ---------------------------------------------------------------------------
 FAULTY_ELFS=()
 while IFS= read -r -d '' f; do
@@ -157,9 +150,9 @@ fi
 
 # ---------------------------------------------------------------------------
 # rel_stem: path of a faulty ELF relative to ELF_DIR, minus the .elf
-# suffix -- same convention collect_dist.sh/run_pipeline.sh use for the
-# dist_paired output directory, so results from this script and from the
-# full-sweep pipeline live side by side.
+# suffix -- same convention collect_dist.sh uses for the dist_paired
+# output directory, so results from this script and from the full-sweep
+# pipeline live side by side.
 # ---------------------------------------------------------------------------
 rel_stem() {
     python3 - "$1" "$2" <<'PYEOF'
@@ -176,43 +169,69 @@ PYEOF
 # Every derivation below reads the witness once and prints
 # "OUT_BUF ACTIVE_LEN WORD_SIZE DIFF_MODE FIELD_MOD" on one line, so the
 # whole auto-pick is one python invocation. secret_buf is validated here
-# too (must exist in the witness layout) but is no longer auto-picked --
-# it's the required 2nd positional argument. The R_q-shaped distribution
-# set mirrors driver_dist.py's _DISTRIBUTION_TABLE (every non-"bytes"
-# entry) and must stay in sync with it.
+# too (must exist in the witness layout) but is the required 2nd
+# positional argument, not auto-picked. The coefficient-shaped
+# distribution set mirrors driver_dist.py's _DISTRIBUTION_TABLE (every
+# non-"bytes" entry) and must stay in sync with it -- including its
+# normalization (case-folded, whitespace-collapsed, trailing
+# poly/polyvec/vector/matrix qualifier stripped), so the two lists can't
+# drift on spelling alone.
 # ---------------------------------------------------------------------------
 derive_all() {
     python3 - "$WITNESS" "$SECRET_BUF" "$OUT_BUF_OVERRIDE" \
-             "$WORD_SIZE_OVERRIDE" "$DIFF_MODE_OVERRIDE" "$FIELD_MOD_OVERRIDE" \
-             "$SECRET_WORD_SIZE_OVERRIDE" <<'PYEOF'
-import json, sys
+             "$WORD_SIZE_OVERRIDE" "$DIFF_MODE_OVERRIDE" "$FIELD_MOD_OVERRIDE" <<'PYEOF'
+import json, re, sys
 
 (witness_path, secret_buf, out_override,
- word_override, diff_override, field_override,
- secret_word_size_override) = sys.argv[1:8]
+ word_override, diff_override, field_override) = sys.argv[1:7]
 
 with open(witness_path) as f:
     layout = json.load(f)["layout"]
 
+# Every non-byte-string distribution driver_dist.py's Dilithium
+# _DISTRIBUTION_TABLE knows about -- i.e. everything sampled as int32
+# coefficients rather than raw bytes.
 POLY_DISTRIBUTIONS = {
-    "centered binomial distribution, eta1",
-    "centered binomial distribution, eta2",
-    "message embedded in R_q = Z_q[X]/(X^n + 1)",
-    "R_q = Z_q[X]/(X^n + 1), coefficient domain",
-    "R_q = Z_q[X]/(X^n + 1), coefficient domain polyvec",
-    "R_q = Z_q[X]/(X^n + 1), NTT domain",
-    "R_q = Z_q[X]/(X^n + 1), NTT domain polyvec",
-    "R_q = Z_q[X]/(X^n + 1), poly",
-    "R_q = Z_q[X]/(X^n + 1), polyvec",
-    "R_q = Z_q[X]/(X^n + 1), Montgomery domain",
-    "R_q = Z_q[X]/(X^n + 1), reduced coefficients",
-    "R_q = Z_q[X]/(X^n + 1), reduced polynomial",
-    "R_q = Z_q[X]/(X^n + 1), reduced polyvec",
-    "uniform polynomial matrix in R_q",
+    "uniform in [-eta, eta]",
+    "uniform in [-eta,eta]",
+    "secret key polynomial, uniform in [-eta, eta]",
+    "centered binomial distribution, eta",
+    "r_q = z_q[x]/(x^n + 1)",
+    "r_q = z_q[x]/(x^n + 1), coefficient domain",
+    "r_q = z_q[x]/(x^n + 1), ntt domain",
+    "r_q = z_q[x]/(x^n + 1), montgomery domain",
+    "r_q = z_q[x]/(x^n + 1), reduced coefficients",
+    "r_q = z_q[x]/(x^n + 1), reduced",
+    "uniform polynomial matrix in r_q",
+    "uniform polynomial in r_q",
+    "uniform in (-gamma1, gamma1]",
+    "masking vector y, uniform in (-gamma1, gamma1]",
+    "z = y + c*s1, coefficients bounded by gamma1 - beta",
+    "coefficients bounded by gamma1 - beta",
+    "coefficients bounded by gamma2 - beta",
+    "high bits w1, coefficients in [0, (q-1)/(2*gamma2))",
+    "w1 high bits",
+    "low bits w0, coefficients bounded by gamma2",
+    "challenge polynomial with tau +-1 coefficients",
+    "sparse challenge polynomial",
+    "hint polynomial, 0/1 coefficients",
+    "hint vector with at most omega nonzero coefficients",
+    "t0, coefficients in (-2^(d-1), 2^(d-1)]",
+    "t1, coefficients in [0, 2^10)",
 }
 
+QUALIFIER_RE = re.compile(
+    r'\s+(poly|polynomial|polyvec|polyveck|polyvecl|vector|matrix)$')
+
+
 def is_poly_dist(name):
-    return name in POLY_DISTRIBUTIONS
+    if not name:
+        return False
+    key = re.sub(r'\s+', ' ', name.strip().lower())
+    if key in POLY_DISTRIBUTIONS:
+        return True
+    return QUALIFIER_RE.sub('', key) in POLY_DISTRIBUTIONS
+
 
 # --- secret buffer: validate the given positional argument -------------
 if secret_buf not in layout:
@@ -247,15 +266,19 @@ out_spec = layout[out_buf]
 active_len = out_spec["length"]
 
 # --- word-size / diff-mode: from OUT_BUF's witness entry ----------------
+# Prefers "output_distribution" when present (an in-place function's
+# post-call domain can differ from its pre-call one -- see
+# extract_qemu_witness.py), falling back to "distribution".
 if word_override and diff_override:
     word_size, diff_mode = int(word_override), diff_override
 else:
+    out_dist = out_spec.get("output_distribution") or out_spec.get("distribution")
     if out_spec.get("type") == "scalar":
         length = out_spec.get("length", 1)
         auto_word_size = length if length in (1, 2, 4) else 1
         auto_diff_mode = "xor"
-    elif is_poly_dist(out_spec.get("distribution")):
-        auto_word_size = 2
+    elif is_poly_dist(out_dist):
+        auto_word_size = 4
         auto_diff_mode = "mod-sub"
     else:
         auto_word_size = 1
@@ -263,59 +286,48 @@ else:
     word_size = int(word_override) if word_override else auto_word_size
     diff_mode = diff_override if diff_override else auto_diff_mode
 
-# --- field-mod: full domain sweep for an R_q-shaped SECRET buffer ------
+# --- field-mod: full domain sweep for a coefficient-shaped SECRET ------
 if field_override:
     field_mod = int(field_override)
 elif is_poly_dist(secret_spec.get("distribution")):
-    field_mod = 3329  # KYBER_Q -- sweep the whole coefficient domain
+    field_mod = 8380417  # Dilithium Q -- sweep the whole coefficient domain
 else:
-    field_mod = 256   # byte-string secret buffer
+    field_mod = 256      # byte-string secret buffer
 
-# --- secret-word-size: how the override AT --secret-pos is encoded -----
-# Mirrors derive_word_size_and_diff_mode()'s word-size half, but keyed
-# on the SECRET buffer, not the output buffer -- these are unrelated: a
-# byte-string output can still be fed by an R_q-shaped secret (e.g.
-# poly_tomsg's msg output vs its 'a' input), so out-word-size and
-# secret-word-size must be derived independently. An R_q-shaped secret
-# distribution means poly.coeffs is int16_t, so word-size 2 forces a
-# whole coefficient at --secret-pos (a coefficient/word INDEX, not a
-# byte offset) rather than only overriding its low byte -- see
-# driver_dist.py's word-aware GDB_DRIVER_OVERRIDE_WORD_SIZE and
-# collect_dist.py's run_one() 'word_size' parameter, which this feeds.
-if secret_word_size_override:
-    secret_word_size = int(secret_word_size_override)
-elif is_poly_dist(secret_spec.get("distribution")):
-    secret_word_size = 2
-else:
-    secret_word_size = 1
-
-print(f"{out_buf} {active_len} {word_size} {diff_mode} {field_mod} {secret_word_size}")
+print(f"{out_buf} {active_len} {word_size} {diff_mode} {field_mod}")
 PYEOF
 }
 
-read -r OUT_BUF ACTIVE_LEN WORD_SIZE DIFF_MODE FIELD_MOD SECRET_WORD_SIZE <<< "$(derive_all)"
+read -r OUT_BUF ACTIVE_LEN WORD_SIZE DIFF_MODE FIELD_MOD <<< "$(derive_all)"
 
-# --- module rank: parse from func_name's kyberNNN substring -------------
-if [[ -n "$KYBER_K_OVERRIDE" ]]; then
-    KYBER_K="$KYBER_K_OVERRIDE"
-elif [[ "$FUNC_NAME" == *kyber512* ]]; then
-    KYBER_K=2
-elif [[ "$FUNC_NAME" == *kyber1024* ]]; then
-    KYBER_K=4
+# --- dilithium mode: parse from func_name's dilithiumNNN substring -----
+if [[ -n "$DILITHIUM_MODE_OVERRIDE" ]]; then
+    DILITHIUM_MODE="$DILITHIUM_MODE_OVERRIDE"
+elif [[ "$FUNC_NAME" == *dilithium3* ]]; then
+    DILITHIUM_MODE=3
+elif [[ "$FUNC_NAME" == *dilithium5* ]]; then
+    DILITHIUM_MODE=5
 else
-    KYBER_K=3  # covers kyber768 and any name without an explicit variant
+    DILITHIUM_MODE=2  # covers dilithium2 and any name without an explicit variant
 fi
 
 echo "[i] func:        ${FUNC_NAME}"
-echo "[i] secret-buf:  ${SECRET_BUF} (pos ${SECRET_POS}, word-size ${SECRET_WORD_SIZE})"
+echo "[i] secret-buf:  ${SECRET_BUF} (byte pos ${SECRET_POS})"
 echo "[i] out-buf:     ${OUT_BUF} (active-len ${ACTIVE_LEN} bytes, word-size ${WORD_SIZE}, diff-mode ${DIFF_MODE})"
-echo "[i] field-mod:   ${FIELD_MOD}, kyber-k: ${KYBER_K}"
+echo "[i] field-mod:   ${FIELD_MOD}, dilithium-mode: ${DILITHIUM_MODE}"
 echo "[i] elf-dir:     ${ELF_DIR}"
 echo "[i] correct elf: ${CORRECT_ELF}"
 echo "[i] faulty elfs: ${#FAULTY_ELFS[@]} found"
 for f in "${FAULTY_ELFS[@]}"; do
     echo "                 - ${f#${ELF_DIR}/}"
 done
+if [[ "$FIELD_MOD" -gt 100000 ]]; then
+    echo "[!] field-mod=${FIELD_MOD} is a full coefficient-domain sweep;" >&2
+    echo "    a fault with NO detectable hit will run to completion at" >&2
+    echo "    that many trials (x2 for correct+faulty). Early stopping" >&2
+    echo "    usually terminates far sooner in practice -- see the module" >&2
+    echo "    docstring in dist_and_test.py." >&2
+fi
 
 # ---------------------------------------------------------------------------
 # [1/4] calibrate, once for the function -- ALWAYS run, before the
@@ -335,12 +347,9 @@ python3 "${SETUP_DIR}/calibrate.py" \
 
 # ---------------------------------------------------------------------------
 # Run the sweep for every discovered faulty ELF, reusing the parameters
-# derived once above (they depend only on the function/witness, not on
-# which fault is injected). Each fault's full output is tee'd to its own
-# result file (same layout as run_ineffective_paired.sh/
-# run_correction_paired.sh's *_paired_result.txt), and a compact
-# DETECTED/NOT DETECTED summary table is printed at the end so many
-# faults can be scanned at a glance without re-reading every log.
+# derived once above. Each fault's full output is tee'd to its own result
+# file, and a compact DETECTED/NOT DETECTED summary table is printed at
+# the end.
 # ---------------------------------------------------------------------------
 declare -a SUMMARY_ROWS=()
 OVERALL_STATUS=0
@@ -359,9 +368,9 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
     python3 -u "${SCRIPT_DIR}/dist_and_test.py" \
         --witness "$WITNESS" --active-lengths "$ACTIVE_LENGTHS" \
         --correct-elf "$CORRECT_ELF" --faulty-elf "$FAULTY_ELF" \
-        --func "$FUNC_NAME" --field-mod "$FIELD_MOD" --kyber-k "$KYBER_K" \
-        --secret-buf "$SECRET_BUF" --secret-pos "$SECRET_POS" \
-        --secret-word-size "$SECRET_WORD_SIZE" --seed "$SEED" \
+        --func "$FUNC_NAME" --field-mod "$FIELD_MOD" \
+        --dilithium-mode "$DILITHIUM_MODE" \
+        --secret-buf "$SECRET_BUF" --secret-pos "$SECRET_POS" --seed "$SEED" \
         --outdir "$DIST_PAIRED_DIR" --machine "$MACHINE" \
         --fixed-scalars "$FIXED_SCALARS" \
         --out-buf "$OUT_BUF" --active-len "$ACTIVE_LEN" \
