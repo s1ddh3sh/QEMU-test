@@ -567,6 +567,8 @@ def resolve_pointer_addrs(func, layout):
         )
 
     ptr_addr = {n: int(sym.value(frame)) for n, sym in zip(ptr_names, ptr_args)}
+    for n, a in ptr_addr.items():
+       print(f"[debug] resolved {n} -> 0x{a:x}")
     return ptr_addr, ptr_names
 
 
