@@ -552,10 +552,10 @@ def resolve_pointer_addrs(func, layout):
     frame = gdb.selected_frame()
     if frame.name() != func:
         raise RuntimeError(f"stopped in '{frame.name()}', expected '{func}'")
-    try:
-        print(f"[debug] live frame arg prelen = {frame.read_var('prelen')}")
-    except gdb.error as e:
-        print(f"[debug] could not read live prelen: {e}")
+    # try:
+    #     print(f"[debug] live frame arg prelen = {frame.read_var('prelen')}")
+    # except gdb.error as e:
+    #     print(f"[debug] could not read live prelen: {e}")
     fn_bp.delete()
 
     ptr_args = get_pointer_args(frame)
