@@ -63,20 +63,16 @@ bytes as an opaque bitstring, splitting each byte into its two nibbles
 (bit/nibble-slicing is a fixed, k-independent F2-linear repacking, so it
 cannot change any individual nibble's degree in the swept O coordinate).
 
-For a chosen O byte position `pos`, force O[pos] to each of 3 distinct
-GF(16) field elements {0, 1, x} (raw nibbles 0, 1, 2) right when the
-probe function's entry hook fires (before its body runs; everything
-else -- P1, P2, the rest of O -- is left exactly as the deterministic
-keypair generation produced it), and capture the resulting output buffer
-each time. Restricted to this one-coordinate line, the probe function is
-a genuine univariate GF(16) polynomial of degree <= 2 per output nibble.
-Fit the unique degree-1 (affine) polynomial through the k=0 and k=1
-samples and predict the k=x(=2) sample; a nonzero residual there proves a
-genuine quadratic term. Tally the residual-nonzero count over every
-output nibble:
+Any GF(16)-linear F has the form F(X) = A*X. Restricting X to a set of O
+byte positions (all other O bytes forced to 0 at the probe function's entry
+hook, so F(0) = 0): (1) query the standard basis e_i (O[pos_i] = 1) to get
+C_i = F(e_i), the columns of the candidate matrix A; (2) for random extra
+inputs X predict F_pred(X) = sum_i x_i*C_i in GF(16); (3) query the real
+system at X and compare. Any differing output nibble proves F is not
+GF(16)-linear:
 
-    healthy (quadratic in O) : some nibbles show a nonzero residual
-    collapsed (affine in O)  : ~0 nibbles show a nonzero residual
+    healthy (quadratic in O) : nibbles differ from the linear prediction
+    collapsed (linear in O)  : all nibbles match, A is a valid model
 
 Not every function is a valid target for THIS test
 ------------------------------------------------------
@@ -119,6 +115,7 @@ to probe a differently-shaped function.
 import argparse
 import json
 import os
+import random
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
@@ -193,10 +190,10 @@ def capture_calls(elf_path, func, secret_arg, secret_len, output_arg, output_len
     completion, and return one record per call: {which, call_index,
     secret, output}.
 
-    override: optional {"call_index": int, "pos": int, "value": int} --
-    the secret argument's byte `pos` is forced to `value` (not XOR'd) in
-    guest memory right when the target call's entry hook fires, before
-    its body runs.
+    override: optional {"call_index": int, "values": {pos: value}} -- the
+    whole secret argument is overwritten in guest memory right when the
+    target call's entry hook fires, before its body runs: byte `pos` is
+    set to `value` for each entry of `values`, every other byte to 0.
     """
     m = Machine.from_elf(elf_path)
     m.run_until("main")
@@ -227,12 +224,15 @@ def capture_calls(elf_path, func, secret_arg, secret_len, output_arg, output_len
         secret_bytes = list(machine.read(secret_ptr, secret_len))
 
         if override is not None and idx == override["call_index"]:
-            pos = override["pos"]
-            value = override["value"] & 0xFF
-            if not (0 <= pos < secret_len):
-                raise ValueError(f"override pos {pos} out of range (secret_len={secret_len})")
-            machine.write(secret_ptr + pos, bytes([value]))
-            secret_bytes[pos] = value
+            # X = override["values"] ({pos: gf16 value}); every other secret
+            # byte is forced to 0, so the probe sees exactly X (F(0) = 0).
+            new_secret = [0] * secret_len
+            for pos, value in override["values"].items():
+                if not (0 <= pos < secret_len):
+                    raise ValueError(f"override pos {pos} out of range (secret_len={secret_len})")
+                new_secret[pos] = value & 0xF
+            machine.write(secret_ptr, bytes(new_secret))
+            secret_bytes = new_secret
 
         pending.append(
             {
@@ -280,37 +280,58 @@ def _nibbles(byte_list):
     return out
 
 
-def degree_probe(elf_path, func, secret_arg, secret_len, output_arg, output_len, call_index, pos, label):
-    """Force secret[pos] to 0, 1, x(=2) in three separate runs, decode
-    every output nibble, and count how many show a nonzero Lagrange
-    residual at the 3rd point (== genuine degree-2 dependence on
-    secret[pos])."""
-    samples = {}
-    for k in (0, 1, 2):
-        calls = capture_calls(
-            elf_path, func, secret_arg, secret_len, output_arg, output_len,
-            override={"call_index": call_index, "pos": pos, "value": k},
-        )
-        rec = next(r for r in calls if r["call_index"] == call_index)
-        samples[k] = _nibbles(rec["output"])
+def _query(elf_path, func, secret_arg, secret_len, output_arg, output_len, call_index, values):
+    calls = capture_calls(
+        elf_path, func, secret_arg, secret_len, output_arg, output_len,
+        override={"call_index": call_index, "values": values},
+    )
+    rec = next(r for r in calls if r["call_index"] == call_index)
+    return _nibbles(rec["output"])
 
-    n = len(samples[0])
-    assert len(samples[1]) == n and len(samples[2]) == n
+
+def linearity_probe(elf_path, func, secret_arg, secret_len, output_arg, output_len,
+                    call_index, positions, n_tests, seed, label):
+    """GF(16)-linearity test via the standard basis.
+
+    Any GF(16)-linear F has the form F(X) = A*X. Restricting X to the
+    coordinates in `positions` (all others held at 0):
+      1. query F(e_i) = C_i for each basis vector e_i (secret[pos_i] = 1);
+         the C_i are the columns of the candidate matrix A;
+      2. for random X = (x_1..x_n), predict F_pred(X) = sum_i x_i * C_i
+         (GF(16) arithmetic);
+      3. query the black box at X and compare. Any differing output nibble
+         proves F is not GF(16)-linear.
+    Returns the number of mismatching nibbles summed over all test inputs.
+    """
+    rng = random.Random(seed)
+    cols = {}
+    for pos in positions:
+        cols[pos] = _query(elf_path, func, secret_arg, secret_len, output_arg,
+                           output_len, call_index, {pos: 1})
+    n = len(cols[positions[0]])
 
     nonzero = 0
-    for i in range(n):
-        v0, v1, v2 = samples[0][i], samples[1][i], samples[2][i]
-        predicted = v0 ^ gf16_mul(2, v0 ^ v1)  # affine line through (0,v0),(1,v1), at t=2
-        residual = predicted ^ v2
-        if residual != 0:
-            nonzero += 1
+    failing_tests = 0
+    for t in range(n_tests):
+        x = {pos: rng.randrange(1, 16) for pos in positions}
+        actual = _query(elf_path, func, secret_arg, secret_len, output_arg,
+                        output_len, call_index, x)
+        predicted = [0] * n
+        for pos, xi in x.items():
+            c = cols[pos]
+            for i in range(n):
+                predicted[i] ^= gf16_mul(xi, c[i])
+        mism = sum(1 for i in range(n) if predicted[i] != actual[i])
+        nonzero += mism
+        failing_tests += mism != 0
+        print(f"[i] {label}: test {t + 1}/{n_tests} X={x} -> {mism}/{n} nibbles differ from sum x_i*C_i")
 
-    ratio = nonzero / n
     print(
-        f"[i] {label}: secret[{pos}] degree probe over {n} output nibbles -> "
-        f"{nonzero} nonzero-residual ({ratio:.2%})"
+        f"[i] {label}: linearity probe over {len(positions)} basis vectors, {n_tests} tests, "
+        f"{n} output nibbles -> {nonzero} mismatching nibbles, {failing_tests}/{n_tests} tests failed"
     )
-    return {"pos": pos, "n_nibbles": n, "nonzero_residual": nonzero, "ratio": ratio}
+    return {"positions": positions, "n_nibbles": n, "n_tests": n_tests,
+            "failing_tests": failing_tests, "nonzero_residual": nonzero}
 
 
 def main():
@@ -336,7 +357,13 @@ def main():
     ap.add_argument("--call-index", type=int, default=1,
                      help="1-based call index of --func the probe targets.")
     ap.add_argument("--positions", default="0,1",
-                     help="comma-separated secret[] byte positions to probe.")
+                     help="secret[] byte positions forming the basis e_i "
+                          "(comma-separated, ranges like 0-7 allowed, or "
+                          "'all' for the full n=secret_len basis).")
+    ap.add_argument("--n-tests", type=int, default=4,
+                     help="number of random extra inputs X compared against "
+                          "the prediction sum x_i*C_i.")
+    ap.add_argument("--seed", type=int, default=1)
     ap.add_argument(
         "--min-nonzero", type=int, default=5,
         help="minimum absolute nonzero-residual count for a 'correct' probe "
@@ -380,24 +407,33 @@ def main():
             print(f"[!] {label} not found: {path}", file=sys.stderr)
             sys.exit(1)
 
-    positions = [int(p) for p in args.positions.split(",") if p.strip() != ""]
+    if args.positions.strip() == "all":
+        positions = list(range(secret_len))
+    else:
+        positions = []
+        for tok in args.positions.split(","):
+            tok = tok.strip()
+            if not tok:
+                continue
+            lo, _, hi = tok.partition("-")
+            positions.extend(range(int(lo), int(hi or lo) + 1))
 
     print("=" * 70)
-    print(f"{args.func} degree-collapse probe: is the output still quadratic in the secret?")
+    print(f"{args.func} degree-collapse probe: is the output still nonlinear in the secret?")
     print("=" * 70)
 
     results = {"correct": [], "faulty": []}
     try:
-        for pos in positions:
-            results["correct"].append(
-                degree_probe(args.correct_elf, args.func, secret_arg, secret_len,
-                             output_arg, output_len, args.call_index, pos, "correct")
-            )
-        for pos in positions:
-            results["faulty"].append(
-                degree_probe(args.faulty_elf, args.func, secret_arg, secret_len,
-                             output_arg, output_len, args.call_index, pos, "faulty ")
-            )
+        results["correct"].append(
+            linearity_probe(args.correct_elf, args.func, secret_arg, secret_len,
+                            output_arg, output_len, args.call_index, positions,
+                            args.n_tests, args.seed, "correct")
+        )
+        results["faulty"].append(
+            linearity_probe(args.faulty_elf, args.func, secret_arg, secret_len,
+                            output_arg, output_len, args.call_index, positions,
+                            args.n_tests, args.seed, "faulty ")
+        )
     except EmulationError as e:
         print(f"[!] emulation failed: {e}", file=sys.stderr)
         sys.exit(2)
@@ -417,11 +453,10 @@ def main():
 
     if weak_system_detected:
         print(
-            f"[!] WEAK SYSTEM DETECTED: at every probed secret coordinate "
-            f"({positions}), {args.func}'s output is a genuine degree-2 "
-            f"function of the secret in the correct binary but collapses "
-            f"to a degree-<=1 (affine) function of the secret in the "
-            f"faulty binary."
+            f"[!] WEAK SYSTEM DETECTED: over the probed secret coordinates "
+            f"({positions}), {args.func}'s output is a GF(16)-"
+            f"nonlinear function of the secret in the correct binary but "
+            f"is exactly GF(16)-linear (F(X)=AX) in the faulty binary."
         )
         exit_code = 1
     else:
