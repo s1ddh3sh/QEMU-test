@@ -195,7 +195,7 @@ fi
 FAULTY_ELFS=()
 while IFS= read -r -d '' f; do
     FAULTY_ELFS+=("$f")
-done < <(find "$ELF_DIR" -type f -name '*.elf' -not -samefile "$CORRECT_ELF" -print0 | sort -z)
+done < <(find "$ELF_DIR" -type f -name '*.elf' -not -path '*/full_dilithium_gated/*' -not -samefile "$CORRECT_ELF" -print0 | sort -z)
 
 if [[ ${#FAULTY_ELFS[@]} -eq 0 ]]; then
     echo "[!] no faulty ELFs found under $ELF_DIR (besides $CORRECT_ELF)" >&2

@@ -34,7 +34,9 @@
 # ELF layout assumed (default --elf-dir is build/tests_mayo/<func_name>):
 #   <elf-dir>/<func_name>.elf   -- the correct build
 #   <elf-dir>/*.elf             -- every other .elf is a faulty variant,
-#                                  tested one at a time
+#                                  tested one at a time, EXCEPT anything
+#                                  under a full_mayo_gated/ directory
+#                                  (whole-program builds; skipped here)
 #
 # Example:
 #   ./run_tests_unicorn.sh mat_add
@@ -139,11 +141,11 @@ CORRECT_ELF="${ELF_DIR}/${FUNC_NAME}.elf"
 
 # Faulty builds are not necessarily immediate children of the correct
 # ELF -- they can be nested several directories deep -- so this must be a
-# recursive search, not a flat glob.
+# recursive search, not a flat glob. full_mayo_gated/ ELFs are skipped.
 FAULTY_ELFS=()
 while IFS= read -r -d '' f; do
     FAULTY_ELFS+=("$f")
-done < <(find "$ELF_DIR" -type f -name '*.elf' -not -samefile "$CORRECT_ELF" -print0 | sort -z)
+done < <(find "$ELF_DIR" -type f -name '*.elf' -not -path '*/full_mayo_gated/*' -not -samefile "$CORRECT_ELF" -print0 | sort -z)
 
 if [[ ${#FAULTY_ELFS[@]} -eq 0 ]]; then
     echo "[!] no faulty ELFs found under $ELF_DIR (besides $CORRECT_ELF)" >&2
