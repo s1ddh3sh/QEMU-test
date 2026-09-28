@@ -20,7 +20,13 @@
 # Usage:
 #   ./run_tests_unicorn.sh <func_name> [--secret-buf NAME] [--secret-pos POS] \
 #       [--elf-dir DIR] [--fixed-scalars name1,name2,...] [--seed N] \
-#       [--out-buf NAME] [--field-mod N]
+#       [--seeds p0,p1,...] [--out-buf NAME] [--field-mod N]
+#
+# --seeds p0,p1,...: public-background seeds for the CORRECTION test
+# (exists alpha != 0, s: for all p, y1 = y2 xor alpha; needs >= 2). One
+# sweep is collected per seed: the first seed (also used for the
+# ineffective test) goes to dist_paired/, every other seed p to
+# dist_paired_seed<p>/. Without --seeds, only --seed is swept.
 #
 # Only <func_name> is required. --secret-buf/--fixed-scalars are looked
 # up automatically from <repo_root>/mayo.json (keyed by func_name); an
@@ -46,7 +52,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <func_name> [--secret-buf NAME] [--secret-pos POS] [--elf-dir DIR] [--fixed-scalars n1,n2,...] [--seed N] [--out-buf NAME] [--field-mod N]" >&2
+    echo "Usage: $0 <func_name> [--secret-buf NAME] [--secret-pos POS] [--elf-dir DIR] [--fixed-scalars n1,n2,...] [--seed N] [--seeds p0,p1,...] [--out-buf NAME] [--field-mod N]" >&2
     exit 1
 fi
 
@@ -60,6 +66,7 @@ ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 FIXED_SCALARS_OVERRIDE=""
 SECRET_BUF_OVERRIDE=""
 SEED=0
+SEEDS=""
 OUT_BUF_OVERRIDE=""
 FIELD_MOD=""
 
@@ -70,6 +77,7 @@ while [[ $# -gt 0 ]]; do
         --elf-dir) ELF_DIR="$2"; shift 2 ;;
         --fixed-scalars) FIXED_SCALARS_OVERRIDE="$2"; shift 2 ;;
         --seed) SEED="$2"; shift 2 ;;
+        --seeds) SEEDS="$2"; shift 2 ;;
         --out-buf) OUT_BUF_OVERRIDE="$2"; shift 2 ;;
         --field-mod) FIELD_MOD="$2"; shift 2 ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
@@ -79,6 +87,12 @@ done
 if [[ -z "$SECRET_POS" ]]; then
     echo "[!] --secret-pos POS is required" >&2
     exit 1
+fi
+
+SEED_LIST=("$SEED")
+if [[ -n "$SEEDS" ]]; then
+    read -r -a SEED_LIST <<< "${SEEDS//,/ }"
+    SEED="${SEED_LIST[0]}"
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -174,16 +188,23 @@ echo "########## [1/3] collect_dist_unicorn.sh (${#FAULTY_ELFS[@]} faulty ELF(s)
 for faulty_elf in "${FAULTY_ELFS[@]}"; do
     echo ""
     echo "--- collect_dist (unicorn): ${FUNC_NAME} / $(basename "$faulty_elf") ---"
-    COLLECT_ARGS=(
-        "$FUNC_NAME" "$CORRECT_ELF" "$faulty_elf" "$SECRET_BUF"
-        --secret-pos "$SECRET_POS"
-        --fixed-scalars "$FIXED_SCALARS"
-        --seed "$SEED"
-    )
-    if [[ -n "$FIELD_MOD" ]]; then
-        COLLECT_ARGS+=(--field-mod "$FIELD_MOD")
-    fi
-    "${SCRIPT_DIR}/collect_dist_unicorn.sh" "${COLLECT_ARGS[@]}"
+    for i in "${!SEED_LIST[@]}"; do
+        p="${SEED_LIST[$i]}"
+        COLLECT_ARGS=(
+            "$FUNC_NAME" "$CORRECT_ELF" "$faulty_elf" "$SECRET_BUF"
+            --secret-pos "$SECRET_POS"
+            --fixed-scalars "$FIXED_SCALARS"
+            --seed "$p"
+        )
+        if [[ $i -gt 0 ]]; then
+            COLLECT_ARGS+=(--dist-dir-name "dist_paired_seed${p}")
+        fi
+        if [[ -n "$FIELD_MOD" ]]; then
+            COLLECT_ARGS+=(--field-mod "$FIELD_MOD")
+        fi
+        echo "    [seed p=${p}]"
+        "${SCRIPT_DIR}/collect_dist_unicorn.sh" "${COLLECT_ARGS[@]}"
+    done
 done
 
 # ---------------------------------------------------------------------------
@@ -200,9 +221,14 @@ echo ""
 echo "########## [2/3] run_ineffective_paired.sh ##########"
 "${SCRIPT_DIR}/run_ineffective_paired.sh" "${RUN_ARGS[@]}"
 
+CORR_ARGS=("${RUN_ARGS[@]}")
+if [[ -n "$SEEDS" ]]; then
+    CORR_ARGS+=(--seeds "$SEEDS")
+fi
+
 echo ""
 echo "########## [3/3] run_correction_paired.sh ##########"
-"${SCRIPT_DIR}/run_correction_paired.sh" "${RUN_ARGS[@]}"
+"${SCRIPT_DIR}/run_correction_paired.sh" "${CORR_ARGS[@]}"
 
 echo ""
 echo "=== pipeline complete (unicorn): ${FUNC_NAME} (${#FAULTY_ELFS[@]} faulty ELF(s)) ==="

@@ -18,7 +18,10 @@
 # Usage:
 #   ./collect_dist_unicorn.sh <func_name> <correct_elf> <faulty_elf> <secret_buf> \
 #       [--secret-pos POS] [--fixed-scalars name1,name2,...] [--seed N] \
-#       [--timeout SECONDS] [--field-mod N]
+#       [--timeout SECONDS] [--field-mod N] [--dist-dir-name NAME]
+#
+# --dist-dir-name NAME: output subdir name under the faulty-ELF dir
+# (default dist_paired); used to keep one sweep per public seed.
 #
 # --secret-pos defaults to 0. --field-mod defaults to 16 (GF(16),
 # MAYO_FIELD_MOD -- a fixed constant, not auto-derived, see
@@ -44,6 +47,7 @@ FIXED_SCALARS=""
 SEED=0
 TIMEOUT_SECS=120   # per-collection wall-clock cap; adjust if legitimate
                     # sweeps for large functions routinely exceed this
+DIST_DIR_NAME=dist_paired
 FIELD_MOD=16       # GF(16) -- fixed constant (MAYO_FIELD_MOD), matches
                     # dist_tests/mayo/collect_dist.sh's own hardcoded
                     # FIELD_MOD=16; overridable via --field-mod for
@@ -56,6 +60,7 @@ while [[ $# -gt 0 ]]; do
         --seed) SEED="$2"; shift 2 ;;
         --timeout) TIMEOUT_SECS="$2"; shift 2 ;;
         --field-mod) FIELD_MOD="$2"; shift 2 ;;
+        --dist-dir-name) DIST_DIR_NAME="$2"; shift 2 ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
@@ -93,7 +98,7 @@ PYEOF
 
 ELF_BASE_DIR="$(dirname "$CORRECT_ELF")"
 FAULTY_STEM="$(rel_stem "$FAULTY_ELF" "$ELF_BASE_DIR")"
-DIST_PAIRED_DIR="${OUT_DIR}/${FAULTY_STEM}/dist_paired"
+DIST_PAIRED_DIR="${OUT_DIR}/${FAULTY_STEM}/${DIST_DIR_NAME}"
 
 mkdir -p "$OUT_DIR"
 

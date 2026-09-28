@@ -4,8 +4,9 @@ early_stop_sweep_unicorn.py (Dilithium, Unicorn backend) — incrementally
 collect (or reuse already-collected) correct/faulty trials for increasing
 secret values sv = 0, 1, 2, ..., and STOP as soon as the requested test(s)
 (ineffective and/or correction) have found at least one witness -- i.e.
-an (s1, s2) pair with d1 != d2 (ineffective) or Delta(s1) != Delta(s2)
-(correction), at ANY output position.
+an (s1, s2) pair with d1 != d2 (ineffective) or, for correction, an s for
+which  y1 = y2 xor alpha  holds for ALL swept public backgrounds p (see
+--seeds), at ANY output position.
 
 This is the SAME orchestrator as dist_and_test.py, with exactly one
 substantive change: it collects trials via collect_dist_unicorn.py's
@@ -101,7 +102,7 @@ from ineffective_dilithium import (                 # noqa: E402  (unmodified)
 DILITHIUM_Q = 8380417
 
 
-def load_or_collect(sval, c_path, f_path, args):
+def load_or_collect(sval, c_path, f_path, args, seed):
     """Collect via run_one() ONLY for whichever of the two files is
     missing on disk, then load and return both parsed trial JSONs. This
     is what makes the script transparently resumable/replayable: point
@@ -121,7 +122,7 @@ def load_or_collect(sval, c_path, f_path, args):
         if os.path.exists(out_path) and os.path.getsize(out_path) > 0:
             continue
         run_one(elf_path, args.witness, args.active_lengths, args.func,
-                args.field_mod, args.seed, variant, out_path, args.machine,
+                args.field_mod, seed, variant, out_path, args.machine,
                 args.fixed_scalars, args.dilithium_mode,
                 args.secret_buf, args.secret_pos, sval)
     with open(c_path) as f:
@@ -166,6 +167,16 @@ def main():
              "coefficient.",
     )
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument(
+        "--seeds", type=int, nargs="+", default=None,
+        help="public-background seeds p used by the CORRECTION test "
+             "(exists alpha != 0, s: for all p, y1 = y2 xor alpha). Default: "
+             "just --seed, which makes 'for all p' vacuous -- pass >= 2. "
+             "The first seed (or --seed if --seeds is omitted) is also "
+             "the one used by the ineffective test and stores its files "
+             "directly in --outdir; every other seed p stores its files "
+             "in --outdir/seed<p>/.",
+    )
 
     ap.add_argument("--out-buf", required=True)
     ap.add_argument(
@@ -204,45 +215,60 @@ def main():
 
     os.makedirs(args.outdir, exist_ok=True)
     active_len_words = args.active_len // args.out_word_size
+    seeds = args.seeds if args.seeds else [args.seed]
+    primary_seed = seeds[0]
+    if args.test != "ineffective" and len(seeds) < 2:
+        print("[!] --seeds has fewer than 2 public backgrounds: 'for all p' "
+              "is vacuous, so every s trivially satisfies the correction "
+              "test.", file=sys.stderr)
 
     want_ineffective = args.test in ("ineffective", "both")
     want_correction = args.test in ("correction", "both")
 
-    # Per position, only the DISTINCT eq/delta values seen so far (each
-    # mapped to one witness sv) are kept -- a hit only needs ONE prior
-    # value that disagrees with the new one, not the full history.
+    # Ineffective test: per position, only the DISTINCT eq values seen so
+    # far (each mapped to one witness sv) are kept.
     ineffective_seen = [dict() for _ in range(active_len_words)]  # bool -> sv
-    correction_seen = [dict() for _ in range(active_len_words)]   # value -> sv
 
     ineffective_hit = None  # (pos, sv_ineffective, sv_effective)
-    correction_hit = None   # (pos, sv1, delta1, sv2, delta2)
+    correction_hit = None   # (pos, sv, alpha)
 
     n_collected = 0
     n_reused = 0
 
     for sval in range(args.field_mod):
-        c_path = os.path.join(args.outdir, f"correct_sv{sval:03d}.json")
-        f_path = os.path.join(args.outdir, f"faulty_sv{sval:03d}.json")
-        already_present = os.path.exists(c_path) and os.path.exists(f_path)
-        try:
-            c, fdata = load_or_collect(sval, c_path, f_path, args)
-        except RunFailed as e:
-            print(f"[!] sv={sval}: collection failed, skipping.\n{e}",
-                  file=sys.stderr)
+        trials = {}   # seed -> (co, fo)
+        already_present = True
+        failed = False
+        for p in seeds:
+            pdir = args.outdir if p == primary_seed else \
+                os.path.join(args.outdir, f"seed{p}")
+            os.makedirs(pdir, exist_ok=True)
+            c_path = os.path.join(pdir, f"correct_sv{sval:03d}.json")
+            f_path = os.path.join(pdir, f"faulty_sv{sval:03d}.json")
+            already_present &= os.path.exists(c_path) and os.path.exists(f_path)
+            try:
+                c, fdata = load_or_collect(sval, c_path, f_path, args, p)
+            except RunFailed as e:
+                print(f"[!] sv={sval} seed={p}: collection failed, "
+                      f"skipping sv.\n{e}", file=sys.stderr)
+                failed = True
+                break
+            trials[p] = tuple(
+                np.asarray(
+                    decode_words(get_buffer(d, args.out_buf),
+                                 args.out_word_size),
+                    dtype=np.int64,
+                )[:active_len_words]
+                for d in (c, fdata)
+            )
+        if failed:
             continue
         if already_present:
             n_reused += 1
         else:
             n_collected += 1
 
-        co = np.asarray(
-            decode_words(get_buffer(c, args.out_buf), args.out_word_size),
-            dtype=np.int64,
-        )[:active_len_words]
-        fo = np.asarray(
-            decode_words(get_buffer(fdata, args.out_buf), args.out_word_size),
-            dtype=np.int64,
-        )[:active_len_words]
+        co, fo = trials[primary_seed]
 
         # Diff-mode-independent: xor(a,b)==0 iff a==b, so a plain
         # elementwise equality check IS the ineffective test regardless
@@ -250,13 +276,14 @@ def main():
         # ineffective_dilithium.py's and correction_dilithium.py's
         # docstrings that both modes agree exactly on whether y1==y2).
         eq = (co == fo)
-        delta = compute_delta(co, fo, args.diff_mode, args.modulus)
+        deltas = [compute_delta(trials[p][0], trials[p][1], args.diff_mode,
+                                args.modulus) for p in seeds]
 
         # Safety clamp: --active-len may exceed the OUTPUT buffer's real
         # decoded length -- co/fo are already truncated to
         # active_len_words above via [:active_len_words], so len(eq) is
         # the true usable position count for THIS trial.
-        n_pos = min(active_len_words, len(eq))
+        n_pos = min([active_len_words, len(eq)] + [len(d) for d in deltas])
         if n_pos < active_len_words and sval == 0:
             print(
                 f"[!] --active-len ({active_len_words} words) exceeds "
@@ -277,15 +304,16 @@ def main():
                           f"s2={bucket[False]} (d2=False, effective)")
 
             if want_correction and correction_hit is None:
-                bucket = correction_seen[pos]
-                dv = int(delta[pos])
-                if bucket and dv not in bucket:
-                    other_dv, other_sv = next(iter(bucket.items()))
-                    correction_hit = (pos, other_sv, other_dv, sval, dv)
+                # exists alpha, s: for all p, y1 = y2 xor alpha, i.e.
+                # Delta_p(s) is the same value alpha for every public p.
+                alpha = int(deltas[0][pos])
+                # alpha != 0: alpha == 0 means y1 == y2 (position
+                # unaffected by the fault) -- a false positive.
+                if alpha != 0 and all(int(d[pos]) == alpha for d in deltas):
+                    correction_hit = (pos, sval, alpha)
                     print(f"[+] CORRECTION hit at pos {pos}: "
-                          f"s1={other_sv} (Delta={other_dv}) vs "
-                          f"s2={sval} (Delta={dv})")
-                bucket.setdefault(dv, sval)
+                          f"s={sval}, alpha={alpha} constant across "
+                          f"{len(seeds)} public backgrounds (seeds={seeds})")
 
         found = []
         if want_ineffective:
@@ -318,12 +346,13 @@ def main():
                   "in range swept")
     if want_correction:
         if correction_hit:
-            pos, sv1, d1, sv2, d2 = correction_hit
-            print(f"[RESULT] correction test: DETECTED at pos {pos} "
-                  f"(s1={sv1} Delta={d1}, s2={sv2} Delta={d2})")
+            pos, sv, alpha = correction_hit
+            print(f"[RESULT] correction test: SATISFIED at pos {pos} "
+                  f"(s={sv}, alpha={alpha}: y1 = y2 xor alpha for all "
+                  f"{len(seeds)} swept p)")
         else:
-            print("[RESULT] correction test: no disagreement found "
-                  "in range swept")
+            print("[RESULT] correction test: no (s, alpha) with constant "
+                  "Delta across p found in range swept")
 
 
 if __name__ == "__main__":

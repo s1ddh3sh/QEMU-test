@@ -23,6 +23,11 @@
 #   <elf-dir>/<func_name>.elf   -- the correct build
 #   <elf-dir>/*.elf             -- every other .elf is a faulty variant
 #
+# --seeds p0,p1,...: public-background seeds (must match what
+# run_tests_unicorn.sh --seeds collected): the first seed's sweep is in
+# dist_paired/, every other seed p in dist_paired_seed<p>/. The test is
+# exists alpha != 0, s: for all p, y1 = y2 xor alpha, so >= 2 are needed.
+#
 # Example:
 #   ./run_correction_paired.sh mat_add in
 #   ./run_correction_paired.sh EF A_pre        # in-place function
@@ -30,7 +35,7 @@
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 <func_name> <secret_buf> [--out-buf NAME] [--elf-dir DIR]" >&2
+    echo "Usage: $0 <func_name> <secret_buf> [--out-buf NAME] [--elf-dir DIR] [--seeds p0,p1,...]" >&2
     exit 1
 fi
 
@@ -42,11 +47,13 @@ SECRET_BUF="$1"; shift
 SECRET_BUF_BASE="${SECRET_BUF%_pre}"
 
 OUT_BUF_OVERRIDE=""
+SEEDS=""
 ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --out-buf) OUT_BUF_OVERRIDE="$2"; shift 2 ;;
         --elf-dir) ELF_DIR="$2"; shift 2 ;;
+        --seeds) SEEDS="$2"; shift 2 ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
@@ -254,7 +261,27 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     faulty_stem="$(rel_stem "$faulty_elf" "$ELF_DIR")"
     DIST_PAIRED_DIR="${OUT_DIR}/${faulty_stem}/dist_paired"
 
+    DIST_DIRS=("$DIST_PAIRED_DIR")
+    if [[ -n "$SEEDS" ]]; then
+        read -r -a SEED_LIST <<< "${SEEDS//,/ }"
+        for p in "${SEED_LIST[@]:1}"; do
+            DIST_DIRS+=("${OUT_DIR}/${faulty_stem}/dist_paired_seed${p}")
+        done
+    else
+        echo "[!] no --seeds given: only one public background, so 'for all p' is vacuous" >&2
+    fi
+
+    missing=0
+    for d in "${DIST_DIRS[@]}"; do
+        if ! ls "${d}"/correct_sv*.json >/dev/null 2>&1; then
+            echo "[!] no swept secret-value files in $d" >&2
+            missing=1
+        fi
+    done
     n_sv=$(ls "${DIST_PAIRED_DIR}"/correct_sv*.json 2>/dev/null | wc -l)
+    if [[ "$missing" -eq 1 ]]; then
+        n_sv=0
+    fi
     if [[ "$n_sv" -eq 0 ]]; then
         echo "[!] skipping ${faulty_stem}: no swept secret-value files found in $DIST_PAIRED_DIR" >&2
         echo "    (run collect_dist.sh for this faulty elf first)" >&2
@@ -268,7 +295,7 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
 
     echo "=== correction (paired) test: ${FUNC_NAME} / ${faulty_stem} ==="
     python3 -u "${TEST_DIR}/correction_mayo.py" \
-        --dist-dir "$DIST_PAIRED_DIR" \
+        --dist-dir "${DIST_DIRS[@]}" \
         --out-buf "$OUT_BUF" \
         --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" \

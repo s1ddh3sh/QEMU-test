@@ -23,7 +23,11 @@
 #       [--out-buf NAME] [--out-word-size 1|2|4] \
 #       [--diff-mode xor|mod-sub] [--modulus N] \
 #       [--test ineffective|correction|both] [--require any|all] \
-#       [--seed N] [--dilithium-mode 2|3|5]
+#       [--seed N] [--seeds p0,p1,...] [--dilithium-mode 2|3|5]
+#
+# --seeds: comma-separated public-background seeds for the CORRECTION test
+# (exists alpha != 0, s: for all p, y1 = y2 xor alpha). Needs >= 2 values to
+# be meaningful. The first seed is also the one used by the ineffective test.
 #
 # Example:
 #   ./run_combined_unicorn.sh pqcrystals_dilithium2_ref_poly_add
@@ -91,7 +95,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <func_name> [--secret-buf NAME] [--fixed-scalars n1,n2,...] [--elf-dir DIR] [--secret-pos POS] [--field-mod N] [--out-buf NAME] [--out-word-size 1|2|4] [--diff-mode xor|mod-sub] [--modulus N] [--test ineffective|correction|both] [--require any|all] [--seed N] [--dilithium-mode 2|3|5]" >&2
+    echo "Usage: $0 <func_name> [--secret-buf NAME] [--fixed-scalars n1,n2,...] [--elf-dir DIR] [--secret-pos POS] [--field-mod N] [--out-buf NAME] [--out-word-size 1|2|4] [--diff-mode xor|mod-sub] [--modulus N] [--test ineffective|correction|both] [--require any|all] [--seed N] [--seeds p0,p1,...] [--dilithium-mode 2|3|5]" >&2
     exit 1
 fi
 
@@ -109,6 +113,7 @@ MODULUS=8380417
 TEST=both
 REQUIRE=all
 SEED=0
+SEEDS=""
 DILITHIUM_MODE_OVERRIDE=""
 
 while [[ $# -gt 0 ]]; do
@@ -125,10 +130,18 @@ while [[ $# -gt 0 ]]; do
         --test) TEST="$2"; shift 2 ;;
         --require) REQUIRE="$2"; shift 2 ;;
         --seed) SEED="$2"; shift 2 ;;
+        --seeds) SEEDS="$2"; shift 2 ;;
         --dilithium-mode) DILITHIUM_MODE_OVERRIDE="$2"; shift 2 ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
+
+SEEDS_ARGS=()
+if [[ -n "$SEEDS" ]]; then
+    read -r -a SEEDS_ARR <<< "${SEEDS//,/ }"
+    SEED="${SEEDS_ARR[0]}"
+    SEEDS_ARGS=(--seeds "${SEEDS_ARR[@]}")
+fi
 
 # ---------------------------------------------------------------------------
 # Path setup. NOTE: this must come before any [[ -f ... ]] checks -- under
@@ -396,6 +409,7 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
         --out-buf "$OUT_BUF" --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" --diff-mode "$DIFF_MODE" \
         --modulus "$MODULUS" --test "$TEST" --require "$REQUIRE" \
+        "${SEEDS_ARGS[@]}" \
         2>&1 | tee "$RESULT_FILE"
     STATUS=${PIPESTATUS[0]}
     set -e
@@ -410,10 +424,10 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
     elif grep -q "^\[RESULT\] ineffective test:" "$RESULT_FILE"; then
         INEFF_STATUS="not detected"
     fi
-    if grep -q "^\[RESULT\] correction test: DETECTED" "$RESULT_FILE"; then
-        CORR_STATUS="DETECTED"
+    if grep -q "^\[RESULT\] correction test: SATISFIED" "$RESULT_FILE"; then
+        CORR_STATUS="SATISFIED"
     elif grep -q "^\[RESULT\] correction test:" "$RESULT_FILE"; then
-        CORR_STATUS="not detected"
+        CORR_STATUS="not satisfied"
     fi
     SUMMARY_ROWS+=("${FAULTY_STEM}|${INEFF_STATUS}|${CORR_STATUS}")
 

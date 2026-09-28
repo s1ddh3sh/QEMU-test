@@ -1,25 +1,27 @@
 #!/usr/bin/env python3
 """
-correction_paired_test.py (single-background mode)
+correction_mayo.py (paired sweep over secret s, multiple public backgrounds p)
 
-Correction-fault query, paired-sweep design:
+Correction-fault query:
 
-    y1 = f_correct(s, p),  y2 = f_faulty(s, p),  Delta(s) = y1 xor y2
+    y1 = f_correct(s, p),  y2 = f_faulty(s, p)
 
-    H0: exists alpha such that Delta(s) = alpha for every s
-        (a single, secret-independent additive correction -- no leakage)
-    H1: Delta(s1) != Delta(s2) for some pair (s1, s2)
-        (the divergence value itself depends on the secret -- correction
-        fault detected)
+    exists alpha, s  such that  for all p:  y1 = y2 xor alpha
 
-For a single shared background p, this is DESCRIPTIVE, not a hypothesis
-test (one observation per pair, no p-value) -- it reports, per output
-position, how many of the ordered (s1, s2) pairs show Delta(s1) !=
-Delta(s2).
+i.e. there is a secret value s for which the divergence Delta_p(s) =
+y1 xor y2 is one constant alpha across EVERY public background p. Each
+--dist-dir holds one single-background secret sweep (correct_sv*.json /
+faulty_sv*.json) collected with a different public background p (seed).
+For each output position, every secret value s present in all dirs is
+checked: if Delta_p(s) is identical for all p, (s, alpha) is a witness.
+alpha = 0 is excluded (y1 == y2: position unaffected by the fault).
+
+Pass at least 2 --dist-dir values; with one, "for all p" is vacuous.
 
 Usage:
-    python3 correction_paired_test.py \
-        --dist-dir tests_mayo/mat_add/dist_paired \
+    python3 correction_mayo.py \
+        --dist-dir tests_mayo/mat_add/dist_paired_p0 \
+                   tests_mayo/mat_add/dist_paired_p1 \
         --out-buf s --active-len 78 --out-word-size 1
 """
 
@@ -94,26 +96,32 @@ def load_sweep(dist_dir, out_buf, active_len, out_word_size):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dist-dir", required=True)
+    ap.add_argument("--dist-dir", required=True, nargs="+",
+                    help="one sweep directory per public background p")
     ap.add_argument("--out-buf", required=True)
     ap.add_argument("--active-len", type=int, required=True)
     ap.add_argument("--out-word-size", type=int, default=1, choices=[1, 4])
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
-    delta = load_sweep(args.dist_dir, args.out_buf, args.active_len, args.out_word_size)
-    secret_values = sorted(delta.keys())
-    if len(secret_values) < 2:
-        raise RuntimeError(f"only {len(secret_values)} secret values found in {args.dist_dir}")
+    if len(args.dist_dir) < 2:
+        print("[!] only one --dist-dir (one public background p): "
+              "'for all p' is vacuous, every s trivially qualifies.")
 
-    print(f"[i] loaded {len(secret_values)} secret values (single shared background p)")
+    # sweeps[i][sv] = Delta array for public background i
+    sweeps = [load_sweep(d, args.out_buf, args.active_len, args.out_word_size)
+              for d in args.dist_dir]
+    secret_values = sorted(set.intersection(*(set(w) for w in sweeps)))
+    if not secret_values:
+        raise RuntimeError("no secret value present in every --dist-dir")
 
-    # Safety clamp: --active-len is normally derived from the SECRET
-    # buffer's calibrated length, which can exceed the OUTPUT buffer's
-    # true length. load_sweep() already truncates each delta array to
-    # whatever the output buffer actually contains -- use THAT length,
-    # not the raw --active-len, to bound the position loop.
-    out_len = min(len(v) for v in delta.values())
+    print(f"[i] {len(secret_values)} secret values x {len(sweeps)} "
+          f"public backgrounds")
+
+    # --active-len is normally derived from the SECRET buffer's length,
+    # which can exceed the OUTPUT buffer's true length; clamp to the
+    # actual (already truncated) delta length.
+    out_len = min(len(w[sv]) for w in sweeps for sv in secret_values)
     safe_len = min(args.active_len, out_len)
     if safe_len < args.active_len:
         print(
@@ -122,27 +130,23 @@ def main():
             f"position loop to {safe_len}."
         )
 
-    pairs = [(a, b) for a in secret_values for b in secret_values if a != b]
-    print(f"[i] {len(pairs)} ordered (s1,s2) pairs "
-          f"({len(secret_values)}*{len(secret_values)-1})")
-
     for pos in range(safe_len):
-        disagree = []
-        for s1, s2 in pairs:
-            d1 = int(delta[s1][pos])
-            d2 = int(delta[s2][pos])
-            if d1 != d2:
-                disagree.append((s1, s2, d1, d2))
+        witnesses = []   # (s, alpha): Delta_p(s) == alpha for every p
+        for sv in secret_values:
+            alpha = int(sweeps[0][sv][pos])
+            # alpha != 0: alpha == 0 means y1 == y2 (position unaffected
+            # by the fault), which is a false positive, not a correction.
+            if alpha != 0 and all(int(w[sv][pos]) == alpha for w in sweeps):
+                witnesses.append((sv, alpha))
 
-        if args.verbose or disagree:
+        if args.verbose or witnesses:
             print("=" * 75)
-            print(f"pos {pos}: {len(disagree)}/{len(pairs)} pairs disagree "
-                  f"(Delta(s1) != Delta(s2))")
-            if disagree:
-                for s1, s2, d1, d2 in disagree[:10]:
-                    print(f"    s1={s1} (Delta={d1}) vs s2={s2} (Delta={d2})")
-                if len(disagree) > 10:
-                    print(f"    ... and {len(disagree) - 10} more")
+            print(f"pos {pos}: {len(witnesses)}/{len(secret_values)} secret "
+                  f"values with y1 = y2 xor alpha (alpha != 0) for all {len(sweeps)} p")
+            for sv, alpha in witnesses[:10]:
+                print(f"    s={sv}, alpha={alpha}")
+            if len(witnesses) > 10:
+                print(f"    ... and {len(witnesses) - 10} more")
             print("=" * 75)
 
 
