@@ -472,7 +472,7 @@ def main():
                     "faulty_elf": args.faulty_elf,
                     "secret_arg": secret_arg, "secret_len": secret_len,
                     "output_arg": output_arg, "output_len": output_len,
-                    "positions": positions,
+                    # "positions": positions,
                     "results": results,
                     "weak_system_detected": weak_system_detected,
                 },
