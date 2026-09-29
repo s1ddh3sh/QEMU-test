@@ -182,18 +182,54 @@ def _read_arg_ptr(machine, arg_index):
     return machine.read_u32(sp + 4 * (arg_index - 4))
 
 
-def capture_calls(elf_path, func, secret_arg, secret_len, output_arg, output_len, override=None):
+class ProbeSession:
+    """A machine parked right at the entry of the target `func` call, with a
+    snapshot taken there, so many trials (one per basis vector / random
+    test) can be replayed cheaply: restore the snapshot, patch the secret
+    bytes, run only from the call's entry to its own return -- instead of
+    rebooting the ELF and replaying the whole example_mayo() round trip
+    from scratch for every single trial (which is what made --positions
+    all take on the order of an hour: len(positions) + n_tests full
+    program runs, per ELF).
+    """
+
+    def __init__(self, machine, snap, secret_ptr, output_ptr, entry_pc, ret_addr,
+                 secret_len, output_len):
+        self.machine = machine
+        self.snap = snap
+        self.secret_ptr = secret_ptr
+        self.output_ptr = output_ptr
+        self.entry_pc = entry_pc
+        self.ret_addr = ret_addr
+        self.secret_len = secret_len
+        self.output_len = output_len
+
+    def query(self, values):
+        """values: {pos: gf16 value}; every other secret byte is forced to
+        0, so the probe sees exactly X (F(0) = 0). Returns the output
+        nibbles."""
+        m = self.machine
+        m.restore(self.snap)
+
+        new_secret = [0] * self.secret_len
+        for pos, value in values.items():
+            if not (0 <= pos < self.secret_len):
+                raise ValueError(f"override pos {pos} out of range (secret_len={self.secret_len})")
+            new_secret[pos] = value & 0xF
+        m.write(self.secret_ptr, bytes(new_secret))
+
+        m._emu_start(self.entry_pc | 1, self.ret_addr, timeout=RUN_TIMEOUT_US)
+        return list(m.read(self.output_ptr, self.output_len))
+
+
+def open_probe_session(elf_path, func, secret_arg, secret_len, output_arg, output_len, call_index):
     """Boot elf_path to main(), hook every call to `func` (and, if it
     happens to exist in this ELF, `func`__faulted -- the two are
     functionally interchangeable hook points; whichever ones are present
-    are hooked identically), run the whole example_mayo() round trip to
-    completion, and return one record per call: {which, call_index,
-    secret, output}.
-
-    override: optional {"call_index": int, "values": {pos: value}} -- the
-    whole secret argument is overwritten in guest memory right when the
-    target call's entry hook fires, before its body runs: byte `pos` is
-    set to `value` for each entry of `values`, every other byte to 0.
+    are hooked identically), run the whole example_mayo() round trip only
+    up through the call_index'th such call's entry, snapshot there, and
+    return a ProbeSession ready for repeated cheap trials against that one
+    call.
     """
     m = Machine.from_elf(elf_path)
     m.run_until("main")
@@ -208,68 +244,39 @@ def capture_calls(elf_path, func, secret_arg, secret_len, output_arg, output_len
             continue
     if func not in addrs:
         raise EmulationError(f"{elf_path}: no symbol named {func!r}")
-    addr_to_name = {addr: name for name, addr in addrs.items()}
 
-    calls = []
-    pending = []
-    return_hooks = {}
+    count = 0
+    hit = {}
 
     def entry_hook(machine, address, size):
-        which = addr_to_name[address]
-        secret_ptr = _read_arg_ptr(machine, secret_arg)
-        output_ptr = _read_arg_ptr(machine, output_arg)
-        ret_addr = machine.reg("lr") & ~1
-        idx = len(calls) + len(pending) + 1
-
-        secret_bytes = list(machine.read(secret_ptr, secret_len))
-
-        if override is not None and idx == override["call_index"]:
-            # X = override["values"] ({pos: gf16 value}); every other secret
-            # byte is forced to 0, so the probe sees exactly X (F(0) = 0).
-            new_secret = [0] * secret_len
-            for pos, value in override["values"].items():
-                if not (0 <= pos < secret_len):
-                    raise ValueError(f"override pos {pos} out of range (secret_len={secret_len})")
-                new_secret[pos] = value & 0xF
-            machine.write(secret_ptr, bytes(new_secret))
-            secret_bytes = new_secret
-
-        pending.append(
-            {
-                "which": which,
-                "call_index": idx,
-                "output_ptr": output_ptr,
-                "secret": secret_bytes,
-            }
-        )
-
-        if ret_addr not in return_hooks:
-            def exit_hook(machine, address, size):
-                rec = pending.pop(0)
-                rec["output"] = list(machine.read(rec["output_ptr"], output_len))
-                calls.append(rec)
-
-            return_hooks[ret_addr] = m.hook_code(
-                exit_hook, begin=ret_addr, end=ret_addr, precise=False
-            )
+        nonlocal count
+        count += 1
+        if count == call_index:
+            hit["secret_ptr"] = _read_arg_ptr(machine, secret_arg)
+            hit["output_ptr"] = _read_arg_ptr(machine, output_arg)
+            hit["ret_addr"] = machine.reg("lr") & ~1
+            hit["pc"] = address
+            machine.uc.emu_stop()
 
     entry_handles = [
         m.hook_code(entry_hook, begin=addr, end=addr, precise=False) for addr in addrs.values()
     ]
-
     try:
         m._emu_start(main_entry_pc, return_addr, timeout=RUN_TIMEOUT_US)
     finally:
         for h in entry_handles:
             m.unhook(h)
-        for h in return_hooks.values():
-            m.unhook(h)
 
-    if pending:
-        raise EmulationError(f"{len(pending)} {func} call(s) entered but never returned")
+    if "pc" not in hit:
+        raise EmulationError(
+            f"{elf_path}: {func} call_index {call_index} never reached (only {count} call(s) seen)"
+        )
 
-    calls.sort(key=lambda r: r["call_index"])
-    return calls
+    snap = m.snapshot()
+    return ProbeSession(
+        m, snap, hit["secret_ptr"], hit["output_ptr"], hit["pc"], hit["ret_addr"],
+        secret_len, output_len,
+    )
 
 
 def _nibbles(byte_list):
@@ -278,15 +285,6 @@ def _nibbles(byte_list):
         out.append(b & 0xF)
         out.append((b >> 4) & 0xF)
     return out
-
-
-def _query(elf_path, func, secret_arg, secret_len, output_arg, output_len, call_index, values):
-    calls = capture_calls(
-        elf_path, func, secret_arg, secret_len, output_arg, output_len,
-        override={"call_index": call_index, "values": values},
-    )
-    rec = next(r for r in calls if r["call_index"] == call_index)
-    return _nibbles(rec["output"])
 
 
 def linearity_probe(elf_path, func, secret_arg, secret_len, output_arg, output_len,
@@ -302,20 +300,24 @@ def linearity_probe(elf_path, func, secret_arg, secret_len, output_arg, output_l
       3. query the black box at X and compare. Any differing output nibble
          proves F is not GF(16)-linear.
     Returns the number of mismatching nibbles summed over all test inputs.
+
+    One ProbeSession (one boot + one run up to the target call) is reused
+    for all len(positions) + n_tests trials.
     """
+    session = open_probe_session(elf_path, func, secret_arg, secret_len,
+                                  output_arg, output_len, call_index)
+
     rng = random.Random(seed)
     cols = {}
     for pos in positions:
-        cols[pos] = _query(elf_path, func, secret_arg, secret_len, output_arg,
-                           output_len, call_index, {pos: 1})
+        cols[pos] = _nibbles(session.query({pos: 1}))
     n = len(cols[positions[0]])
 
     nonzero = 0
     failing_tests = 0
     for t in range(n_tests):
         x = {pos: rng.randrange(1, 16) for pos in positions}
-        actual = _query(elf_path, func, secret_arg, secret_len, output_arg,
-                        output_len, call_index, x)
+        actual = _nibbles(session.query(x))
         predicted = [0] * n
         for pos, xi in x.items():
             c = cols[pos]
