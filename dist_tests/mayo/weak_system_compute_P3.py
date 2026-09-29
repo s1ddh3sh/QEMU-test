@@ -332,7 +332,7 @@ def linearity_probe(elf_path, func, secret_arg, secret_len, output_arg, output_l
         f"[i] {label}: linearity probe over {len(positions)} basis vectors, {n_tests} tests, "
         f"{n} output nibbles -> {nonzero} mismatching nibbles, {failing_tests}/{n_tests} tests failed"
     )
-    return {"positions": positions, "n_nibbles": n, "n_tests": n_tests,
+    return {"n_nibbles": n, "n_tests": n_tests,
             "failing_tests": failing_tests, "nonzero_residual": nonzero}
 
 
@@ -474,7 +474,6 @@ def main():
                     "faulty_elf": args.faulty_elf,
                     "secret_arg": secret_arg, "secret_len": secret_len,
                     "output_arg": output_arg, "output_len": output_len,
-                    # "positions": positions,
                     "results": results,
                     "weak_system_detected": weak_system_detected,
                 },
