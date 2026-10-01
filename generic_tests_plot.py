@@ -23,10 +23,13 @@ only) gets one row per test per source file it actually has):
   wrapping ineffective_<algo>.py / correction_<algo>.py): a "DETECTED" verdict
   isn't printed explicitly -- presence of at least one
       pos N: X/Y pairs disagree
-  line with X > 0 anywhere in the file IS the detection (see report.sh,
-  which this script supersedes for the paired-result format and extends
-  with Dilithium + the test_result.txt format + machine-readable CSV
-  output).
+  (ineffective test, and older correction_<algo>.py runs), or
+      pos N: X/Y secret values with y1 = y2 xor alpha (alpha != 0) for all P p
+  (current correction_<algo>.py), with X > 0 anywhere in the file IS the
+  detection; the no-detection case has no "pos N:" line at all, just the
+  header (see report.sh, which this script supersedes for the paired-result
+  format and extends with Dilithium + the test_result.txt format +
+  machine-readable CSV output).
 
 A fault folder's name is its path relative to the function's tests_<algo>/
 <func_name>/ directory (e.g. "loopOrFuncSkip/<faulty_stem>" for a nested
@@ -51,7 +54,10 @@ PAIRED_FILENAMES = {
     "ineffective_paired_result.txt": "ineffective",
     "correction_paired_result.txt": "correction",
 }
-PAIRED_HIT_RE = re.compile(r"^pos (\d+): (\d+)/(\d+) pairs disagree", re.MULTILINE)
+PAIRED_HIT_RE = re.compile(
+    r"^pos (\d+): (\d+)/(\d+) (pairs disagree|secret values with y1 = y2 xor alpha)",
+    re.MULTILINE,
+)
 
 TEST_RESULT_FILENAME = "test_result.txt"
 TEST_RESULT_RE = re.compile(
@@ -81,11 +87,11 @@ def parse_paired_result(path):
     except OSError as e:
         return [(False, f"(unreadable: {e})")]
     hits = PAIRED_HIT_RE.findall(text)
-    positive = [(pos, x, y) for pos, x, y in hits if int(x) > 0]
+    positive = [(pos, x, y, phrase) for pos, x, y, phrase in hits if int(x) > 0]
     if positive:
-        pos, x, y = positive[0]
+        pos, x, y, phrase = positive[0]
         extra = f" (+{len(positive) - 1} more position(s))" if len(positive) > 1 else ""
-        return [(True, f"pos {pos}: {x}/{y} pairs disagree{extra}")]
+        return [(True, f"pos {pos}: {x}/{y} {phrase}{extra}")]
     return [(False, "no position with disagreeing pairs")]
 
 
