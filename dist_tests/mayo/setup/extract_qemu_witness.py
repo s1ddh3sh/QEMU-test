@@ -21,6 +21,18 @@ TYPE_SIZES = {
     "ptr": 8,
 }
 
+NAME_TOKEN_RE = re.compile(r'[a-z0-9]+')
+
+# A pointer arg's backing alloca is flagged as a likely reused/placeholder
+# buffer -- not one actually sized for this argument -- when it is both
+# (a) unrelated by name to the argument key it's bound to, and (b) more
+# than this many times larger than every OTHER pointer buffer in the same
+# call. Both conditions together avoid flagging legitimately big buffers
+# (llvmbmc variable names routinely don't match the source argument name,
+# so name mismatch alone is too weak a signal; sheer size alone is too,
+# since some functions genuinely need one big buffer among small ones).
+OVERSIZE_RATIO = 5
+
 # Matches the START of any alloca statement we care about: %name = alloca
 # What follows -- an array type "[N x TYPE]" (possibly nested, e.g. a
 # matrix's "[M x [N x i8]]"), or a bare scalar type like "i32" (e.g.
@@ -221,6 +233,57 @@ def find_global_init(ll_text: str, anchor_name: str) -> int:
         return 0
     return int(m.group(1))
 
+def _name_tokens(name: str) -> set:
+    return set(NAME_TOKEN_RE.findall(name.lower()))
+
+
+def warn_if_placeholder_buffer(key, var_name, length, key_to_arg, allocas, output_keys):
+    """Best-effort sanity check for a pointer arg's backing alloca: flags
+    the case where qemu_witness.json would report a wildly oversized,
+    name-unrelated buffer as this key's "length" because the harness
+    generator reused some OTHER buffer (e.g. a worst-case/leftover
+    scratch array) for this argument slot instead of one actually sized
+    for it -- see mul_add_mat_x_m_mat's 'bs_mat' bound to a 148824-byte
+    '%sk' (secret-key-sized) scratch buffer for a real-world example.
+    Both conditions below must hold, since neither alone is a reliable
+    signal: llvmbmc variable names routinely don't match the source
+    argument name, and some functions legitimately need one big pointer
+    buffer among otherwise-small ones.
+
+    Output buffers are exempt, both as the flagged key and as a sibling:
+    an output's size legitimately reflects the size of its RESULT (e.g.
+    an expansion function's output dwarfing its seed input), which has
+    nothing to do with whether its backing alloca was sized correctly --
+    and letting a huge legitimate output buffer stand in as a "sibling"
+    would mask a genuinely oversized INPUT right next to it.
+    """
+    if key in output_keys:
+        return
+    sibling_lengths = [
+        allocas[sib_var] for sib_key, (sib_kind, sib_var) in key_to_arg.items()
+        if sib_kind == "ptr" and sib_key != key and sib_key not in output_keys
+        and sib_var in allocas
+    ]
+    if not sibling_lengths:
+        return
+    name_mismatch = not (_name_tokens(key) & _name_tokens(var_name))
+    oversized = length > OVERSIZE_RATIO * max(sibling_lengths)
+    if name_mismatch and oversized:
+        print(
+            f"[!] '{key}' is backed by %{var_name} ({length} bytes), which "
+            f"shares no name tokens with '{key}' and is >{OVERSIZE_RATIO}x "
+            f"larger than this call's other pointer buffer(s) "
+            f"({sorted(sibling_lengths)}). This looks like a reused/"
+            f"placeholder buffer (e.g. a worst-case scratch array) rather "
+            f"than one actually sized for '{key}' -- the reported length "
+            f"is likely a large OVER-estimate of what the function really "
+            f"touches, and probing/calibrating up to it may read or write "
+            f"past the buffer's real usable region. Verify against the "
+            f"function's actual access pattern (and consider hand-"
+            f"correcting qemu_witness.json) before trusting this length."
+        )
+
+
 def load_first_sample(json_path: Path) -> Dict[str, object]:
     with open(json_path) as f:
         for line in f:
@@ -274,8 +337,10 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
                     f"Call argument %{var_name} (json key '{key}') has no "
                     f"matching alloca with !llvmbmc.var in main()"
                 )
-            layout[key] = {"role": "input", "length": allocas[var_name]}
+            length = allocas[var_name]
+            layout[key] = {"role": "input", "length": length}
             ptr_keys.add(key)
+            warn_if_placeholder_buffer(key, var_name, length, key_to_arg, allocas, output_keys)
 
         elif kind == "reg":
             anchor_name, byte_width = find_arg_anchor(ll_text, val)
