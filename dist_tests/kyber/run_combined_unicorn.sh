@@ -17,7 +17,7 @@
 # ordinarily this script should be used instead.
 #
 # Usage:
-#   ./run_combined_unicorn.sh <func_name> \
+#   ./run_combined_unicorn.sh [func_name] \
 #       [--secret-buf NAME] [--fixed-scalars name1,name2,...] \
 #       [--elf-dir DIR] [--secret-pos POS] [--secret-word-size 1|2] \
 #       [--field-mod N] [--out-buf NAME] [--out-word-size 1|2|4] \
@@ -25,12 +25,21 @@
 #       [--test ineffective|correction|both] [--require any|all] \
 #       [--seed N] [--seeds p0,p1,...] [--kyber-k 2|3|4]
 #
+# func_name is now OPTIONAL: if omitted (or if the first argument starts
+# with "--"), every function key in <repo_root>/kyber.json is run in
+# turn, with whatever override flags were given applying uniformly to
+# all of them. One function's failure is reported and does not stop the
+# others (see run_one_function below); the script exits non-zero overall
+# if anything failed.
+#
 # --seeds: comma-separated public-background seeds for the CORRECTION test
 # (exists alpha != 0, s: for all p, y1 = y2 xor alpha). Needs >= 2 values to
 # be meaningful. The first seed is also the one used by the ineffective test.
 #
 # Example:
 #   ./run_combined_unicorn.sh pqcrystals_kyber768_ref_poly_tomsg
+#   ./run_combined_unicorn.sh                    # every function in kyber.json
+#   ./run_combined_unicorn.sh --test ineffective  # ditto, with an override flag
 #
 # NOTE: func_name is the function's full/mangled symbol name (e.g.
 # pqcrystals_kyber768_ref_poly_tomsg), matching both the tests_kyber/
@@ -95,12 +104,13 @@
 
 set -euo pipefail
 
-if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <func_name> [--secret-buf NAME] [--fixed-scalars n1,n2,...] [--elf-dir DIR] [--secret-pos POS] [--secret-word-size 1|2] [--field-mod N] [--out-buf NAME] [--out-word-size 1|2|4] [--diff-mode xor|mod-sub] [--modulus N] [--test ineffective|correction|both] [--require any|all] [--seed N] [--seeds p0,p1,...] [--kyber-k 2|3|4]" >&2
-    exit 1
+# func_name is optional (see Usage above): present unless the first
+# argument is itself a flag, in which case every function in
+# kyber.json is run (dispatch is at the bottom of this file).
+FUNC_NAME=""
+if [[ $# -ge 1 && "$1" != --* ]]; then
+    FUNC_NAME="$1"; shift
 fi
-
-FUNC_NAME="$1"; shift
 
 ELF_DIR_OVERRIDE=""
 SECRET_BUF_OVERRIDE=""
@@ -145,6 +155,19 @@ if [[ -n "$SEEDS" ]]; then
     SEED="${SEEDS_ARR[0]}"
     SEEDS_ARGS=(--seeds "${SEEDS_ARR[@]}")
 fi
+
+# ---------------------------------------------------------------------------
+# Everything below runs for exactly one function. It's wrapped in a
+# function (itself a subshell, so an internal `exit N` only ends this
+# one function's run, never the whole script) so the no-func_name mode
+# at the bottom of this file can call it once per function in
+# kyber.json without one function's failure/`exit` aborting the rest --
+# same isolation pattern as mayo_build.sh's build_one_dir().
+# ---------------------------------------------------------------------------
+run_one_function() {
+(
+set -euo pipefail
+FUNC_NAME="$1"
 
 # ---------------------------------------------------------------------------
 # Path setup. NOTE: this must come before any [[ -f ... ]] checks -- under
@@ -472,3 +495,58 @@ for row in "${SUMMARY_ROWS[@]}"; do
 done
 
 exit $OVERALL_STATUS
+)
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch: a func_name was given on the command line -> run just that
+# one (identical behavior to before this function existed). Otherwise,
+# run every function key in kyber.json in turn, with whatever override
+# flags were parsed above applied uniformly to all of them.
+# ---------------------------------------------------------------------------
+
+if [[ -n "$FUNC_NAME" ]]; then
+    run_one_function "$FUNC_NAME"
+    exit $?
+fi
+
+CONFIG_JSON="kyber.json"
+if [[ ! -f "$CONFIG_JSON" ]]; then
+    echo "[!] ${CONFIG_JSON} not found -- run this script from the repo root" >&2
+    exit 1
+fi
+
+mapfile -t ALL_FUNCS < <(python3 -c "
+import json
+with open('${CONFIG_JSON}') as f:
+    print('\n'.join(json.load(f).keys()))
+")
+
+if [[ "${#ALL_FUNCS[@]}" -eq 0 ]]; then
+    echo "[!] no functions found in ${CONFIG_JSON}" >&2
+    exit 1
+fi
+
+echo "[i] no <func_name> given -- running all ${#ALL_FUNCS[@]} function(s) from ${CONFIG_JSON}"
+
+FAILED_FUNCS=()
+for f in "${ALL_FUNCS[@]}"; do
+    echo
+    echo "################################################################"
+    echo "# ${f}"
+    echo "################################################################"
+    if run_one_function "$f"; then
+        echo "[i] OK: ${f}"
+    else
+        echo "[!] FAILED: ${f}" >&2
+        FAILED_FUNCS+=("$f")
+    fi
+done
+
+echo
+echo "=== Overall: $((${#ALL_FUNCS[@]} - ${#FAILED_FUNCS[@]}))/${#ALL_FUNCS[@]} function(s) completed without failure ==="
+if [[ "${#FAILED_FUNCS[@]}" -gt 0 ]]; then
+    echo "Failed:" >&2
+    printf '  %s\n' "${FAILED_FUNCS[@]}" >&2
+    exit 1
+fi
