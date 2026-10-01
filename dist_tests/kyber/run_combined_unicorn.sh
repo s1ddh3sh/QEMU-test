@@ -205,8 +205,13 @@ try:
 except FileNotFoundError:
     config = {}
 entry = config.get(func) or {}
-print(entry.get("secret-buf") or "__NONE__")
-print(entry.get("fixed-scalars") or "__NONE__")
+# ONE line, space-joined: `read -r VAR1 VAR2 <<< "$(...)"` below only
+# reads the FIRST line of its here-string, splitting it on whitespace --
+# two separate print() calls would silently leave JSON_FIXED_SCALARS
+# empty on every function that actually has a "fixed-scalars" entry
+# (neither secret-buf nor fixed-scalars ever contains whitespace, so
+# this is a safe, unambiguous join).
+print((entry.get("secret-buf") or "__NONE__") + " " + (entry.get("fixed-scalars") or "__NONE__"))
 PYEOF
 )"
 [[ "$JSON_SECRET_BUF" == "__NONE__" ]] && JSON_SECRET_BUF=""
