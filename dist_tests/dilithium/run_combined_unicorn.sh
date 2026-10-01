@@ -23,7 +23,17 @@
 #       [--out-buf NAME] [--out-word-size 1|2|4] \
 #       [--diff-mode xor|mod-sub] [--modulus N] \
 #       [--test ineffective|correction|both] [--require any|all] \
-#       [--seed N] [--seeds p0,p1,...] [--dilithium-mode 2|3|5]
+#       [--seed N] [--seeds p0,p1,...] [--dilithium-mode 2|3|5] [--fresh]
+#
+# --fresh: delete each faulty ELF's dist_paired/ directory (and its
+# seed<N>/ subdirs) before collecting, instead of reusing whatever
+# correct_sv*.json/faulty_sv*.json already happen to be on disk there.
+# Without this flag, early_stop_sweep_unicorn.py is resumable/replayable
+# by design (see its own module docstring) -- useful for picking up an
+# interrupted sweep, but it also means a STALE collection left over from
+# a run with different parameters (a bug fix, a different --fixed-scalars,
+# etc.) gets silently replayed instead of recollected. Pass --fresh
+# whenever you've changed anything that affects what a trial computes.
 #
 # func_name is now OPTIONAL: if omitted (or if the first argument starts
 # with "--"), every function key in <repo_root>/dilithium.json is run in
@@ -125,6 +135,7 @@ REQUIRE=all
 SEED=0
 SEEDS=""
 DILITHIUM_MODE_OVERRIDE=""
+FRESH=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -142,6 +153,7 @@ while [[ $# -gt 0 ]]; do
         --seed) SEED="$2"; shift 2 ;;
         --seeds) SEEDS="$2"; shift 2 ;;
         --dilithium-mode) DILITHIUM_MODE_OVERRIDE="$2"; shift 2 ;;
+        --fresh) FRESH=1; shift ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
@@ -418,6 +430,10 @@ OVERALL_STATUS=0
 for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
     FAULTY_STEM="$(rel_stem "$FAULTY_ELF" "$ELF_DIR")"
     DIST_PAIRED_DIR="${OUT_DIR}/${FAULTY_STEM}/dist_paired"
+    if [[ "$FRESH" -eq 1 && -d "$DIST_PAIRED_DIR" ]]; then
+        echo "[i] --fresh: removing ${DIST_PAIRED_DIR}"
+        rm -rf "$DIST_PAIRED_DIR"
+    fi
     mkdir -p "$DIST_PAIRED_DIR"
 
     RESULT_FILE="${OUT_DIR}/${FAULTY_STEM}/test_result.txt"
