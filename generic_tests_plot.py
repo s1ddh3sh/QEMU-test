@@ -11,12 +11,11 @@ pipeline (run_combined.sh / run_combined_unicorn.sh, Dilithium/Kyber
 only) gets one row per test per source file it actually has):
 
   test_result.txt (Dilithium/Kyber only -- written by dist_and_test.py /
-  early_stop_sweep_unicorn.py):
-      [RESULT] ineffective test: DETECTED at pos 0 (s1=256 ineffective, s2=0 effective)
-      [RESULT] correction test: DETECTED at pos 0 (s1=0 Delta=116, s2=256 Delta=0)
-  or, when nothing was found in the swept range:
-      [RESULT] ineffective test: no disagreement found in range swept
-      [RESULT] correction test: no disagreement found in range swept
+  early_stop_sweep_unicorn.py): a test is detected iff the file has its
+  "[+]" line (each test is judged independently):
+      [+] INEFFECTIVE hit at pos 0: s1=0 (d1=True, ineffective) vs s2=2 (d2=False, effective)
+      [+] CORRECTION hit at pos 0: s=2, alpha=1 constant across 4 public backgrounds ...
+  The "[RESULT] <test> test: ..." lines are recorded as the CSV detail.
 
   ineffective_paired_result.txt / correction_paired_result.txt (all three
   schemes -- written by run_ineffective_paired.sh / run_correction_paired.sh,
@@ -60,10 +59,10 @@ PAIRED_HIT_RE = re.compile(
 )
 
 TEST_RESULT_FILENAME = "test_result.txt"
-TEST_RESULT_RE = re.compile(
-    r"^\[RESULT\] (ineffective|correction) test: (DETECTED.*|no disagreement.*)$",
-    re.MULTILINE,
-)
+# A "[+] INEFFECTIVE hit ..." / "[+] CORRECTION hit ..." line means that test
+# detected the fault; the "[RESULT] <test> test: ..." line is kept as detail.
+TEST_HIT_RE = re.compile(r"^\[\+\] (INEFFECTIVE|CORRECTION) hit\b.*$", re.MULTILINE)
+TEST_RESULT_RE = re.compile(r"^\[RESULT\] (ineffective|correction) test: (.*)$", re.MULTILINE)
 
 FIELDNAMES = ["scheme", "function", "fault", "source", "test", "detected", "detail"]
 
@@ -103,10 +102,13 @@ def parse_test_result(path):
         text = open(path, errors="replace").read()
     except OSError as e:
         return [("ineffective", False, f"(unreadable: {e})"), ("correction", False, f"(unreadable: {e})")]
+    hits = {m.group(1).lower(): m.group(0).strip() for m in TEST_HIT_RE.finditer(text)}
+    verdicts = {t: v.strip() for t, v in TEST_RESULT_RE.findall(text)}
     out = []
-    for test, verdict in TEST_RESULT_RE.findall(text):
-        detected = verdict.startswith("DETECTED")
-        out.append((test, detected, verdict.strip()))
+    for test in ("ineffective", "correction"):
+        if test not in hits and test not in verdicts:
+            continue
+        out.append((test, test in hits, verdicts.get(test) or hits.get(test)))
     return out
 
 

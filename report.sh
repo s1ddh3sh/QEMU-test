@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 #
-# report.sh — scan tests_mayo/ and tests_kyber/ for correction_paired_result.txt
-# and ineffective_paired_result.txt files, detect which ones show at least one
-# position with a "pos N: X/Y pairs disagree" line, and produce a report
-# grouped by project -> function -> fault folder.
+# report.sh — scan the test folders and record which tests detected each fault.
+#   tests_kyber/, tests_dilithium/: one test_result.txt per fault folder;
+#       "[+] INEFFECTIVE hit" -> ineffective test detected
+#       "[+] CORRECTION hit"  -> correction test detected
+#   tests_mayo/: correction_paired_result.txt / ineffective_paired_result.txt;
+#       a "pos N: X/Y pairs disagree" line -> that test detected
+# Produces a report grouped by project -> function -> fault folder.
 #
 # Usage:
 #   ./report.sh [outfile.md]
@@ -11,8 +14,10 @@
 set -euo pipefail
 
 OUTFILE="${1:-fault_detection_report.md}"
-PATTERN='pos [0-9]+: [0-9]+/[0-9]+ pairs disagree'
-ROOTS=(tests_mayo tests_kyber)
+PATTERN_INEFF='^\[\+\] INEFFECTIVE hit'
+PATTERN_CORR='^\[\+\] CORRECTION hit'
+PATTERN_MAYO='pos [0-9]+: [0-9]+/[0-9]+ pairs disagree'
+ROOTS=(tests_mayo tests_kyber tests_dilithium)
 SEP='|'   # plain, visible delimiter -- avoids the \t vs $'\t' quoting bug
 
 declare -A DETECTED   # key: project|func|fault|kind -> "1"
@@ -28,13 +33,6 @@ for root in "${ROOTS[@]}"; do
         SEEN_FUNC["${root}${SEP}${func_name}"]=1
 
         while IFS= read -r -d '' resfile; do
-            base="$(basename "$resfile")"
-            case "$base" in
-                ineffective_paired_result.txt) kind="ineffective" ;;
-                correction_paired_result.txt)  kind="correction"  ;;
-                *) continue ;;
-            esac
-
             parent_dir="$(dirname "$resfile")"
             if [[ "$(realpath "$parent_dir")" == "$(realpath "$func_dir")" ]]; then
                 fault_name="(root)"
@@ -44,11 +42,28 @@ for root in "${ROOTS[@]}"; do
 
             SEEN_FAULT["${root}${SEP}${func_name}${SEP}${fault_name}"]=1
 
-            if grep -Eq "$PATTERN" "$resfile" 2>/dev/null; then
-                DETECTED["${root}${SEP}${func_name}${SEP}${fault_name}${SEP}${kind}"]=1
+            if [[ "$root" == "tests_mayo" ]]; then
+                case "$(basename "$resfile")" in
+                    ineffective_paired_result.txt) kind="ineffective" ;;
+                    correction_paired_result.txt)  kind="correction"  ;;
+                    *) continue ;;
+                esac
+                if grep -Eq "$PATTERN_MAYO" "$resfile" 2>/dev/null; then
+                    DETECTED["${root}${SEP}${func_name}${SEP}${fault_name}${SEP}${kind}"]=1
+                fi
+                continue
+            fi
+
+            if grep -Eq "$PATTERN_INEFF" "$resfile" 2>/dev/null; then
+                DETECTED["${root}${SEP}${func_name}${SEP}${fault_name}${SEP}ineffective"]=1
+            fi
+            if grep -Eq "$PATTERN_CORR" "$resfile" 2>/dev/null; then
+                DETECTED["${root}${SEP}${func_name}${SEP}${fault_name}${SEP}correction"]=1
             fi
         done < <(find "$func_dir" -type f \
-                    \( -name "ineffective_paired_result.txt" -o -name "correction_paired_result.txt" \) \
+                    \( -name "test_result.txt" \
+                       -o -name "ineffective_paired_result.txt" \
+                       -o -name "correction_paired_result.txt" \) \
                     -print0)
     done
 done
@@ -62,9 +77,9 @@ done
     echo
     echo "Generated $(date -u '+%Y-%m-%d %H:%M UTC')."
     echo
-    echo "Detection pattern: \`${PATTERN}\` — presence means at least one"
-    echo "output position showed \`X/Y pairs disagree\` with \`X > 0\` in the"
-    echo "corresponding paired test's result file."
+    echo "Mayo: a \`${PATTERN_MAYO}\` line in the paired result files means detection."
+    echo "Kyber/Dilithium: a \`[+] INEFFECTIVE hit\` / \`[+] CORRECTION hit\` line in a"
+    echo "fault's \`test_result.txt\` means that test detected the fault."
     echo
 
     for root in "${ROOTS[@]}"; do

@@ -80,8 +80,7 @@ def print_report(flagged):
         print(f"== {function} ==")
         for item in by_func[function]:
             print(f"  {item['fault']}")
-            print(f"      correct residual: {item['correct_pct']:.1f}%   "
-                  f"faulty residual: {item['faulty_pct']:.1f}%")
+        print(f"  -> {len(by_func[function])} flagged")
         print()
     print(f"Total flagged faults: {len(flagged)} across {len(by_func)} function(s).")
 
@@ -90,48 +89,35 @@ def plot(flagged, out_path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.ticker
 
     if not flagged:
         print("Nothing to plot.")
         return
 
-    # Sort by function then fault so bars are grouped visually by function.
-    flagged = sorted(flagged, key=lambda d: (d["function"], d["fault"]))
-    labels = [f"{d['function']}\n{d['fault']}" for d in flagged]
-    correct_vals = [d["correct_pct"] for d in flagged]
-    faulty_vals = [d["faulty_pct"] for d in flagged]
+    counts = defaultdict(int)
+    for d in flagged:
+        counts[d["function"]] += 1
+    funcs = sorted(counts, key=lambda f: (-counts[f], f))
+    vals = [counts[f] for f in funcs]
 
-    n = len(flagged)
-    y = list(range(n))
-    bar_h = 0.35
-
-    fig_h = max(3.0, 0.9 * n + 1.5)
-    fig, ax = plt.subplots(figsize=(11, fig_h))
-
-    ax.barh([i + bar_h / 2 for i in y], correct_vals, height=bar_h,
-            color=COLOR_CORRECT, label="correct binary (expected: nonlinear)")
-    ax.barh([i - bar_h / 2 for i in y], faulty_vals, height=bar_h,
-            color=COLOR_FAULTY, label="faulty binary (collapsed to linear)")
-
+    fig, ax = plt.subplots(figsize=(10, max(3.0, 0.45 * len(funcs) + 1.5)))
+    y = list(range(len(funcs)))
+    ax.barh(y, vals, height=0.6, color=COLOR_FAULTY, zorder=3)
     ax.set_yticks(y)
-    ax.set_yticklabels(labels, fontsize=8)
+    ax.set_yticklabels(funcs, fontsize=8)
     ax.invert_yaxis()
-    ax.set_xlabel("Residual nibbles vs. zero-input baseline (%)\n"
-                  "(share of output nibbles that differ under GF(16) linearity probe)")
-    ax.set_title("MAYO weak-system faults: degree-collapse residual, correct vs. faulty",
-                 pad=36)
-    ax.set_xlim(0, 100)
-    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, frameon=False)
+    ax.set_xlabel("faults flagged as weak system (output collapsed to linear)")
+    ax.set_title(f"MAYO weak-system faults: {len(flagged)} flagged across "
+                 f"{len(funcs)} function(s)")
+    ax.set_xlim(0, max(vals) + 1)
+    ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
     ax.grid(axis="x", color="#dddddd", linewidth=0.8, zorder=0)
     ax.set_axisbelow(True)
     for spine in ("top", "right"):
         ax.spines[spine].set_visible(False)
-
-    # direct value labels on each bar
-    for yi, v in zip(y, correct_vals):
-        ax.text(v + 1, yi + bar_h / 2, f"{v:.0f}%", va="center", fontsize=7, color="#333333")
-    for yi, v in zip(y, faulty_vals):
-        ax.text(v + 1, yi - bar_h / 2, f"{v:.0f}%", va="center", fontsize=7, color="#333333")
+    for yi, v in zip(y, vals):
+        ax.text(v + 0.05, yi, str(v), va="center", fontsize=8, color="#333333")
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
