@@ -76,6 +76,21 @@
     },
     "compute_rhs":{
         "secret-buf":"vPv"
+    },
+    "compute_P3":{
+        "secret-buf":"O"
+    },
+    "compute_M_and_VPV":{
+        "secret-buf":"Vdec"
+    },
+    "ef_pack_m_vec":{
+        "secret-buf":"in",
+        "fixed-scalars":"ncols"
+    },
+    "m_calculate_PS_SPS":{
+        "secret-buf":"s"
+    },
+    "mul_table":{
+        "secret-buf":"b"
     }
-    
 }
