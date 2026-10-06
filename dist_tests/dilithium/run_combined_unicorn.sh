@@ -135,7 +135,7 @@ REQUIRE=all
 SEED=0
 SEEDS="0,1,2,3"
 DILITHIUM_MODE_OVERRIDE=""
-FRESH=0
+FRESH=1
 
 while [[ $# -gt 0 ]]; do
     case "$1" in

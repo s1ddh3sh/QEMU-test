@@ -56,6 +56,54 @@
         "secret-buf":"v"
     },
     "pqcrystals_dilithium2_ref_polyveck_add":{
-        
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_caddq":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_decompose":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_invntt_tomont":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_ntt":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_pointwise_poly_montgomery":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_reduce":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_shiftl":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_sub":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_uniform_eta":{
+        "secret-buf":"seed",
+        "fixed-scalars":"nonce"
+    },
+    "pqcrystals_dilithium2_ref_polyvecl_invntt_tomont":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyvecl_ntt":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyvecl_pointwise_acc_montgomery":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyvecl_pointwise_poly_montgomery":{
+        "secret-buf":"v"
+    },
+    "pqcrystals_dilithium2_ref_polyvecl_uniform_eta":{
+        "secret-buf":"seed",
+        "fixed-scalars":"nonce"
+    },
+    "pqcrystals_dilithium2_ref_polyvecl_uniform_gamma1":{
+        "secret-buf":"seed",
+        "fixed-scalars":"nonce"
     }
 }
