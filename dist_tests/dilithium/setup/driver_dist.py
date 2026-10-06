@@ -399,7 +399,8 @@ def _lookup_distribution(dist_name):
             f"distribution, add it to _DISTRIBUTION_TABLE in "
             f"driver_dist.py -- a uniform byte fill decodes to "
             f"out-of-domain int32 coefficients and can make a function "
-            f"behave nothing like it does in a real signature."
+            f"behave nothing like it does in a real signature.",
+            file=sys.stderr,
         )
     return entry
 

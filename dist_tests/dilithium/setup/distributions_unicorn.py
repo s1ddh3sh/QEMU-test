@@ -14,6 +14,7 @@ populations.
 """
 
 import os
+import sys
 import re
 
 
@@ -235,7 +236,8 @@ def _lookup_distribution(dist_name):
             f"distribution, add it to _DISTRIBUTION_TABLE in "
             f"driver_dist.py -- a uniform byte fill decodes to "
             f"out-of-domain int32 coefficients and can make a function "
-            f"behave nothing like it does in a real signature."
+            f"behave nothing like it does in a real signature.",
+            file=sys.stderr,
         )
     return entry
 
@@ -354,6 +356,91 @@ def infer_field_mod(dist_name):
     if kind == "t1":
         return 1 << 10
     return 256
+
+
+def domain_bounds(dist_name):
+    """Inclusive (lo, hi) of the values a SINGLE coefficient of this
+    distribution can take -- the same ranges infer_field_mod() counts
+    (hi - lo + 1 == infer_field_mod(dist_name))."""
+    entry = _lookup_distribution(dist_name) if dist_name else None
+    if entry is None or entry[0] == "bytes":
+        return (0, 255)
+    kind, extra = entry
+    if kind == "uniform_eta":
+        return (-ETA, ETA)
+    if kind == "poly_mod_q":
+        return (0, DILITHIUM_Q - 1)
+    if kind == "poly_signed":
+        return (-extra, extra)
+    if kind == "poly_gamma1":
+        return (-GAMMA1 + 1, GAMMA1)
+    if kind == "w1":
+        return (0, (DILITHIUM_Q - 1) // (2 * GAMMA2) - 1)
+    if kind == "challenge":
+        return (-1, 1)
+    if kind == "hint":
+        return (0, 1)
+    if kind == "t0":
+        half = 1 << (DILITHIUM_D - 1)
+        return (-half + 1, half)
+    if kind == "t1":
+        return (0, (1 << 10) - 1)
+    return (0, 255)
+
+
+class _ZeroFirstRange:
+    """Every integer in [lo, hi], with 0 first when in range, without
+    materialising the list (the full Dilithium domain is ~8M values)."""
+
+    def __init__(self, lo, hi):
+        self.lo, self.hi = lo, hi
+        self._zero = lo <= 0 <= hi
+
+    def __len__(self):
+        return self.hi - self.lo + 1
+
+    def __getitem__(self, i):
+        if not 0 <= i < len(self):
+            raise IndexError(i)
+        if not self._zero:
+            return self.lo + i
+        if i == 0:
+            return 0
+        v = self.lo + i - 1
+        return v + 1 if v >= 0 else v
+
+
+def domain_values(dist_name, count):
+    """At most `count` distinct values, all inside the distribution's own
+    range (domain_bounds), for a capped sweep. 0 comes first when it is in
+    range (the most likely value to expose a skipped/altered operation);
+    the rest are evenly spaced across the whole range, endpoints included,
+    so a cap samples the full domain rather than just its low end. If
+    count >= the domain size, every value is returned (0 first, then the
+    rest in increasing order)."""
+    lo, hi = domain_bounds(dist_name)
+    size = hi - lo + 1
+    if count >= size:
+        return _ZeroFirstRange(lo, hi)
+
+    out, seen = [], set()
+
+    def add(v):
+        if v not in seen and len(out) < count:
+            seen.add(v)
+            out.append(v)
+
+    if lo <= 0 <= hi:
+        add(0)
+    n = max(count, 2)
+    for i in range(n):
+        add(lo + (i * (size - 1)) // (n - 1))
+    # rounding collisions can leave us short; fill from the low end
+    v = lo
+    while len(out) < count:
+        add(v)
+        v += 1
+    return out
 
 
 def _is_coeff_shaped(dist_name):

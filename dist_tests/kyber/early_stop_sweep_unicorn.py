@@ -85,6 +85,9 @@ if os.path.dirname(os.path.abspath(__file__)) not in sys.path:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from collect_dist_unicorn import run_one, RunFailed  # noqa: E402  (unmodified, in-process Unicorn backend)
+# Same module instance collect_dist_unicorn uses (it puts the repo root on
+# sys.path and exports --kyber-k before importing this).
+from dist_tests.kyber.setup.distributions_unicorn import infer_field_mod, domain_values  # noqa: E402
 from ineffective_kyber import (              # noqa: E402  (unmodified)
     decode_words,
     get_buffer,
@@ -112,7 +115,7 @@ def load_or_collect(sval, c_path, f_path, args, seed):
         if os.path.exists(out_path) and os.path.getsize(out_path) > 0:
             continue
         run_one(elf_path, args.witness, args.active_lengths, args.func,
-                args.field_mod, seed, variant, out_path, args.machine,
+                args.bg_field_mod, seed, variant, out_path, args.machine,
                 args.fixed_scalars, args.kyber_k,
                 args.secret_buf, args.secret_pos, sval,
                 args.secret_word_size)
@@ -132,8 +135,10 @@ def main():
     ap.add_argument("--func", required=True)
     ap.add_argument(
         "--field-mod", type=int, default=256,
-        help="upper bound of the sv sweep (exclusive) -- only reached in "
-             "the worst case where no hit is ever found",
+        help="cap on the NUMBER of secret values swept -- only reached in "
+             "the worst case where no hit is ever found. The values are "
+             "taken from the secret buffer's own distribution range "
+             "(0 first, the rest spread across it), not 0..N-1.",
     )
     ap.add_argument("--kyber-k", type=int, default=3, choices=(2, 3, 4))
     ap.add_argument("--outdir", required=True)
@@ -197,6 +202,17 @@ def main():
     args = ap.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
+
+    # --field-mod caps the NUMBER of secret values swept; the values
+    # themselves come from the secret buffer's own distribution range
+    # (domain_values), not 0..field_mod-1. Background fill for buffers with
+    # no recognised distribution keeps the secret's natural field-mod, so a
+    # cap doesn't also narrow the public inputs.
+    with open(args.witness) as f:
+        secret_dist = json.load(f)["layout"].get(args.secret_buf, {}).get("distribution")
+    args.bg_field_mod = infer_field_mod(secret_dist)
+    sweep_values = domain_values(secret_dist, args.field_mod,
+                                 args.secret_word_size)
     active_len_words = args.active_len // args.out_word_size
     seeds = args.seeds if args.seeds else [args.seed]
     primary_seed = seeds[0]
@@ -218,7 +234,7 @@ def main():
     n_collected = 0
     n_reused = 0
 
-    for sval in range(args.field_mod):
+    for idx, sval in enumerate(sweep_values):
         trials = {}   # seed -> (co, fo)
         already_present = True
         failed = False
@@ -226,8 +242,8 @@ def main():
             pdir = args.outdir if p == primary_seed else \
                 os.path.join(args.outdir, f"seed{p}")
             os.makedirs(pdir, exist_ok=True)
-            c_path = os.path.join(pdir, f"correct_sv{sval:03d}.json")
-            f_path = os.path.join(pdir, f"faulty_sv{sval:03d}.json")
+            c_path = os.path.join(pdir, f"correct_sv{idx:03d}.json")
+            f_path = os.path.join(pdir, f"faulty_sv{idx:03d}.json")
             already_present &= os.path.exists(c_path) and os.path.exists(f_path)
             try:
                 c, fdata = load_or_collect(sval, c_path, f_path, args, p)
@@ -270,7 +286,7 @@ def main():
         # raw active_len_words instead would index past the end of eq/
         # delta once a trial's real output is shorter than requested.
         n_pos = min([active_len_words, len(eq)] + [len(d) for d in deltas])
-        if n_pos < active_len_words and sval == 0:
+        if n_pos < active_len_words and idx == 0:
             print(
                 f"[!] --active-len ({active_len_words} words) exceeds "
                 f"output buffer '{args.out_buf}''s actual decoded length "
@@ -309,14 +325,15 @@ def main():
         stop = any(found) if args.require == "any" else all(found)
         if stop:
             print(f"[i] stopping sweep at sv={sval}: "
-                  f"{sval + 1} secret values examined "
+                  f"{idx + 1} secret values examined "
                   f"({n_collected} newly collected, {n_reused} reused from "
-                  f"disk), out of a possible {args.field_mod} -- "
-                  f"{100 * (sval + 1) / args.field_mod:.1f}% of the full "
+                  f"disk), out of a possible {args.bg_field_mod} -- "
+                  f"{100 * (idx + 1) / args.bg_field_mod:.1f}% of the full "
                   f"sweep.")
             break
     else:
-        print(f"[i] swept the full range 0..{args.field_mod - 1} "
+        print(f"[i] swept {len(sweep_values)} secret value(s) spread over "
+              f"[{min(sweep_values)}, {max(sweep_values)}] "
               f"({n_collected} newly collected, {n_reused} reused from "
               f"disk) without satisfying --require={args.require} for "
               f"--test={args.test}")

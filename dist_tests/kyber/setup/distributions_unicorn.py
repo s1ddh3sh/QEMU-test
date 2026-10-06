@@ -402,6 +402,63 @@ def infer_field_mod(dist_name):
     return 256
 
 
+def domain_values(dist_name, count, word_size=2):
+    """At most `count` distinct secret values, all inside the
+    distribution's own range, for a capped sweep (the same ranges
+    infer_field_mod() counts). 0 comes first when it is in range; the
+    rest are evenly spaced across the whole range, endpoints included, so
+    a cap samples the full domain instead of only its low end. If count
+    covers the whole domain, every value is returned.
+
+    word_size==1 means the override is a single byte (value & 0xFF), so
+    the only distinct values are 0..255 whatever the distribution is.
+    message_poly is not a contiguous range: its domain is exactly
+    {0, round(q/2)}."""
+    entry = _DISTRIBUTION_TABLE.get(dist_name) if dist_name else None
+    if word_size == 1 or entry is None or entry[0] == "bytes":
+        lo, hi = 0, 255
+    else:
+        kind, extra = entry
+        if kind == "message_poly":
+            return [0, (KYBER_Q + 1) // 2][:count]
+        if kind == "cbd":
+            lo, hi = -extra, extra
+        elif kind == "poly_mod_q":
+            lo, hi = 0, KYBER_Q - 1
+        elif kind == "poly_signed":
+            lo, hi = -extra, extra
+        else:
+            lo, hi = 0, 255
+
+    size = hi - lo + 1
+    zero_in = lo <= 0 <= hi
+    if count >= size:
+        vals = list(range(lo, hi + 1))
+        if zero_in:
+            vals.remove(0)
+            vals.insert(0, 0)
+        return vals
+
+    out, seen = [], set()
+
+    def add(v):
+        if v not in seen and len(out) < count:
+            seen.add(v)
+            out.append(v)
+
+    if zero_in:
+        add(0)
+    n = max(count, 2)
+    for i in range(n):
+        add(lo + (i * (size - 1)) // (n - 1))
+    # rounding collisions can leave us short; fill from the low end
+    v = lo
+    while len(out) < count:
+        add(v)
+        v += 1
+    return out
+
+
 def apply_word_override_pure(vals, word_pos, value, word_size):
     """Pure port of driver_dist.py's apply_word_override(): mutates and
     returns `vals` in place (no memory write -- the caller does that).
