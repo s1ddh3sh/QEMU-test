@@ -64,6 +64,11 @@ TEST_RESULT_FILENAME = "test_result.txt"
 TEST_HIT_RE = re.compile(r"^\[\+\] (INEFFECTIVE|CORRECTION) hit\b.*$", re.MULTILINE)
 TEST_RESULT_RE = re.compile(r"^\[RESULT\] (ineffective|correction) test: (.*)$", re.MULTILINE)
 
+# A run that died on a subprocess timeout (e.g. gdb-multiarch exceeding its
+# limit) leaves a traceback ending in this, and no verdict at all. Recorded as
+# detected="timeout" for BOTH tests so it is plotted rather than dropped.
+TIMEOUT_RE = re.compile(r"subprocess\.TimeoutExpired")
+
 FIELDNAMES = ["scheme", "function", "fault", "source", "test", "detected", "detail"]
 
 # Status colors (fixed, never themed) and the two-test categorical pair, from
@@ -73,18 +78,21 @@ FIELDNAMES = ["scheme", "function", "fault", "source", "test", "detected", "deta
 COLOR_INEFFECTIVE = "#2a78d6"   # categorical slot 1 (blue)
 COLOR_CORRECTION = "#eb6834"    # categorical slot 2 (orange)
 COLOR_UNDETECTED = "#d03b3b"    # status critical (used sparingly, labeled)
+COLOR_TIMEOUT = "#9a9a94"       # neutral grey: "no verdict", not good/bad
 COLOR_GRID = "#d9d8d2"
 COLOR_TEXT = "#0b0b0b"
 COLOR_TEXT_MUTED = "#52514e"
 
 
 def parse_paired_result(path):
-    """Returns [(detected: bool, detail: str)] -- at most one row, since a
+    """Returns [(detected: bool | "timeout", detail: str)] -- at most one row, since a
     paired-result file is one test's ENTIRE verdict, not per-position."""
     try:
         text = open(path, errors="replace").read()
     except OSError as e:
         return [(False, f"(unreadable: {e})")]
+    if TIMEOUT_RE.search(text):
+        return [("timeout", "subprocess.TimeoutExpired")]
     hits = PAIRED_HIT_RE.findall(text)
     positive = [(pos, x, y, phrase) for pos, x, y, phrase in hits if int(x) > 0]
     if positive:
@@ -104,12 +112,18 @@ def parse_test_result(path):
         return [("ineffective", False, f"(unreadable: {e})"), ("correction", False, f"(unreadable: {e})")]
     hits = {m.group(1).lower(): m.group(0).strip() for m in TEST_HIT_RE.finditer(text)}
     verdicts = {t: v.strip() for t, v in TEST_RESULT_RE.findall(text)}
+    if TIMEOUT_RE.search(text) and not hits and not verdicts:
+        return [(t, "timeout", "subprocess.TimeoutExpired") for t in ("ineffective", "correction")]
     out = []
     for test in ("ineffective", "correction"):
         if test not in hits and test not in verdicts:
             continue
         out.append((test, test in hits, verdicts.get(test) or hits.get(test)))
     return out
+
+
+def _status(detected):
+    return detected if detected == "timeout" else ("yes" if detected else "no")
 
 
 def fault_name(func_dir, result_path):
@@ -140,7 +154,7 @@ def scan_scheme(scheme, tests_root):
                             "fault": fault,
                             "source": fn,
                             "test": test,
-                            "detected": "yes" if detected else "no",
+                            "detected": _status(detected),
                             "detail": detail,
                         }
                 elif fn == TEST_RESULT_FILENAME:
@@ -153,30 +167,33 @@ def scan_scheme(scheme, tests_root):
                             "fault": fault,
                             "source": fn,
                             "test": test,
-                            "detected": "yes" if detected else "no",
+                            "detected": _status(detected),
                             "detail": detail,
                         }
 
 
 def aggregate_detection_rates(rows):
-    """Collapses `rows` (as written to the CSV) to one (detected: bool) per
-    (function, fault, test) -- if EITHER source file for a given fault+test
-    says detected, it counts as detected once, so a fault tested via both
-    the paired-sweep and early-stop pipelines isn't double-counted or
-    allowed to cancel itself out. Returns {function: {test: (n_detected,
-    n_total)}}."""
-    verdict = {}  # (function, fault, test) -> bool (OR'd across sources)
+    """Collapses `rows` (as written to the CSV) to one status per
+    (function, fault, test) -- if ANY source file for a given fault+test says
+    detected it counts as detected once (so a fault tested via both the
+    paired-sweep and early-stop pipelines isn't double-counted); otherwise a
+    timeout beats a plain "no" (it is an inconclusive run, not a clean pass).
+    Returns {function: {test: [n_detected, n_timeout, n_total]}}."""
+    rank = {"no": 0, "timeout": 1, "yes": 2}
+    verdict = {}  # (function, fault, test) -> "yes" | "timeout" | "no"
     for r in rows:
         key = (r["function"], r["fault"], r["test"])
-        is_hit = r["detected"] == "yes"
-        verdict[key] = verdict.get(key, False) or is_hit
+        if rank[r["detected"]] >= rank[verdict.get(key, "no")]:
+            verdict[key] = r["detected"]
 
-    counts = {}  # function -> test -> [n_detected, n_total]
-    for (func, _fault, test), detected in verdict.items():
-        bucket = counts.setdefault(func, {"ineffective": [0, 0], "correction": [0, 0]})
-        bucket[test][1] += 1
-        if detected:
+    counts = {}
+    for (func, _fault, test), status in verdict.items():
+        bucket = counts.setdefault(func, {"ineffective": [0, 0, 0], "correction": [0, 0, 0]})
+        bucket[test][2] += 1
+        if status == "yes":
             bucket[test][0] += 1
+        elif status == "timeout":
+            bucket[test][1] += 1
     return counts
 
 
@@ -197,13 +214,17 @@ def plot_scheme(scheme, rows, out_path):
     counts = aggregate_detection_rates(rows)
     # Drop functions with zero tested faults for BOTH tests -- nothing to
     # plot, and they'd otherwise render as two zero-length bars.
-    funcs = [f for f, c in counts.items() if c["ineffective"][1] or c["correction"][1]]
+    funcs = [f for f, c in counts.items() if c["ineffective"][2] or c["correction"][2]]
     if not funcs:
         raise RuntimeError(f"no plottable data for scheme {scheme!r}")
 
     def rate(func, test):
-        n_hit, n_total = counts[func][test]
+        n_hit, _n_to, n_total = counts[func][test]
         return (100.0 * n_hit / n_total) if n_total else 0.0
+
+    def to_rate(func, test):
+        _n_hit, n_to, n_total = counts[func][test]
+        return (100.0 * n_to / n_total) if n_total else 0.0
 
     # Sort by combined detection rate descending, so the functions with the
     # most leakage lead -- the headline a reader wants first.
@@ -225,6 +246,17 @@ def plot_scheme(scheme, rows, out_path):
     ax.barh([i - bar_h / 2 - 0.02 for i in y], corr_rates, height=bar_h,
             color=COLOR_CORRECTION, label="correction test", zorder=3)
 
+    # Timeouts stack after the detected segment as hatched grey: they are
+    # inconclusive runs (subprocess.TimeoutExpired), counted in the total.
+    for k, (offset, test, rates) in enumerate((
+        (bar_h / 2 + 0.02, "ineffective", ineff_rates),
+        (-bar_h / 2 - 0.02, "correction", corr_rates),
+    )):
+        ax.barh([i + offset for i in y], [to_rate(f, test) for f in funcs],
+                left=rates, height=bar_h, color=COLOR_TIMEOUT, hatch="///",
+                edgecolor="#fcfcfb", linewidth=0,
+                label="timeout (TimeoutExpired)" if k == 0 else None, zorder=3)
+
     # Direct labels: "n/N" so the bar carries the real counts, not just a
     # rate that could be misread as a percentage of ALL faults in the repo.
     for i, f in enumerate(funcs):
@@ -232,18 +264,19 @@ def plot_scheme(scheme, rows, out_path):
             (bar_h / 2 + 0.02, "ineffective", COLOR_INEFFECTIVE),
             (-bar_h / 2 - 0.02, "correction", COLOR_CORRECTION),
         ):
-            n_hit, n_total = counts[f][test]
+            n_hit, n_to, n_total = counts[f][test]
             if n_total == 0:
                 continue
-            r = rate(f, test)
-            ax.text(r + 1.5, i + offset, f"{n_hit}/{n_total}",
+            r = rate(f, test) + to_rate(f, test)
+            lab = f"{n_hit}/{n_total}" + (f" (+{n_to} timeout)" if n_to else "")
+            ax.text(r + 1.5, i + offset, lab,
                     va="center", ha="left", fontsize=7.5, color=COLOR_TEXT_MUTED)
 
     ax.set_yticks(list(y))
     ax.set_yticklabels(funcs, fontsize=8.5, color=COLOR_TEXT)
     ax.invert_yaxis()
-    ax.set_xlim(0, 108)
-    ax.set_xlabel("faults with the leak DETECTED (%)", fontsize=9, color=COLOR_TEXT_MUTED)
+    ax.set_xlim(0, 125)
+    ax.set_xlabel("faults with the leak DETECTED (%); grey = timed out", fontsize=9, color=COLOR_TEXT_MUTED)
     ax.set_title(
         f"{scheme}: fault-leakage detection rate by function\n"
         f"(counts = distinct faults tested, OR'd across every result source found)",
@@ -299,12 +332,13 @@ def main():
                 w.writerow(row)
 
         n_detected = sum(1 for r in rows if r["detected"] == "yes")
+        n_timeout = sum(1 for r in rows if r["detected"] == "timeout")
         n_faults = len({(r["function"], r["fault"]) for r in rows})
         n_funcs = len({r["function"] for r in rows})
         if rows:
             print(f"[{scheme}] {out_path}: {len(rows)} test result(s) across "
                   f"{n_faults} fault(s) in {n_funcs} function(s) -- "
-                  f"{n_detected} DETECTED")
+                  f"{n_detected} DETECTED, {n_timeout} TIMEOUT")
         else:
             print(f"[{scheme}] {out_path}: no result files found under {tests_root}")
 

@@ -75,8 +75,16 @@ def _parse_array_type(type_text: str):
     return count, rest
 
 
-def extract_allocas(ll_text: str) -> Dict[str, int]:
-    """{var_name: raw alloca total byte size}, in first-appearance order.
+def extract_allocas(ll_text: str) -> Tuple[Dict[str, int], set]:
+    """Returns (sizes, scalar_ptr_names):
+
+      sizes: {var_name: raw alloca total byte size}, in first-appearance
+        order.
+      scalar_ptr_names: the subset of `sizes` keys that came from the
+        SCALAR alloca form rather than an array -- i.e. a POINTER argument
+        whose traced root was itself a scalar local (e.g. a `size_t *smlen`
+        out-parameter). derive_layout marks such an argument
+        "type": "scalar_ptr" plus an "init_value" from the sample.
 
     Handles three alloca shapes, all requiring !llvmbmc.var on the same
     statement to be picked up at all:
@@ -85,6 +93,7 @@ def extract_allocas(ll_text: str) -> Dict[str, int]:
       - scalar:        %siglen = alloca i32, ..., !llvmbmc.var !N
     """
     allocas = {}
+    scalar_ptr_names = set()
     for m in ALLOCA_START_RE.finditer(ll_text):
         var_name = m.group("name")
         pos = m.end()
@@ -129,8 +138,9 @@ def extract_allocas(ll_text: str) -> Dict[str, int]:
                 continue
             base_type = type_m.group(1)
             allocas[var_name] = TYPE_SIZES.get(base_type, 1)
+            scalar_ptr_names.add(var_name)
 
-    return allocas
+    return allocas, scalar_ptr_names
 
 
 def find_main_body(ll_text: str) -> str:
@@ -292,7 +302,7 @@ def load_first_sample(json_path: Path) -> Dict[str, object]:
                 return json.loads(line)
     raise ValueError(f"No JSON objects found in {json_path}")
 def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict[str, dict]:
-    allocas = extract_allocas(ll_text)
+    allocas, scalar_ptr_names = extract_allocas(ll_text)
     call_args = find_fut_call(find_main_body(ll_text), fn_name)
 
     if "output" not in sample:
@@ -341,6 +351,24 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
             layout[key] = {"role": "input", "length": length}
             ptr_keys.add(key)
             warn_if_placeholder_buffer(key, var_name, length, key_to_arg, allocas, output_keys)
+
+            if var_name in scalar_ptr_names:
+                # A POINTER to a single scalar (e.g. `size_t *smlen`), not
+                # a byte buffer. Distinct from the anchor-based "scalar"
+                # type used for register arguments: it has no anchor, its
+                # address only exists at runtime via the real pointer
+                # argument. "init_value" documents its observed value.
+                sample_val = sample.get(key)
+                if isinstance(sample_val, bool) or not isinstance(sample_val, int):
+                    print(
+                        f"[!] '{key}' is a scalar-shaped pointer argument, "
+                        f"but its sample value ({sample_val!r}) isn't a "
+                        f"plain integer; leaving it as a plain pointer "
+                        f"buffer without a 'type'/'init_value' hint."
+                    )
+                else:
+                    layout[key]["type"] = "scalar_ptr"
+                    layout[key]["init_value"] = sample_val
 
         elif kind == "reg":
             anchor_name, byte_width = find_arg_anchor(ll_text, val)

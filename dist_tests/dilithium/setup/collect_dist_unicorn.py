@@ -29,7 +29,7 @@ if "--dilithium-mode" in sys.argv:
     if _i + 1 < len(sys.argv):
         os.environ["GDB_DRIVER_DILITHIUM_MODE"] = sys.argv[_i + 1]
 
-from dist_tests.common.unicorn_runner import run_trial, TrialError
+from dist_tests.common.unicorn_runner import run_trial, TrialError, TrialTimeout
 from dist_tests.dilithium.setup.distributions_unicorn import (
     sample_for_distribution,
     _is_coeff_shaped,
@@ -37,6 +37,12 @@ from dist_tests.dilithium.setup.distributions_unicorn import (
     COEFF_BYTES,
     infer_field_mod,
 )
+
+
+class RunTimeout(Exception):
+    """A trial exceeded the emulation wall-clock cap (likely an endless
+    loop in a faulty ELF). Deliberately NOT a RunFailed: callers must not
+    "skip this sv and continue" -- every other sv would hang too."""
 
 
 class RunFailed(Exception):
@@ -74,6 +80,11 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             secret_buf, secret_pos, secret_val,
             also_override_hook=_dilithium_override_hook,
         )
+    except TrialTimeout as e:
+        raise RunTimeout(
+            f"subprocess.TimeoutExpired: {variant} run for "
+            f"{secret_buf}[{secret_pos}]={secret_val} (seed={seed}): {e}"
+        ) from e
     except (TrialError, Exception) as e:
         raise RunFailed(
             f"{variant} run for {secret_buf}[{secret_pos}]={secret_val} "

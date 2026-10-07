@@ -46,10 +46,22 @@ runtime address directly. This runner instead:
 
 import os
 import struct
+import time
 
 from .dwarf_params import pointer_param_order
 from .elfimage import ElfImage
 from .machine import Machine
+
+
+# Wall-clock cap for the single emu_start() of one trial. A faulty ELF (e.g.
+# a skipped loop-counter update) can spin forever; Unicorn's own timeout
+# stops silently, so run_trial() detects it and raises TrialTimeout.
+# Override with UNICORN_TRIAL_TIMEOUT_S (seconds, 0 disables).
+TRIAL_TIMEOUT_S = float(os.environ.get("UNICORN_TRIAL_TIMEOUT_S", "300"))
+
+
+class TrialTimeout(RuntimeError):
+    """The trial did not return from main() within TRIAL_TIMEOUT_S."""
 
 
 class TrialError(RuntimeError):
@@ -283,7 +295,14 @@ def run_trial(
         )
 
     # -- 5. run main() to completion in one shot -----------------------
-    m._emu_start(main_entry_pc, return_addr)
+    t0 = time.monotonic()
+    m._emu_start(main_entry_pc, return_addr,
+                 timeout=int(TRIAL_TIMEOUT_S * 1_000_000))
+    if (TRIAL_TIMEOUT_S > 0 and m.reg("pc") & ~1 != return_addr
+            and time.monotonic() - t0 >= TRIAL_TIMEOUT_S * 0.99):
+        raise TrialTimeout(
+            f"main() did not return within {TRIAL_TIMEOUT_S:g}s "
+            f"(pc=0x{m.reg('pc'):x})")
 
     # -- 6. read outputs -------------------------------------------------
     addr_of = {**scalar_addr, **ptr_addr}

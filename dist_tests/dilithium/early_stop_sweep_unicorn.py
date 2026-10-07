@@ -92,7 +92,7 @@ if _SETUP_DIR not in sys.path:
 if os.path.dirname(os.path.abspath(__file__)) not in sys.path:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from setup.collect_dist_unicorn import run_one, RunFailed  # noqa: E402  (unmodified, in-process Unicorn backend)
+from setup.collect_dist_unicorn import run_one, RunFailed, RunTimeout  # noqa: E402  (unmodified, in-process Unicorn backend)
 from setup.distributions_unicorn import infer_field_mod, domain_values, domain_bounds  # noqa: E402
 from ineffective_dilithium import (                 # noqa: E402  (unmodified)
     decode_words,
@@ -262,6 +262,14 @@ def main():
             already_present &= os.path.exists(c_path) and os.path.exists(f_path)
             try:
                 c, fdata = load_or_collect(sval, c_path, f_path, args, p)
+            except RunTimeout as e:
+                # Not skippable: a hanging ELF hangs for every sv. Abort
+                # this ELF so the caller moves on to the next one. The
+                # marker below is what generic_tests_plot.py looks for.
+                print(f"[!] sv={sval} seed={p}: {e}", file=sys.stderr)
+                print("[RESULT] aborted: subprocess.TimeoutExpired -- "
+                      "emulation timed out, moving on to the next ELF")
+                sys.exit(124)
             except RunFailed as e:
                 print(f"[!] sv={sval} seed={p}: collection failed, "
                       f"skipping sv.\n{e}", file=sys.stderr)

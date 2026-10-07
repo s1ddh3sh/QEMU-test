@@ -75,9 +75,13 @@ mayo,EF,loopOrFuncSkip/EF_fnSkip_vec_mul_add_u64_line128,correction_paired_resul
 mayo,EF,loopOrFuncSkip/EF_fnSkip_vec_mul_add_u64_line128,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 mayo,EF,loopOrFuncSkip/EF_fnSkip_vec_mul_add_u64_line88,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 mayo,EF,loopOrFuncSkip/EF_fnSkip_vec_mul_add_u64_line88,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,P1P1t_times_O,loadStoreSkip/P1P1t_times_O_line23_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,P1P1t_times_O,loadStoreSkip/P1P1t_times_O_line23_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,P1P1t_times_O,loadStoreSkip/P1P1t_times_O_line34_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,P1P1t_times_O,loadStoreSkip/P1P1t_times_O_line34_mem,ineffective_paired_result.txt,ineffective,yes,pos 320: 30/240 pairs disagree (+36 more position(s))
 mayo,P1P1t_times_O,loopOrFuncSkip/P1P1t_times_O_fnSkip_m_vec_mul_add_line28,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 mayo,P1P1t_times_O,loopOrFuncSkip/P1P1t_times_O_fnSkip_m_vec_mul_add_line28,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
-mayo,P1P1t_times_O,loopOrFuncSkip/P1P1t_times_O_fnSkip_m_vec_mul_add_line39,correction_paired_result.txt,correction,yes,pos 320: 240/240 pairs disagree (+36 more position(s))
+mayo,P1P1t_times_O,loopOrFuncSkip/P1P1t_times_O_fnSkip_m_vec_mul_add_line39,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 mayo,P1P1t_times_O,loopOrFuncSkip/P1P1t_times_O_fnSkip_m_vec_mul_add_line39,ineffective_paired_result.txt,ineffective,yes,pos 320: 30/240 pairs disagree (+36 more position(s))
 mayo,P1_times_O,loopOrFuncSkip/P1_times_O_fnSkip_mul_add_m_upper_triangular_mat_x_mat_line0,correction_paired_result.txt,correction,yes,pos 0: 1/16 secret values with y1 = y2 xor alpha (+1 more position(s))
 mayo,P1_times_O,loopOrFuncSkip/P1_times_O_fnSkip_mul_add_m_upper_triangular_mat_x_mat_line0,ineffective_paired_result.txt,ineffective,yes,pos 0: 30/240 pairs disagree (+37 more position(s))
@@ -991,6 +995,20 @@ mayo,mul_table,binOpFault/mul_table_line6_undef,correction_paired_result.txt,cor
 mayo,mul_table,binOpFault/mul_table_line6_undef,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 mayo,mul_table,binOpFault/mul_table_line6_zero,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 mayo,mul_table,binOpFault/mul_table_line6_zero,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_pk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_pk_fnSkip_expand_P1_P2_line0,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_pk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_pk_fnSkip_expand_P1_P2_line0,ineffective_paired_result.txt,ineffective,yes,pos 2: 78/240 pairs disagree (+901 more position(s))
+mayo,pqmayo_MAYO_1_ref_mayo_expand_pk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_pk_fnSkip_unpack_m_vecs_line3,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_pk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_pk_fnSkip_unpack_m_vecs_line3,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_P1P1t_times_O_line7,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_P1P1t_times_O_line7,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_decode_line4,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_decode_line4,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_expand_P1_P2_line5,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_expand_P1_P2_line5,ineffective_paired_result.txt,ineffective,yes,pos 0: 56/240 pairs disagree (+13 more position(s))
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_mayo_secure_clear_line8,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_mayo_secure_clear_line8,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_shake256_line2,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_expand_sk,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_expand_sk_fnSkip_shake256_line2,ineffective_paired_result.txt,ineffective,yes,pos 0: 30/240 pairs disagree (+14 more position(s))
 mayo,pqmayo_MAYO_1_ref_mayo_keypair,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_keypair_fnSkip_pqmayo_MAYO_1_ref_mayo_keypair_compact_line0,correction_paired_result.txt,correction,yes,pos 0: 16/16 secret values with y1 = y2 xor alpha (+23 more position(s))
 mayo,pqmayo_MAYO_1_ref_mayo_keypair,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_keypair_fnSkip_pqmayo_MAYO_1_ref_mayo_keypair_compact_line0,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 mayo,pqmayo_MAYO_1_ref_mayo_keypair_compact,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_keypair_compact_fnSkip_compute_P3_line12,correction_paired_result.txt,correction,yes,pos 16: 16/16 secret values with y1 = y2 xor alpha (+7 more position(s))
@@ -1013,6 +1031,12 @@ mayo,pqmayo_MAYO_1_ref_mayo_keypair_compact,loopOrFuncSkip/pqmayo_MAYO_1_ref_may
 mayo,pqmayo_MAYO_1_ref_mayo_keypair_compact,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_keypair_compact_fnSkip_pack_m_vecs_line16,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 mayo,pqmayo_MAYO_1_ref_mayo_keypair_compact,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_keypair_compact_fnSkip_pqmayo_MAYO_1_ref_m_upper_line14,correction_paired_result.txt,correction,yes,pos 16: 16/16 secret values with y1 = y2 xor alpha (+7 more position(s))
 mayo,pqmayo_MAYO_1_ref_mayo_keypair_compact,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_keypair_compact_fnSkip_pqmayo_MAYO_1_ref_m_upper_line14,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_sign,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_sign_fnSkip_memmove_line2,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_sign,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_sign_fnSkip_memmove_line2,ineffective_paired_result.txt,ineffective,yes,pos 0: 56/240 pairs disagree (+14 more position(s))
+mayo,pqmayo_MAYO_1_ref_mayo_sign,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_sign_fnSkip_memset_line10,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_sign,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_sign_fnSkip_memset_line10,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_sign,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_sign_fnSkip_pqmayo_MAYO_1_ref_mayo_sign_signature_line4,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,pqmayo_MAYO_1_ref_mayo_sign,loopOrFuncSkip/pqmayo_MAYO_1_ref_mayo_sign_fnSkip_pqmayo_MAYO_1_ref_mayo_sign_signature_line4,ineffective_paired_result.txt,ineffective,yes,pos 0: 30/240 pairs disagree (+14 more position(s))
 mayo,shake256,loadStoreSkip/shake256_line17_mem,correction_paired_result.txt,correction,yes,pos 0: 236/240 pairs disagree (+23 more position(s))
 mayo,shake256,loadStoreSkip/shake256_line17_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 96/240 pairs disagree (+17 more position(s))
 mayo,shake256,loadStoreSkip/shake256_line19_mem,correction_paired_result.txt,correction,yes,pos 0: 236/240 pairs disagree (+23 more position(s))

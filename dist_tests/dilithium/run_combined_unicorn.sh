@@ -135,7 +135,7 @@ REQUIRE=all
 SEED=0
 SEEDS="0,1,2,3"
 DILITHIUM_MODE_OVERRIDE=""
-FRESH=1
+FRESH=0
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -457,13 +457,16 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
         2>&1 | tee "$RESULT_FILE"
     STATUS=${PIPESTATUS[0]}
     set -e
-    if [[ $STATUS -ne 0 ]]; then
+    if [[ $STATUS -ne 0 && $STATUS -ne 124 ]]; then
         OVERALL_STATUS=1
     fi
 
     INEFF_STATUS="-"
     CORR_STATUS="-"
-    if grep -q "^\[RESULT\] ineffective test: DETECTED" "$RESULT_FILE"; then
+    if [[ $STATUS -eq 124 ]] || grep -q "TimeoutExpired" "$RESULT_FILE"; then
+        INEFF_STATUS="TIMEOUT"
+        CORR_STATUS="TIMEOUT"
+    elif grep -q "^\[RESULT\] ineffective test: DETECTED" "$RESULT_FILE"; then
         INEFF_STATUS="DETECTED"
     elif grep -q "^\[RESULT\] ineffective test:" "$RESULT_FILE"; then
         INEFF_STATUS="not detected"

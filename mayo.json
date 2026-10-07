@@ -92,5 +92,30 @@
     },
     "mul_table":{
         "secret-buf":"b"
+    },
+    "P1P1t_times_O":{
+        "secret-buf":"O"
+    },
+    "pqmayo_MAYO_1_ref_mayo_expand_pk":{
+        "secret-buf":"cpk"
+    },
+    "pqmayo_MAYO_1_ref_mayo_expand_sk":{
+        "secret-buf":"csk"
+    },
+    "pqmayo_MAYO_1_ref_mayo_sign":{
+        "secret-buf":"csk",
+        "fixed-scalars":"smlen,mlen"
+    },
+    "pqmayo_MAYO_1_ref_mayo_sign_signature":{
+        "secret-buf":"csk",
+        "fixed-scalars":"siglen,mlen"
+    },
+    "pqmayo_MAYO_1_ref_sample_solution":{
+        "secret-buf":"A",
+        "fixed-scalars":"k,o,m,A_cols"
+    },
+    "vec_mul_add_u64":{
+        "secret-buf":"in",
+        "fixed-scalars":"legs,a"
     }
 }
