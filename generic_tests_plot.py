@@ -299,10 +299,265 @@ def plot_scheme(scheme, rows, out_path):
     return out_path
 
 
+def plot_scheme_heatmap(scheme, rows, out_path):
+    """Compact alternative to plot_scheme: one row per function (scan
+    order), two columns (ineffective / correction). Each cell is shaded by
+    detection rate and annotated "detected/tested"; cells containing
+    timed-out faults get a grey hatched overlay and a "+N TO" note."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Rectangle
+        from matplotlib.colors import LinearSegmentedColormap
+    except ImportError as e:
+        raise RuntimeError(
+            "matplotlib is required for --plot (pip install matplotlib)"
+        ) from e
+
+    counts = aggregate_detection_rates(rows)
+    funcs = [f for f, c in counts.items() if c["ineffective"][2] or c["correction"][2]]
+    if not funcs:
+        raise RuntimeError(f"no plottable data for scheme {scheme!r}")
+
+    tests = ("ineffective", "correction")
+    cmap = LinearSegmentedColormap.from_list("detect", ["#f1f0ec", COLOR_INEFFECTIVE])
+
+    n = len(funcs)
+    row_h = 0.24
+    fig_h = max(2.5, row_h * n + 1.6)
+    fig, ax = plt.subplots(figsize=(7.5, fig_h), dpi=150)
+    fig.patch.set_facecolor("#fcfcfb")
+    ax.set_facecolor("#fcfcfb")
+
+    for i, f in enumerate(funcs):
+        for j, test in enumerate(tests):
+            n_hit, n_to, n_total = counts[f][test]
+            if n_total == 0:
+                continue
+            rate = n_hit / n_total
+            ax.add_patch(Rectangle((j, i), 1, 1, facecolor=cmap(rate),
+                                   edgecolor="#fcfcfb", linewidth=1.5, zorder=2))
+            if n_to:
+                ax.add_patch(Rectangle((j, i), 1, 1, facecolor="none",
+                                       edgecolor=COLOR_TIMEOUT, hatch="////",
+                                       linewidth=0, zorder=3, alpha=0.8))
+            lab = f"{n_hit}/{n_total}" + (f" +{n_to} TO" if n_to else "")
+            ax.text(j + 0.5, i + 0.5, lab, ha="center", va="center", fontsize=7,
+                    color="white" if rate > 0.55 else COLOR_TEXT, zorder=4)
+
+    ax.set_xlim(0, len(tests))
+    ax.set_ylim(n, 0)
+    ax.set_xticks([j + 0.5 for j in range(len(tests))])
+    ax.set_xticklabels([f"{t} test" for t in tests], fontsize=9, color=COLOR_TEXT)
+    ax.xaxis.tick_top()
+    ax.set_yticks([i + 0.5 for i in range(n)])
+    ax.set_yticklabels(funcs, fontsize=7.5, color=COLOR_TEXT)
+    ax.tick_params(left=False, top=False)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    fig.suptitle(
+        f"{scheme}: faults with the leak detected, by function\n"
+        f"cell = detected/tested, shade = detection rate\n"
+        f"hatched = includes timed-out faults (TO)",
+        x=0.01, ha="left", fontsize=9, color=COLOR_TEXT,
+    )
+
+    fig.tight_layout(rect=(0, 0, 1, 1 - 0.3 / fig_h))
+    fig.savefig(out_path, facecolor=fig.get_facecolor())
+    plt.close(fig)
+    return out_path
+
+
+def plot_scheme_summary(scheme, rows, out_path):
+    """Overall summary + per-function table. Top: one stacked bar per test
+    (detected / not detected / timeout) over ALL faults of the scheme.
+    Bottom: a text table of detected/tested per function (scan order)."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError as e:
+        raise RuntimeError(
+            "matplotlib is required for --plot (pip install matplotlib)"
+        ) from e
+
+    counts = aggregate_detection_rates(rows)
+    funcs = [f for f, c in counts.items() if c["ineffective"][2] or c["correction"][2]]
+    if not funcs:
+        raise RuntimeError(f"no plottable data for scheme {scheme!r}")
+    tests = ("ineffective", "correction")
+    colors = {"ineffective": COLOR_INEFFECTIVE, "correction": COLOR_CORRECTION}
+
+    totals = {t: [sum(counts[f][t][k] for f in funcs) for k in range(3)] for t in tests}
+
+    n = len(funcs)
+    row_h = 0.2
+    fig_h = 1.9 + row_h * (n + 1)
+    fig = plt.figure(figsize=(8, fig_h), dpi=150)
+    fig.patch.set_facecolor("#fcfcfb")
+    gs = fig.add_gridspec(2, 1, height_ratios=[1.5, row_h * (n + 1)], hspace=0.12)
+
+    # -- summary bars (absolute counts, one shared axis) -------------------
+    ax = fig.add_subplot(gs[0])
+    ax.set_facecolor("#fcfcfb")
+    max_total = max(t[2] for t in totals.values())
+    for i, test in enumerate(tests):
+        hit, to, tot = totals[test]
+        miss = tot - hit - to
+        ax.barh(i, hit, height=0.5, color=colors[test], zorder=3)
+        ax.barh(i, to, left=hit, height=0.5, color=COLOR_TIMEOUT, hatch="///",
+                edgecolor="#fcfcfb", linewidth=0, zorder=3)
+        ax.barh(i, miss, left=hit + to, height=0.5, color=COLOR_GRID,
+                alpha=0.7, zorder=2)
+        pct = 100.0 * hit / tot if tot else 0.0
+        lab = f"{hit}/{tot} detected ({pct:.0f}%)" + (f", {to} timeout" if to else "")
+        ax.text(tot + 0.01 * max_total, i, lab, va="center", ha="left",
+                fontsize=8, color=COLOR_TEXT_MUTED)
+    ax.set_yticks(range(len(tests)))
+    ax.set_yticklabels([f"{t} test" for t in tests], fontsize=9, color=COLOR_TEXT)
+    ax.invert_yaxis()
+    ax.set_xlim(0, max_total * 1.45)
+    ax.set_xlabel("number of faults (colour = detected, hatched = timed out, "
+                  "faint = not detected)", fontsize=8, color=COLOR_TEXT_MUTED)
+    ax.grid(axis="x", color=COLOR_GRID, linewidth=0.7, zorder=0)
+    ax.set_axisbelow(True)
+    for spine in ("top", "right", "left"):
+        ax.spines[spine].set_visible(False)
+    ax.spines["bottom"].set_color(COLOR_GRID)
+    ax.tick_params(left=False, bottom=False)
+    ax.set_title(f"{scheme}: fault-leakage detection summary", fontsize=10,
+                 color=COLOR_TEXT, loc="left", pad=8)
+
+    # -- per-function table -------------------------------------------------
+    tx = fig.add_subplot(gs[1])
+    tx.axis("off")
+
+    def cell(f, t):
+        n_hit, n_to, n_tot = counts[f][t]
+        if n_tot == 0:
+            return "-"
+        return f"{n_hit}/{n_tot}" + (f" (+{n_to} TO)" if n_to else "")
+
+    cells = [[f, cell(f, "ineffective"), cell(f, "correction")] for f in funcs]
+    tbl = tx.table(cellText=cells,
+                   colLabels=["function", "ineffective", "correction"],
+                   colWidths=[0.6, 0.2, 0.2], cellLoc="left", loc="upper left",
+                   bbox=[0, 0, 1, 1])
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(7)
+    for (r, c), tc in tbl.get_celld().items():
+        tc.set_edgecolor(COLOR_GRID)
+        tc.set_linewidth(0.4)
+        tc.set_facecolor("#fcfcfb" if r % 2 else "#f4f3ef")
+        tc.get_text().set_color(COLOR_TEXT)
+        if r == 0:
+            tc.set_facecolor("#e9e8e2")
+            tc.get_text().set_fontweight("bold")
+        elif c > 0:
+            n_hit, _to, n_tot = counts[funcs[r - 1]][tests[c - 1]]
+            if n_tot and n_hit == n_tot:
+                tc.get_text().set_color(colors[tests[c - 1]])
+                tc.get_text().set_fontweight("bold")
+            elif n_tot and n_hit == 0:
+                tc.get_text().set_color(COLOR_TEXT_MUTED)
+
+    # Table spans the full width; only the summary bars get a left margin
+    # for their "<test> test" labels.
+    fig.subplots_adjust(left=0.03, right=0.97, top=1 - 0.4 / fig_h, bottom=0.01)
+    pos = ax.get_position()
+    ax.set_position([0.2, pos.y0, 0.77, pos.height])
+    fig.savefig(out_path, facecolor=fig.get_facecolor())
+    plt.close(fig)
+    return out_path
+
+
+def plot_combined(rows_by_scheme, out_path):
+    """One figure covering every scheme: per scheme, a pair of 100%-stacked
+    bars (ineffective / correction) split into detected / timed out / not
+    detected. Percent-normalized because the schemes test very different
+    numbers of faults; the labels carry the absolute counts."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError as e:
+        raise RuntimeError(
+            "matplotlib is required for --plot (pip install matplotlib)"
+        ) from e
+
+    tests = ("ineffective", "correction")
+    colors = {"ineffective": COLOR_INEFFECTIVE, "correction": COLOR_CORRECTION}
+    data = []  # (scheme, test, hit, to, tot)
+    for scheme, rows in rows_by_scheme.items():
+        counts = aggregate_detection_rates(rows)
+        for t in tests:
+            tot = sum(c[t][2] for c in counts.values())
+            if tot:
+                data.append((scheme, t, sum(c[t][0] for c in counts.values()),
+                             sum(c[t][1] for c in counts.values()), tot))
+    if not data:
+        raise RuntimeError("no plottable data for any scheme")
+
+    schemes = list(dict.fromkeys(d[0] for d in data))
+    fig, ax = plt.subplots(figsize=(9, 1.0 + 0.9 * len(schemes)), dpi=150)
+    fig.patch.set_facecolor("#fcfcfb")
+    ax.set_facecolor("#fcfcfb")
+
+    bar_h = 0.34
+    yticks, ylabels = [], []
+    for si, scheme in enumerate(schemes):
+        for ti, t in enumerate(tests):
+            y = si + (ti - 0.5) * (bar_h + 0.04)
+            match = [d for d in data if d[0] == scheme and d[1] == t]
+            if not match:
+                continue
+            _s, _t, hit, to, tot = match[0]
+            pct = lambda v: 100.0 * v / tot
+            ax.barh(y, pct(hit), height=bar_h, color=colors[t], zorder=3,
+                    label=f"{t} test: detected" if si == 0 else None)
+            ax.barh(y, pct(to), left=pct(hit), height=bar_h, color=COLOR_TIMEOUT,
+                    hatch="///", edgecolor="#fcfcfb", linewidth=0, zorder=3,
+                    label="timeout (TimeoutExpired)" if (si, ti) == (0, 0) else None)
+            ax.barh(y, 100 - pct(hit) - pct(to), left=pct(hit) + pct(to),
+                    height=bar_h, color=COLOR_GRID, alpha=0.7, zorder=2,
+                    label="not detected" if (si, ti) == (0, 0) else None)
+            lab = f"{hit}/{tot} ({pct(hit):.0f}%)" + (f", {to} timeout" if to else "")
+            ax.text(101.5, y, lab, va="center", ha="left", fontsize=7.5,
+                    color=COLOR_TEXT_MUTED)
+        yticks.append(si)
+        ylabels.append(scheme)
+
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(ylabels, fontsize=10, color=COLOR_TEXT)
+    ax.invert_yaxis()
+    ax.set_xlim(0, 135)
+    ax.set_xticks(range(0, 101, 20))
+    ax.set_xlabel("% of faults tested (labels: detected/tested faults)",
+                  fontsize=8.5, color=COLOR_TEXT_MUTED)
+    ax.set_title("Fault-leakage detection summary, all schemes", fontsize=11,
+                 color=COLOR_TEXT, loc="left", pad=10)
+    ax.grid(axis="x", color=COLOR_GRID, linewidth=0.7, zorder=0)
+    ax.set_axisbelow(True)
+    for spine in ("top", "right", "left"):
+        ax.spines[spine].set_visible(False)
+    ax.spines["bottom"].set_color(COLOR_GRID)
+    ax.tick_params(left=False, bottom=False)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=4,
+              frameon=False, fontsize=8, labelcolor=COLOR_TEXT_MUTED)
+
+    fig.tight_layout()
+    fig.savefig(out_path, facecolor=fig.get_facecolor())
+    plt.close(fig)
+    return out_path
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument("--outdir", default=".", help="where to write CSVs (default: cwd)")
+    ap.add_argument("--plotdir", default="plots",
+                    help="where to write PNG plots (default: plots/)")
     ap.add_argument(
         "--schemes", default="mayo,kyber,dilithium",
         help="comma-separated subset of mayo,kyber,dilithium (default: all three)",
@@ -313,16 +568,34 @@ def main():
              "of ineffective/correction detection rate by function "
              "(requires matplotlib).",
     )
+    ap.add_argument(
+        "--style", choices=("bar", "heatmap", "summary"), default="bar",
+        help="plot style used with --plot: 'bar' (default, "
+             "fault_report_<scheme>.png) or the more compact 'heatmap' "
+             "(fault_report_<scheme>_heatmap.png) or 'summary' (overall "
+             "stacked bars + per-function table, "
+             "fault_report_<scheme>_summary.png).",
+    )
+    ap.add_argument(
+        "--combined", action="store_true",
+        help="with --plot, also write fault_report_combined.png: one "
+             "summary figure covering every scheme. Independent of --style.",
+    )
     args = ap.parse_args()
 
     schemes = [s.strip() for s in args.schemes.split(",") if s.strip()]
     os.makedirs(args.outdir, exist_ok=True)
+    if args.plot:
+        os.makedirs(args.plotdir, exist_ok=True)
 
     all_rows = []
+    rows_by_scheme = {}
     for scheme in schemes:
         tests_root = os.path.join(args.root, f"tests_{scheme}")
         rows = list(scan_scheme(scheme, tests_root))
         all_rows.extend(rows)
+        if rows:
+            rows_by_scheme[scheme] = rows
 
         out_path = os.path.join(args.outdir, f"fault_report_{scheme}.csv")
         with open(out_path, "w", newline="") as f:
@@ -343,12 +616,25 @@ def main():
             print(f"[{scheme}] {out_path}: no result files found under {tests_root}")
 
         if args.plot and rows:
-            png_path = os.path.join(args.outdir, f"fault_report_{scheme}.png")
+            if args.style in ("heatmap", "summary"):
+                png_path = os.path.join(args.plotdir, f"fault_report_{scheme}_{args.style}.png")
+                plot_fn = plot_scheme_heatmap if args.style == "heatmap" else plot_scheme_summary
+            else:
+                png_path = os.path.join(args.plotdir, f"fault_report_{scheme}.png")
+                plot_fn = plot_scheme
             try:
-                plot_scheme(scheme, rows, png_path)
-                print(f"[{scheme}] {png_path}: detection-rate-by-function chart")
+                plot_fn(scheme, rows, png_path)
+                print(f"[{scheme}] {png_path}: detection-by-function {args.style}")
             except RuntimeError as e:
                 print(f"[{scheme}] [!] plot skipped: {e}")
+
+    if args.plot and args.combined and rows_by_scheme:
+        png_path = os.path.join(args.plotdir, "fault_report_combined.png")
+        try:
+            plot_combined(rows_by_scheme, png_path)
+            print(f"[all] {png_path}: combined summary chart")
+        except RuntimeError as e:
+            print(f"[all] [!] combined plot skipped: {e}")
 
     combined_path = os.path.join(args.outdir, "fault_report_all.csv")
     with open(combined_path, "w", newline="") as f:
