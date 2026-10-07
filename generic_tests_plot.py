@@ -218,18 +218,22 @@ def plot_scheme(scheme, rows, out_path):
     if not funcs:
         raise RuntimeError(f"no plottable data for scheme {scheme!r}")
 
-    def rate(func, test):
-        n_hit, _n_to, n_total = counts[func][test]
-        return (100.0 * n_hit / n_total) if n_total else 0.0
+    def hit(func, test):
+        return counts[func][test][0]
 
-    def to_rate(func, test):
-        _n_hit, n_to, n_total = counts[func][test]
-        return (100.0 * n_to / n_total) if n_total else 0.0
+    def n_to(func, test):
+        return counts[func][test][1]
 
-    # Sort by combined detection rate descending, so the functions with the
-    # most leakage lead -- the headline a reader wants first.
-    funcs.sort(key=lambda f: (rate(f, "ineffective") + rate(f, "correction")), reverse=True)
+    def total(func, test):
+        return counts[func][test][2]
 
+    # Bar lengths are ABSOLUTE fault counts (shared x-axis), so 200 detected
+    # faults draws 200x longer than 1. A faint track behind each bar spans
+    # the number of faults tested, so a short bar next to a long track reads
+    # as "few detected out of many".
+    # Functions keep their scan order (alphabetical by tests_<scheme>/ dir);
+    # deliberately not sorted by count.
+    max_total = max(total(f, t) for f in funcs for t in ("ineffective", "correction"))
     n = len(funcs)
     fig_h = max(3.0, 0.34 * n + 1.5)
     fig, ax = plt.subplots(figsize=(10, fig_h), dpi=150)
@@ -238,47 +242,43 @@ def plot_scheme(scheme, rows, out_path):
 
     y = range(n)
     bar_h = 0.36
-    ineff_rates = [rate(f, "ineffective") for f in funcs]
-    corr_rates = [rate(f, "correction") for f in funcs]
+    series = (
+        (bar_h / 2 + 0.02, "ineffective", COLOR_INEFFECTIVE, "ineffective test"),
+        (-bar_h / 2 - 0.02, "correction", COLOR_CORRECTION, "correction test"),
+    )
+    for k, (offset, test, color, label) in enumerate(series):
+        pos = [i + offset for i in y]
+        ax.barh(pos, [total(f, test) for f in funcs], height=bar_h,
+                color=COLOR_GRID, alpha=0.55, zorder=2,
+                label="faults tested" if k == 0 else None)
+        ax.barh(pos, [hit(f, test) for f in funcs], height=bar_h,
+                color=color, label=label, zorder=3)
+        # Timeouts stack after the detected segment as hatched grey: they
+        # are inconclusive runs (subprocess.TimeoutExpired), and are
+        # included in the faults-tested total.
+        ax.barh(pos, [n_to(f, test) for f in funcs],
+                left=[hit(f, test) for f in funcs], height=bar_h,
+                color=COLOR_TIMEOUT, hatch="///", edgecolor="#fcfcfb",
+                linewidth=0, zorder=3,
+                label="timeout (TimeoutExpired)" if k == 0 else None)
 
-    ax.barh([i + bar_h / 2 + 0.02 for i in y], ineff_rates, height=bar_h,
-            color=COLOR_INEFFECTIVE, label="ineffective test", zorder=3)
-    ax.barh([i - bar_h / 2 - 0.02 for i in y], corr_rates, height=bar_h,
-            color=COLOR_CORRECTION, label="correction test", zorder=3)
-
-    # Timeouts stack after the detected segment as hatched grey: they are
-    # inconclusive runs (subprocess.TimeoutExpired), counted in the total.
-    for k, (offset, test, rates) in enumerate((
-        (bar_h / 2 + 0.02, "ineffective", ineff_rates),
-        (-bar_h / 2 - 0.02, "correction", corr_rates),
-    )):
-        ax.barh([i + offset for i in y], [to_rate(f, test) for f in funcs],
-                left=rates, height=bar_h, color=COLOR_TIMEOUT, hatch="///",
-                edgecolor="#fcfcfb", linewidth=0,
-                label="timeout (TimeoutExpired)" if k == 0 else None, zorder=3)
-
-    # Direct labels: "n/N" so the bar carries the real counts, not just a
-    # rate that could be misread as a percentage of ALL faults in the repo.
+    # Direct labels: "detected/tested" at the end of the track.
     for i, f in enumerate(funcs):
-        for offset, test, color in (
-            (bar_h / 2 + 0.02, "ineffective", COLOR_INEFFECTIVE),
-            (-bar_h / 2 - 0.02, "correction", COLOR_CORRECTION),
-        ):
-            n_hit, n_to, n_total = counts[f][test]
-            if n_total == 0:
+        for offset, test, _color, _label in series:
+            if total(f, test) == 0:
                 continue
-            r = rate(f, test) + to_rate(f, test)
-            lab = f"{n_hit}/{n_total}" + (f" (+{n_to} timeout)" if n_to else "")
-            ax.text(r + 1.5, i + offset, lab,
+            lab = f"{hit(f, test)}/{total(f, test)}" + (
+                f" (+{n_to(f, test)} timeout)" if n_to(f, test) else "")
+            ax.text(total(f, test) + 0.01 * max_total, i + offset, lab,
                     va="center", ha="left", fontsize=7.5, color=COLOR_TEXT_MUTED)
 
     ax.set_yticks(list(y))
     ax.set_yticklabels(funcs, fontsize=8.5, color=COLOR_TEXT)
     ax.invert_yaxis()
-    ax.set_xlim(0, 125)
-    ax.set_xlabel("faults with the leak DETECTED (%); grey = timed out", fontsize=9, color=COLOR_TEXT_MUTED)
+    ax.set_xlim(0, max_total * 1.3)
+    ax.set_xlabel("number of faults (bar = leak DETECTED, hatched = timed out, faint track = tested)", fontsize=9, color=COLOR_TEXT_MUTED)
     ax.set_title(
-        f"{scheme}: fault-leakage detection rate by function\n"
+        f"{scheme}: fault-leakage detections by function\n"
         f"(counts = distinct faults tested, OR'd across every result source found)",
         fontsize=11, color=COLOR_TEXT, loc="left", pad=12,
     )
