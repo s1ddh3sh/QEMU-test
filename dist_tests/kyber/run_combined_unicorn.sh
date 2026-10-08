@@ -208,7 +208,7 @@ CORRECT_ELF="${ELF_DIR}/${FUNC_NAME}.elf"
 # convention exactly.
 # ---------------------------------------------------------------------------
 CONFIG_JSON="kyber.json"
-read -r JSON_SECRET_BUF JSON_FIXED_SCALARS <<< "$(python3 - "$CONFIG_JSON" "$FUNC_NAME" <<'PYEOF'
+read -r JSON_SECRET_BUF JSON_FIXED_SCALARS JSON_EPH_SECRET <<< "$(python3 - "$CONFIG_JSON" "$FUNC_NAME" <<'PYEOF'
 import json, sys
 path, func = sys.argv[1], sys.argv[2]
 try:
@@ -223,11 +223,13 @@ entry = config.get(func) or {}
 # empty on every function that actually has a "fixed-scalars" entry
 # (neither secret-buf nor fixed-scalars ever contains whitespace, so
 # this is a safe, unambiguous join).
-print((entry.get("secret-buf") or "__NONE__") + " " + (entry.get("fixed-scalars") or "__NONE__"))
+print((entry.get("secret-buf") or "__NONE__") + " " + (entry.get("fixed-scalars") or "__NONE__") + " " + (entry.get("eph_secret") or "__NONE__"))
 PYEOF
 )"
 [[ "$JSON_SECRET_BUF" == "__NONE__" ]] && JSON_SECRET_BUF=""
 [[ "$JSON_FIXED_SCALARS" == "__NONE__" ]] && JSON_FIXED_SCALARS=""
+[[ "$JSON_EPH_SECRET" == "__NONE__" ]] && JSON_EPH_SECRET=""
+EPH_SECRET="$JSON_EPH_SECRET"   # ephemeral secrets: sampled fresh, never fixed
 
 if [[ -n "$SECRET_BUF_OVERRIDE" ]]; then
     SECRET_BUF="$SECRET_BUF_OVERRIDE"
@@ -411,6 +413,7 @@ fi
 echo "[i] func:        ${FUNC_NAME} [unicorn backend -- no qemu-system-arm/gdb-multiarch required]"
 echo "[i] secret-buf:  ${SECRET_BUF} (pos ${SECRET_POS}, word-size ${SECRET_WORD_SIZE})"
 echo "[i] out-buf:     ${OUT_BUF} (active-len ${ACTIVE_LEN} bytes, word-size ${WORD_SIZE}, diff-mode ${DIFF_MODE})"
+echo "[i] eph-secret:  ${EPH_SECRET:-<none>} (sampled fresh per evaluation, never fixed)"
 echo "[i] field-mod:   ${FIELD_MOD}, kyber-k: ${KYBER_K}"
 echo "[i] elf-dir:     ${ELF_DIR}"
 echo "[i] correct elf: ${CORRECT_ELF}"
@@ -478,6 +481,7 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
         --secret-word-size "$SECRET_WORD_SIZE" --seed "$SEED" \
         --outdir "$DIST_PAIRED_DIR" --machine "$MACHINE" \
         --fixed-scalars "$FIXED_SCALARS" \
+        --eph-secret "$EPH_SECRET" \
         --out-buf "$OUT_BUF" --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" --diff-mode "$DIFF_MODE" \
         --modulus "$MODULUS" --test "$TEST" --require "$REQUIRE" \

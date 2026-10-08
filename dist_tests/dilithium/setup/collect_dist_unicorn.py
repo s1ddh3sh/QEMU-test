@@ -65,7 +65,7 @@ def _dilithium_override_hook(name, spec, vals, override_pos, override_val):
 
 def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             seed, variant, out_path, machine, fixed_scalars, dilithium_mode,
-            secret_buf, secret_pos, secret_val):
+            secret_buf, secret_pos, secret_val, eph_secret=""):
     with open(witness_path) as f:
         layout = json.load(f)["layout"]
     with open(active_lengths_path) as f:
@@ -73,12 +73,24 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
 
     fixed_set = set(s for s in (fixed_scalars or "").split(",") if s)
 
+    # Ephemeral secrets (named by <alg>.json "eph_secret"): not public, so
+    # not held fixed with the background. Drawn from a dedicated RNG per
+    # (seed, secret value) -- fresh for every evaluation, identical for the
+    # correct and faulty run of it -- using the buffer's own witness
+    # "distribution" (sample_for_distribution inside run_trial).
+    eph_set = set(s for s in (eph_secret or "").split(",") if s)
+    for name in eph_set:
+        if name not in layout:
+            raise RunFailed(f"eph_secret {name!r} not in witness layout")
+
     try:
         result = run_trial(
             elf_path, layout, func, "collect", field_mod, seed, variant,
             fixed_set, sample_for_distribution, active_lengths,
             secret_buf, secret_pos, secret_val,
             also_override_hook=_dilithium_override_hook,
+            eph_secret=eph_set,
+            eph_seed=f"eph:{seed}:{secret_buf}:{secret_pos}:{secret_val}",
         )
     except TrialTimeout as e:
         raise RunTimeout(
@@ -131,7 +143,8 @@ def run_sweep(args):
                 run_one(elf_path, args.witness, args.active_lengths, args.func,
                         args.field_mod, args.seed, variant, out_path, args.machine,
                         args.fixed_scalars, args.dilithium_mode,
-                        args.secret_buf, args.secret_pos, sval)
+                        args.secret_buf, args.secret_pos, sval,
+                        args.eph_secret)
             except RunFailed as e:
                 print(f"[!] FAILED: {variant} sval={sval}\n{e}", flush=True)
                 failures.append((variant, sval, str(e)))
@@ -212,6 +225,10 @@ def main():
                           "with collect_dist.py (no real QEMU machine is "
                           "launched by this backend).")
     ap.add_argument("--fixed-scalars", default="")
+    ap.add_argument("--eph-secret", default="",
+                    help="comma-separated ephemeral-secret buffers: sampled "
+                         "fresh per (seed, secret value) from their own "
+                         "distribution, shared by correct and faulty run.")
     ap.add_argument("--secret-buf", default=None)
     ap.add_argument("--secret-pos", type=int, default=None)
     ap.add_argument("--seed", type=int, default=0)

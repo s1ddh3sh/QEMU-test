@@ -403,14 +403,22 @@ mayo,compute_A,loopOrFuncSkip/compute_A_fnSkip_mul_f_line173,correction_paired_r
 mayo,compute_A,loopOrFuncSkip/compute_A_fnSkip_mul_f_line173,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 mayo,compute_A,loopOrFuncSkip/compute_A_fnSkip_transpose_16x16_nibbles_line144,correction_paired_result.txt,correction,yes,pos 495: 16/16 secret values with y1 = y2 xor alpha (+1 more position(s))
 mayo,compute_A,loopOrFuncSkip/compute_A_fnSkip_transpose_16x16_nibbles_line144,ineffective_paired_result.txt,ineffective,yes,pos 9: 30/240 pairs disagree (+1 more position(s))
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3,correction_paired_result.txt,correction,no,no position with disagreeing pairs
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mayo_memset_line2,correction_paired_result.txt,correction,no,no position with disagreeing pairs
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mayo_memset_line2,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line1,correction_paired_result.txt,correction,no,no position with disagreeing pairs
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line1,ineffective_paired_result.txt,ineffective,yes,pos 0: 30/240 pairs disagree (+292 more position(s))
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line4,correction_paired_result.txt,correction,no,no position with disagreeing pairs
-mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line4,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3_VL,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3_VL,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3_VP1V,correction_paired_result.txt,correction,yes,pos 98: 1/16 secret values with y1 = y2 xor alpha (+10 more position(s))
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_P1_times_Vt_line3_VP1V,ineffective_paired_result.txt,ineffective,yes,pos 3: 56/240 pairs disagree (+2579 more position(s))
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mayo_memset_line2_VL,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mayo_memset_line2_VL,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mayo_memset_line2_VP1V,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mayo_memset_line2_VP1V,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line1_VL,correction_paired_result.txt,correction,yes,pos 24: 1/16 secret values with y1 = y2 xor alpha (+8 more position(s))
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line1_VL,ineffective_paired_result.txt,ineffective,yes,pos 3: 30/240 pairs disagree (+2057 more position(s))
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line1_VP1V,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line1_VP1V,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line4_VL,correction_paired_result.txt,correction,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line4_VL,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line4_VP1V,correction_paired_result.txt,correction,yes,pos 98: 1/16 secret values with y1 = y2 xor alpha (+10 more position(s))
+mayo,compute_M_and_VPV,loopOrFuncSkip/compute_M_and_VPV_fnSkip_mul_add_mat_x_m_mat_line4_VP1V,ineffective_paired_result.txt,ineffective,yes,pos 3: 56/240 pairs disagree (+2579 more position(s))
 mayo,compute_P3,loopOrFuncSkip/compute_P3_fnSkip_P1_times_O_line0,correction_paired_result.txt,correction,yes,pos 272: 1/16 secret values with y1 = y2 xor alpha (+1 more position(s))
 mayo,compute_P3,loopOrFuncSkip/compute_P3_fnSkip_P1_times_O_line0,ineffective_paired_result.txt,ineffective,yes,pos 0: 56/240 pairs disagree (+323 more position(s))
 mayo,compute_P3,loopOrFuncSkip/compute_P3_fnSkip_mul_add_mat_trans_x_m_mat_line1,correction_paired_result.txt,correction,no,no position with disagreeing pairs
@@ -794,7 +802,7 @@ mayo,m_vec_mul_add,loopOrFuncSkip/m_vec_mul_add_fnSkip_mul_table_line0,ineffecti
 mayo,mat_add,loadStoreSkip/mat_add_line10_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 mayo,mat_add,loadStoreSkip/mat_add_line10_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 30/240 pairs disagree
 mayo,mat_add,loadStoreSkip/mat_add_line5_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
-mayo,mat_add,loadStoreSkip/mat_add_line5_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
+mayo,mat_add,loadStoreSkip/mat_add_line5_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 30/240 pairs disagree
 mayo,mat_add,loadStoreSkip/mat_add_line7_mem,correction_paired_result.txt,correction,yes,pos 0: 15/16 secret values with y1 = y2 xor alpha
 mayo,mat_add,loadStoreSkip/mat_add_line7_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 30/240 pairs disagree
 mayo,mat_add,loopOrFuncSkip/mat_add_fnSkip_add_f_line8,correction_paired_result.txt,correction,yes,pos 0: 15/16 secret values with y1 = y2 xor alpha

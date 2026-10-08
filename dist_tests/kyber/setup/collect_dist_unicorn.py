@@ -56,13 +56,23 @@ def _make_kyber_override_hook(word_size):
 
 def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             seed, variant, out_path, machine, fixed_scalars, kyber_k,
-            secret_buf, secret_pos, secret_val, word_size):
+            secret_buf, secret_pos, secret_val, word_size, eph_secret=""):
     with open(witness_path) as f:
         layout = json.load(f)["layout"]
     with open(active_lengths_path) as f:
         active_lengths = json.load(f)
 
     fixed_set = set(s for s in (fixed_scalars or "").split(",") if s)
+
+    # Ephemeral secrets (named by <alg>.json "eph_secret"): not public, so
+    # not held fixed with the background. Drawn from a dedicated RNG per
+    # (seed, secret value) -- fresh for every evaluation, identical for the
+    # correct and faulty run of it -- using the buffer's own witness
+    # "distribution" (sample_for_distribution inside run_trial).
+    eph_set = set(s for s in (eph_secret or "").split(",") if s)
+    for name in eph_set:
+        if name not in layout:
+            raise RunFailed(f"eph_secret {name!r} not in witness layout")
 
     # unicorn_runner's override_pos is always a BYTE position (it does
     # `0 <= override_pos < width` against the plain byte-length buffer);
@@ -77,6 +87,8 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             fixed_set, sample_for_distribution, active_lengths,
             secret_buf, byte_pos, secret_val,
             also_override_hook=_make_kyber_override_hook(word_size),
+            eph_secret=eph_set,
+            eph_seed=f"eph:{seed}:{secret_buf}:{secret_pos}:{secret_val}",
         )
     except (TrialError, Exception) as e:
         raise RunFailed(
@@ -125,7 +137,8 @@ def run_sweep(args):
                 run_one(elf_path, args.witness, args.active_lengths, args.func,
                         args.field_mod, args.seed, variant, out_path, args.machine,
                         args.fixed_scalars, args.kyber_k,
-                        args.secret_buf, args.secret_pos, sval, args.word_size)
+                        args.secret_buf, args.secret_pos, sval, args.word_size,
+                        args.eph_secret)
             except RunFailed as e:
                 print(f"[!] FAILED: {variant} sval={sval}\n{e}", flush=True)
                 failures.append((variant, sval, str(e)))
@@ -156,6 +169,10 @@ def main():
     ap.add_argument("--machine", default="mps2-an386",
                      help="ignored -- accepted only for CLI compatibility.")
     ap.add_argument("--fixed-scalars", default="")
+    ap.add_argument("--eph-secret", default="",
+                    help="comma-separated ephemeral-secret buffers: sampled "
+                         "fresh per (seed, secret value) from their own "
+                         "distribution, shared by correct and faulty run.")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument("--word-size", type=int, default=2, choices=(1, 2))

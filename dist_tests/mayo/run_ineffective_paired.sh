@@ -51,6 +51,7 @@ SECRET_BUF="$1"; shift
 SECRET_BUF_BASE="${SECRET_BUF%_pre}"
 
 OUT_BUF_OVERRIDE=""
+RESULT_SUFFIX=""   # appended to the per-fault RESULT folder only (multi-output functions)
 ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -60,6 +61,10 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             OUT_BUF_OVERRIDE="$2"
+            shift 2
+            ;;
+        --result-suffix)
+            RESULT_SUFFIX="$2"
             shift 2
             ;;
         --elf-dir)
@@ -315,7 +320,7 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     fi
     echo "[i] ${n_sv} correct_sv*.json files present in ${DIST_PAIRED_DIR}"
 
-    INEFFECTIVE_PAIRED_OUT="${OUT_DIR}/${faulty_stem}/ineffective_paired_result.txt"
+    INEFFECTIVE_PAIRED_OUT="${OUT_DIR}/${faulty_stem}${RESULT_SUFFIX}/ineffective_paired_result.txt"
     mkdir -p "$(dirname "$INEFFECTIVE_PAIRED_OUT")"
 
     echo "=== ineffective (paired) test: ${FUNC_NAME} / ${faulty_stem} ==="

@@ -32,11 +32,16 @@ class RunFailed(Exception):
 
 def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             seed, variant, out_path, machine, fixed_scalars,
-            secret_buf, secret_pos, secret_val):
+            secret_buf, secret_pos, secret_val, eph_secret=None):
     with open(witness_path) as f:
         layout = json.load(f)["layout"]
     with open(active_lengths_path) as f:
         active_lengths = json.load(f)
+
+    eph_set = set(s for s in (eph_secret or "").split(",") if s)
+    for name in eph_set:
+        if name not in layout:
+            raise RunFailed(f"eph_secret {name!r} not in witness layout")
 
     fixed_set = set(s for s in (fixed_scalars or "").split(",") if s)
 
@@ -45,6 +50,8 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             elf_path, layout, func, "collect", field_mod, seed, variant,
             fixed_set, sample_for_distribution, active_lengths,
             secret_buf, secret_pos, secret_val,
+            eph_secret=eph_set,
+            eph_seed=f"eph:{seed}:{secret_buf}:{secret_pos}:{secret_val}",
         )
     except (TrialError, Exception) as e:
         raise RunFailed(
@@ -77,7 +84,8 @@ def run_sweep(args):
             try:
                 run_one(elf_path, args.witness, args.active_lengths, args.func,
                         args.field_mod, args.seed, variant, out_path, args.machine,
-                        args.fixed_scalars, args.secret_buf, args.secret_pos, sval)
+                        args.fixed_scalars, args.secret_buf, args.secret_pos, sval,
+                        args.eph_secret)
             except RunFailed as e:
                 print(f"[!] FAILED: {variant} sval={sval}\n{e}", flush=True)
                 failures.append((variant, sval, str(e)))
@@ -107,6 +115,10 @@ def main():
     ap.add_argument("--machine", default="mps2-an386",
                      help="ignored -- accepted only for CLI compatibility.")
     ap.add_argument("--fixed-scalars", default="")
+    ap.add_argument("--eph-secret", default="",
+                    help="comma-separated ephemeral-secret buffers: sampled "
+                         "fresh per (seed, secret value), shared by the "
+                         "correct and faulty run, never held fixed.")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument("--seed", type=int, default=0)

@@ -44,6 +44,7 @@ SECRET_BUF="$1"; shift
 
 SECRET_POS=0
 FIXED_SCALARS=""
+EPH_SECRET=""
 SEED=0
 TIMEOUT_SECS=120   # per-collection wall-clock cap; adjust if legitimate
                     # sweeps for large functions routinely exceed this
@@ -57,6 +58,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --secret-pos) SECRET_POS="$2"; shift 2 ;;
         --fixed-scalars) FIXED_SCALARS="$2"; shift 2 ;;
+        --eph-secret) EPH_SECRET="$2"; shift 2 ;;
         --seed) SEED="$2"; shift 2 ;;
         --timeout) TIMEOUT_SECS="$2"; shift 2 ;;
         --field-mod) FIELD_MOD="$2"; shift 2 ;;
@@ -112,7 +114,8 @@ timeout --signal=TERM --kill-after=10 "$TIMEOUT_SECS" \
         --func "$FUNC_NAME" --field-mod "$FIELD_MOD" \
         --secret-buf "$SECRET_BUF" --secret-pos "$SECRET_POS" --seed "$SEED" \
         --outdir "$DIST_PAIRED_DIR" --machine "$MACHINE" \
-        --fixed-scalars "$FIXED_SCALARS"
+        --fixed-scalars "$FIXED_SCALARS" \
+        --eph-secret "$EPH_SECRET"
 STATUS=$?
 set -e
 

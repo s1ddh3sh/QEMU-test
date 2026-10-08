@@ -110,6 +110,8 @@ def run_trial(
     probe_len=0,
     probe_seed=0,
     co_seed=0,
+    eph_secret=None,
+    eph_seed=None,
 ):
     """Run one correct/faulty trial in-process via Unicorn.
 
@@ -146,6 +148,16 @@ def run_trial(
         search (mirrors driver_dist.py's run_probe()).
     """
     import random
+
+    # eph_secret: set of pointer-buffer names that are EPHEMERAL secrets
+    # (collect mode only). They are not public inputs, so they must not
+    # follow the shared public-background stream; they are drawn from a
+    # dedicated RNG seeded by eph_seed (same value for the correct and
+    # faulty run of one evaluation => f and f~ get the same rho). The
+    # main rng still draws (and discards) their bytes so every OTHER
+    # buffer's sampling is unchanged.
+    eph_secret = set(eph_secret or ())
+    eph_rng = random.Random(eph_seed) if eph_secret else None
 
     if mode not in ("collect", "probe"):
         raise ValueError(f"unknown mode {mode!r}")
@@ -271,6 +283,9 @@ def run_trial(
             else:
                 fill_len = active_lengths.get(name, spec["length"])
                 vals = sample_fn(spec.get("distribution"), fill_len, rng, field_mod)
+                if name in eph_secret:
+                    vals = sample_fn(spec.get("distribution"), fill_len,
+                                     eph_rng, field_mod)
 
                 if name == override_buf and 0 <= override_pos < len(vals):
                     if also_override_hook is not None:

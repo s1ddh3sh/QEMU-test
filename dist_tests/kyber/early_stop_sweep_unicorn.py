@@ -118,7 +118,7 @@ def load_or_collect(sval, c_path, f_path, args, seed):
                 args.bg_field_mod, seed, variant, out_path, args.machine,
                 args.fixed_scalars, args.kyber_k,
                 args.secret_buf, args.secret_pos, sval,
-                args.secret_word_size)
+                args.secret_word_size, args.eph_secret)
     with open(c_path) as f:
         c = json.load(f)
     with open(f_path) as f:
@@ -144,6 +144,12 @@ def main():
     ap.add_argument("--outdir", required=True)
     ap.add_argument("--machine", default="mps2-an386")
     ap.add_argument("--fixed-scalars", default="")
+    ap.add_argument("--eph-secret", default="",
+                    help="comma-separated EPHEMERAL-secret buffers (from "
+                         "the function's \"eph_secret\" json entry): not "
+                         "public, so never fixed with the background -- "
+                         "sampled fresh per (seed, secret value) from their "
+                         "own distribution, same value for correct/faulty.")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument(

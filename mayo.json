@@ -30,6 +30,7 @@
     },
     "mat_add":{
         "secret-buf":"Ox",
+        "eph_secret":"Vdec",
         "fixed-scalars":"m,n"
     },
     "mat_mul":{
@@ -81,7 +82,8 @@
         "secret-buf":"O"
     },
     "compute_M_and_VPV":{
-        "secret-buf":"Vdec"
+        "secret-buf":"L",
+        "eph_secret":"Vdec"
     },
     "ef_pack_m_vec":{
         "secret-buf":"in",

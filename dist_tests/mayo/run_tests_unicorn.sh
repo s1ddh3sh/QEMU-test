@@ -103,7 +103,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # invoked from the repo root, same assumption OUT_DIR above already makes).
 # ---------------------------------------------------------------------------
 CONFIG_JSON="mayo.json"
-read -r JSON_SECRET_BUF JSON_FIXED_SCALARS <<< "$(python3 - "$CONFIG_JSON" "$FUNC_NAME" <<'PYEOF'
+read -r JSON_SECRET_BUF JSON_FIXED_SCALARS JSON_EPH_SECRET <<< "$(python3 - "$CONFIG_JSON" "$FUNC_NAME" <<'PYEOF'
 import json, sys
 path, func = sys.argv[1], sys.argv[2]
 try:
@@ -118,11 +118,13 @@ entry = config.get(func) or {}
 # empty on every function that actually has a "fixed-scalars" entry
 # (neither secret-buf nor fixed-scalars ever contains whitespace, so
 # this is a safe, unambiguous join).
-print((entry.get("secret-buf") or "__NONE__") + " " + (entry.get("fixed-scalars") or "__NONE__"))
+print((entry.get("secret-buf") or "__NONE__") + " " + (entry.get("fixed-scalars") or "__NONE__") + " " + (entry.get("eph_secret") or "__NONE__"))
 PYEOF
 )"
 [[ "$JSON_SECRET_BUF" == "__NONE__" ]] && JSON_SECRET_BUF=""
 [[ "$JSON_FIXED_SCALARS" == "__NONE__" ]] && JSON_FIXED_SCALARS=""
+[[ "$JSON_EPH_SECRET" == "__NONE__" ]] && JSON_EPH_SECRET=""
+EPH_SECRET="$JSON_EPH_SECRET"
 
 if [[ -n "$SECRET_BUF_OVERRIDE" ]]; then
     SECRET_BUF="$SECRET_BUF_OVERRIDE"
@@ -173,6 +175,7 @@ fi
 
 echo "[i] function:     ${FUNC_NAME} [unicorn backend -- no qemu-system-arm/gdb-multiarch required]"
 echo "[i] secret buf:    ${SECRET_BUF} (pos ${SECRET_POS}), field-mod ${FIELD_MOD:-16 (GF(16) default)}"
+echo "[i] eph secret:    ${EPH_SECRET:-<none>} (sampled fresh per evaluation, never fixed)"
 echo "[i] correct elf:   ${CORRECT_ELF}"
 echo "[i] faulty elfs:   ${#FAULTY_ELFS[@]} found under ${ELF_DIR}"
 for f in "${FAULTY_ELFS[@]}"; do
@@ -199,6 +202,7 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
             "$FUNC_NAME" "$CORRECT_ELF" "$faulty_elf" "$SECRET_BUF"
             --secret-pos "$SECRET_POS"
             --fixed-scalars "$FIXED_SCALARS"
+            --eph-secret "$EPH_SECRET"
             --seed "$p"
         )
         if [[ $i -gt 0 ]]; then
@@ -217,24 +221,57 @@ done
 # dir, so they're called once per function, not once per faulty ELF.
 # ---------------------------------------------------------------------------
 
-RUN_ARGS=("$FUNC_NAME" "$SECRET_BUF" --elf-dir "$ELF_DIR")
+# ---------------------------------------------------------------------------
+# Output buffers to analyse. Collection already stores EVERY output in each
+# trial JSON, so steps [2/3]/[3/3] simply run once per output buffer.
+#   - --out-buf given            -> just that buffer
+#   - exactly one role:output    -> it (result folders unchanged)
+#   - two or more role:output    -> each of them; results go to
+#       <faulty_stem>_<out_name>/ (dist_paired/ data stays shared in
+#       <faulty_stem>/), so outputs never overwrite each other.
+# ---------------------------------------------------------------------------
+mapfile -t WITNESS_OUTPUTS < <(python3 - "$WITNESS" <<'PYEOF'
+import json, sys
+layout = json.load(open(sys.argv[1]))["layout"]
+for n, spec in layout.items():
+    if spec.get("role") == "output":
+        print(n)
+PYEOF
+)
 if [[ -n "$OUT_BUF_OVERRIDE" ]]; then
-    RUN_ARGS+=(--out-buf "$OUT_BUF_OVERRIDE")
+    OUT_BUFS=("$OUT_BUF_OVERRIDE")
+else
+    OUT_BUFS=("${WITNESS_OUTPUTS[@]}")
 fi
+MULTI_OUT=0
+[[ ${#WITNESS_OUTPUTS[@]} -ge 2 ]] && MULTI_OUT=1
+[[ ${#OUT_BUFS[@]} -eq 0 ]] && OUT_BUFS=("")   # let the sub-scripts report the error
 
-echo ""
-echo "########## [2/3] run_ineffective_paired.sh ##########"
-"${SCRIPT_DIR}/run_ineffective_paired.sh" "${RUN_ARGS[@]}"
+for OUT_BUF_CUR in "${OUT_BUFS[@]}"; do
+    RUN_ARGS=("$FUNC_NAME" "$SECRET_BUF" --elf-dir "$ELF_DIR")
+    if [[ -n "$OUT_BUF_CUR" ]]; then
+        RUN_ARGS+=(--out-buf "$OUT_BUF_CUR")
+    fi
+    if [[ "$MULTI_OUT" -eq 1 ]]; then
+        RUN_ARGS+=(--result-suffix "_${OUT_BUF_CUR}")
+        echo ""
+        echo "################ output buffer: ${OUT_BUF_CUR} (results -> <faulty_stem>_${OUT_BUF_CUR}/) ################"
+    fi
 
-CORR_ARGS=("${RUN_ARGS[@]}")
-if [[ -n "$SEEDS" ]]; then
-    CORR_ARGS+=(--seeds "$SEEDS")
-fi
+    echo ""
+    echo "########## [2/3] run_ineffective_paired.sh ##########"
+    "${SCRIPT_DIR}/run_ineffective_paired.sh" "${RUN_ARGS[@]}"
 
-echo ""
-echo "########## [3/3] run_correction_paired.sh ##########"
-"${SCRIPT_DIR}/run_correction_paired.sh" "${CORR_ARGS[@]}"
+    CORR_ARGS=("${RUN_ARGS[@]}")
+    if [[ -n "$SEEDS" ]]; then
+        CORR_ARGS+=(--seeds "$SEEDS")
+    fi
+
+    echo ""
+    echo "########## [3/3] run_correction_paired.sh ##########"
+    "${SCRIPT_DIR}/run_correction_paired.sh" "${CORR_ARGS[@]}"
+done
 
 echo ""
 echo "=== pipeline complete (unicorn): ${FUNC_NAME} (${#FAULTY_ELFS[@]} faulty ELF(s)) ==="
-echo "[i] per-faulty-ELF results under: tests_mayo/${FUNC_NAME}/<faulty_elf_stem>/{ineffective,correction}_paired_result.txt"
+echo "[i] per-faulty-ELF results under: tests_mayo/${FUNC_NAME}/<faulty_elf_stem>[_<out>]/{ineffective,correction}_paired_result.txt"
