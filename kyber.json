@@ -63,12 +63,14 @@
         "secret-buf":"buf"
     },
     "pqcrystals_kyber768_ref_polyvec_add":{
-        "secret-buf":"b"
+        "secret-buf":"a",
+        "eph_secret":"b"
     },
     "pqcrystals_kyber768_ref_polyvec_tobytes":{
         "secret-buf":"a"
     },
     "pqcrystals_kyber768_ref_indcpa_keypair_derand":{
-        "secret-buf":"sk"
+        "secret-buf":"sk",
+        "eph_secret":"coins"
     }
 }

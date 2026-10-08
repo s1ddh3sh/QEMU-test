@@ -4,10 +4,12 @@
     },
     "pqcrystals_dilithium2_ref_signature_internal":{
         "secret-buf": "sk",
+        "eph_secret":"rnd",
         "fixed-scalars":"mlen,prelen"
     },
     "pqcrystals_dilithium2_ref_polyvecl_add":{
-        "secret-buf" : "v"
+        "secret-buf":"u",
+        "eph_secret":"v"
     },
     "pqcrystals_dilithium2_ref_poly_ntt":{
         "secret-buf":"a"
@@ -56,7 +58,8 @@
         "secret-buf":"v"
     },
     "pqcrystals_dilithium2_ref_polyveck_add":{
-        "secret-buf":"v"
+        "secret-buf":"u",
+        "eph_secret":"v"
     },
     "pqcrystals_dilithium2_ref_polyveck_caddq":{
         "secret-buf":"v"
@@ -80,7 +83,8 @@
         "secret-buf":"v"
     },
     "pqcrystals_dilithium2_ref_polyveck_sub":{
-        "secret-buf":"v"
+        "secret-buf":"v",
+        "eph_secret":"u"
     },
     "pqcrystals_dilithium2_ref_polyveck_uniform_eta":{
         "secret-buf":"seed",
