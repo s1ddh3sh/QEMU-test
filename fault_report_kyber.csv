@@ -179,8 +179,28 @@ kyber,keccak_squeeze,binOpFault/keccak_squeeze_line29_zero,test_result.txt,corre
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line29_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opA,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opB,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_undef,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_zero,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opA,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opB,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_undef,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_zero,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line21_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line21_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,correction_paired_result.txt,correction,yes,pos 0: 65280/65280 pairs disagree
+kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree
+kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
+kyber,keccak_squeeze,loopOrFuncSkip/keccak_squeeze_fnSkip_KeccakF1600_StatePermute_line8,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,loopOrFuncSkip/keccak_squeeze_fnSkip_KeccakF1600_StatePermute_line8,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,load64,binOpFault/load64_line10_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
 kyber,load64,binOpFault/load64_line10_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,load64,binOpFault/load64_line10_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
