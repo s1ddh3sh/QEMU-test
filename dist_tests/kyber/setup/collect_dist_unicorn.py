@@ -28,12 +28,18 @@ if "--kyber-k" in sys.argv:
     if _i + 1 < len(sys.argv):
         os.environ["GDB_DRIVER_KYBER_K"] = sys.argv[_i + 1]
 
-from dist_tests.common.unicorn_runner import run_trial, TrialError
+from dist_tests.common.unicorn_runner import run_trial, TrialError, TrialTimeout
 from dist_tests.kyber.setup.distributions_unicorn import (
     sample_for_distribution,
     apply_word_override_pure,
     infer_field_mod,
 )
+
+
+class RunTimeout(Exception):
+    """A trial exceeded the emulation wall-clock cap (likely an endless
+    loop in a faulty ELF). Deliberately NOT a RunFailed: callers must not
+    "skip this sv and continue" -- every other sv would hang too."""
 
 
 class RunFailed(Exception):
@@ -66,8 +72,8 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
 
     # Ephemeral secrets (named by <alg>.json "eph_secret"): not public, so
     # not held fixed with the background. Drawn from a dedicated RNG per
-    # (seed, secret value) -- fresh for every evaluation, identical for the
-    # correct and faulty run of it -- using the buffer's own witness
+    # public seed (r_k for seed p_k) -- independent across seeds, identical for
+    # the correct and faulty run and for every swept secret value of that seed -- using the buffer's own witness
     # "distribution" (sample_for_distribution inside run_trial).
     eph_set = set(s for s in (eph_secret or "").split(",") if s)
     for name in eph_set:
@@ -88,8 +94,14 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             secret_buf, byte_pos, secret_val,
             also_override_hook=_make_kyber_override_hook(word_size),
             eph_secret=eph_set,
-            eph_seed=f"eph:{seed}:{secret_buf}:{secret_pos}:{secret_val}",
+            eph_seed=f"eph:{seed}",
         )
+    except TrialTimeout as e:
+        raise RunTimeout(
+            f"subprocess.TimeoutExpired: {variant} run for "
+            f"{secret_buf}[{secret_pos}]={secret_val} "
+            f"(word_size={word_size}, seed={seed}): {e}"
+        ) from e
     except (TrialError, Exception) as e:
         raise RunFailed(
             f"{variant} run for {secret_buf}[{secret_pos}]={secret_val} "
@@ -171,8 +183,9 @@ def main():
     ap.add_argument("--fixed-scalars", default="")
     ap.add_argument("--eph-secret", default="",
                     help="comma-separated ephemeral-secret buffers: sampled "
-                         "fresh per (seed, secret value) from their own "
-                         "distribution, shared by correct and faulty run.")
+                         "one draw per public seed (same N seeds as the public background), "
+                         "from their own distribution, shared by the correct and faulty run "
+                         "and by every swept secret value of that seed.")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument("--word-size", type=int, default=2, choices=(1, 2))

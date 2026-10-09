@@ -152,8 +152,9 @@ def run_trial(
     # eph_secret: set of pointer-buffer names that are EPHEMERAL secrets
     # (collect mode only). They are not public inputs, so they must not
     # follow the shared public-background stream; they are drawn from a
-    # dedicated RNG seeded by eph_seed (same value for the correct and
-    # faulty run of one evaluation => f and f~ get the same rho). The
+    # dedicated RNG seeded by eph_seed (the caller passes one value per public seed, so
+    # r_k comes from the same N seeds as p_k; same for the correct and faulty
+    # run => f and f~ get the same r). The
     # main rng still draws (and discards) their bytes so every OTHER
     # buffer's sampling is unchanged.
     eph_secret = set(eph_secret or ())

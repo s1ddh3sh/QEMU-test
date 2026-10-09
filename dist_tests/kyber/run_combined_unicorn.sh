@@ -413,7 +413,7 @@ fi
 echo "[i] func:        ${FUNC_NAME} [unicorn backend -- no qemu-system-arm/gdb-multiarch required]"
 echo "[i] secret-buf:  ${SECRET_BUF} (pos ${SECRET_POS}, word-size ${SECRET_WORD_SIZE})"
 echo "[i] out-buf:     ${OUT_BUF} (active-len ${ACTIVE_LEN} bytes, word-size ${WORD_SIZE}, diff-mode ${DIFF_MODE})"
-echo "[i] eph-secret:  ${EPH_SECRET:-<none>} (sampled fresh per evaluation, never fixed)"
+echo "[i] eph-secret:  ${EPH_SECRET:-<none>} (one draw per public seed, never fixed)"
 echo "[i] field-mod:   ${FIELD_MOD}, kyber-k: ${KYBER_K}"
 echo "[i] elf-dir:     ${ELF_DIR}"
 echo "[i] correct elf: ${CORRECT_ELF}"
@@ -489,13 +489,16 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
         2>&1 | tee "$RESULT_FILE"
     STATUS=${PIPESTATUS[0]}
     set -e
-    if [[ $STATUS -ne 0 ]]; then
+    if [[ $STATUS -ne 0 && $STATUS -ne 124 ]]; then
         OVERALL_STATUS=1
     fi
 
     INEFF_STATUS="-"
     CORR_STATUS="-"
-    if grep -q "^\[RESULT\] ineffective test: DETECTED" "$RESULT_FILE"; then
+    if [[ $STATUS -eq 124 ]] || grep -q "TimeoutExpired" "$RESULT_FILE"; then
+        INEFF_STATUS="TIMEOUT"
+        CORR_STATUS="TIMEOUT"
+    elif grep -q "^\[RESULT\] ineffective test: DETECTED" "$RESULT_FILE"; then
         INEFF_STATUS="DETECTED"
     elif grep -q "^\[RESULT\] ineffective test:" "$RESULT_FILE"; then
         INEFF_STATUS="not detected"

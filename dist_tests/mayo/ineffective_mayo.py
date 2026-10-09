@@ -9,6 +9,17 @@ collected by collect_paired_sweep.py, per your algorithm:
     y3 = f_correct(s2, p),  y4 = f_faulty(s2, p),  delta2 = y3 xor y4
     d1 = (delta1 == 0),     d2 = (delta2 == 0)
 
+Updated query (see the document): the test runs over ALL N public seeds, one
+--dist-dir per seed (seed k = one public background p_k and, if the function
+has an ephemeral input, one ephemeral draw r_k):
+
+    no ephemeral input :  forall p  exists s1,s2 : d(s1,p)=True and d(s2,p)=False
+                          -> a disagreeing pair must exist on EVERY seed
+    --eph              :  forall p exists s1,s2 : (forall r d(s1,r,p)) and (forall r not d(s2,r,p))
+                          -> s1 ineffective AND s2 effective on EVERY seed's (p_k, r_k)
+
+The text below describes the original single-background form.
+
 This is DESCRIPTIVE, not a hypothesis test -- with a single p, there is
 only one (d1, d2) observation per pair, which is not enough data for a
 p-value. It reports, per output position, how many of the 256 ordered
@@ -27,7 +38,12 @@ import json
 import re
 import struct
 import os
+import sys
+
 import numpy as np
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from dist_tests.common.ineffective import analyse  # noqa: E402
 
 
 def decode_words(values, word_size):
@@ -85,28 +101,34 @@ def load_sweep(dist_dir, out_buf, active_len, out_word_size):
     return d
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dist-dir", required=True)
+    ap.add_argument("--dist-dir", required=True, nargs="+",
+                    help="one sweep directory per public seed (p_k [, r_k])")
     ap.add_argument("--out-buf", required=True)
     ap.add_argument("--active-len", type=int, required=True)
     ap.add_argument("--out-word-size", type=int, default=1, choices=[1, 4])
+    ap.add_argument("--eph", action="store_true",
+                    help="the function has an ephemeral input (eph_secret): "
+                         "require s1 ineffective / s2 effective on every seed "
+                         "instead of a per-seed pair")
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
-    d = load_sweep(args.dist_dir, args.out_buf, args.active_len, args.out_word_size)
-    secret_values = sorted(d.keys())
+    sweeps = [load_sweep(d, args.out_buf, args.active_len, args.out_word_size)
+              for d in args.dist_dir]
+    secret_values = sorted(set.intersection(*(set(w) for w in sweeps)))
     if len(secret_values) < 2:
-        raise RuntimeError(f"only {len(secret_values)} secret values found in {args.dist_dir}")
+        raise RuntimeError(f"only {len(secret_values)} secret values common to all --dist-dir")
 
-    print(f"[i] loaded {len(secret_values)} secret values (single shared background p)")
+    K, S = len(sweeps), len(secret_values)
+    mode = ("eph: s1 ineffective & s2 effective on every seed" if args.eph
+            else "per-seed pair (forall p exists s1,s2)")
+    print(f"[i] loaded {S} secret values x {K} public seeds -- {mode}")
+    if args.eph and K < 2:
+        print("[!] only one seed: 'forall r' is vacuous (one r per seed).")
 
-    # Safety clamp: --active-len is normally derived from the SECRET
-    # buffer's calibrated length, which can exceed the OUTPUT buffer's
-    # true length whenever secret_buf and out_buf are different natural
-    # sizes (e.g. secret_buf is an input matrix, out_buf is a shorter
-    # result). load_sweep() already silently truncates each delta array
-    # to whatever the output buffer actually contains, so use THAT
-    # length -- not the raw --active-len -- to bound the position loop.
-    out_len = min(len(v) for v in d.values())
+    # Safety clamp (see original note): bound the position loop by the real
+    # output length, not the secret buffer's calibrated length.
+    out_len = min(len(w[sv]) for w in sweeps for sv in secret_values)
     safe_len = min(args.active_len, out_len)
     if safe_len < args.active_len:
         print(
@@ -115,28 +137,31 @@ def main():
             f"position loop to {safe_len}."
         )
 
-    pairs = [(a, b) for a in secret_values for b in secret_values if a != b]
-    print(f"[i] {len(pairs)} ordered (s1,s2) pairs "
-          f"({len(secret_values)}*{len(secret_values)-1})")
+    eq = np.stack([np.stack([w[sv][:safe_len] for sv in secret_values])
+                   for w in sweeps])                    # (K, S, P)
+    n_pairs, leak = analyse(eq, args.eph)
+    total = S * (S - 1)
 
     for pos in range(safe_len):
-        disagree = []
-        for s1, s2 in pairs:
-            d1 = bool(d[s1][pos])
-            d2 = bool(d[s2][pos])
-            if d1 != d2:
-                disagree.append((s1, s2, d1, d2))
-
-        if args.verbose or disagree:
-            print("=" * 75)
-            print(f"pos {pos}: {len(disagree)}/{len(pairs)} pairs disagree "
-                  f"(d1 != d2)")
-            if disagree:
-                for s1, s2, d1, d2 in disagree[:10]:
-                    print(f"    s1={s1} (d1={d1}) vs s2={s2} (d2={d2})")
-                if len(disagree) > 10:
-                    print(f"    ... and {len(disagree) - 10} more")
-            print("=" * 75)
+        if not (args.verbose or leak[pos]):
+            continue
+        print("=" * 75)
+        print(f"pos {pos}: {int(n_pairs[pos])}/{total} pairs disagree "
+              f"(d1 != d2)")
+        if leak[pos]:
+            if args.eph:
+                ine = [sv for i, sv in enumerate(secret_values) if eq[:, i, pos].all()]
+                eff = [sv for i, sv in enumerate(secret_values) if (~eq[:, i, pos]).all()]
+                print(f"    s1 ineffective on all {K} seeds: {ine[:10]}"
+                      + (f" ... +{len(ine) - 10}" if len(ine) > 10 else ""))
+                print(f"    s2 effective   on all {K} seeds: {eff[:10]}"
+                      + (f" ... +{len(eff) - 10}" if len(eff) > 10 else ""))
+            else:
+                for k, d in enumerate(args.dist_dir):
+                    ine = [sv for i, sv in enumerate(secret_values) if eq[k, i, pos]]
+                    eff = [sv for i, sv in enumerate(secret_values) if not eq[k, i, pos]]
+                    print(f"    seed#{k}: s1={ine[0]} (ineffective) vs s2={eff[0]} (effective)")
+        print("=" * 75)
 
 
 if __name__ == "__main__":

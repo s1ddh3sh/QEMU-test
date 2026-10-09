@@ -175,7 +175,7 @@ fi
 
 echo "[i] function:     ${FUNC_NAME} [unicorn backend -- no qemu-system-arm/gdb-multiarch required]"
 echo "[i] secret buf:    ${SECRET_BUF} (pos ${SECRET_POS}), field-mod ${FIELD_MOD:-16 (GF(16) default)}"
-echo "[i] eph secret:    ${EPH_SECRET:-<none>} (sampled fresh per evaluation, never fixed)"
+echo "[i] eph secret:    ${EPH_SECRET:-<none>} (one draw per public seed, never fixed)"
 echo "[i] correct elf:   ${CORRECT_ELF}"
 echo "[i] faulty elfs:   ${#FAULTY_ELFS[@]} found under ${ELF_DIR}"
 for f in "${FAULTY_ELFS[@]}"; do
@@ -252,6 +252,9 @@ for OUT_BUF_CUR in "${OUT_BUFS[@]}"; do
     if [[ -n "$OUT_BUF_CUR" ]]; then
         RUN_ARGS+=(--out-buf "$OUT_BUF_CUR")
     fi
+    if [[ -n "$EPH_SECRET" ]]; then
+        RUN_ARGS+=(--has-eph)
+    fi
     if [[ "$MULTI_OUT" -eq 1 ]]; then
         RUN_ARGS+=(--result-suffix "_${OUT_BUF_CUR}")
         echo ""
@@ -260,12 +263,13 @@ for OUT_BUF_CUR in "${OUT_BUFS[@]}"; do
 
     echo ""
     echo "########## [2/3] run_ineffective_paired.sh ##########"
-    "${SCRIPT_DIR}/run_ineffective_paired.sh" "${RUN_ARGS[@]}"
-
+    INEFF_ARGS=("${RUN_ARGS[@]}")
     CORR_ARGS=("${RUN_ARGS[@]}")
     if [[ -n "$SEEDS" ]]; then
+        INEFF_ARGS+=(--seeds "$SEEDS")
         CORR_ARGS+=(--seeds "$SEEDS")
     fi
+    "${SCRIPT_DIR}/run_ineffective_paired.sh" "${INEFF_ARGS[@]}"
 
     echo ""
     echo "########## [3/3] run_correction_paired.sh ##########"

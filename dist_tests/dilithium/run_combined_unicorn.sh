@@ -387,7 +387,7 @@ fi
 echo "[i] func:        ${FUNC_NAME} [unicorn backend -- no qemu-system-arm/gdb-multiarch required]"
 echo "[i] secret-buf:  ${SECRET_BUF} (byte pos ${SECRET_POS})"
 echo "[i] out-buf:     ${OUT_BUF} (active-len ${ACTIVE_LEN} bytes, word-size ${WORD_SIZE}, diff-mode ${DIFF_MODE})"
-echo "[i] eph-secret:  ${EPH_SECRET:-<none>} (sampled fresh per evaluation, never fixed)"
+echo "[i] eph-secret:  ${EPH_SECRET:-<none>} (one draw per public seed, never fixed)"
 echo "[i] field-mod:   ${FIELD_MOD}, dilithium-mode: ${DILITHIUM_MODE}"
 echo "[i] elf-dir:     ${ELF_DIR}"
 echo "[i] correct elf: ${CORRECT_ELF}"

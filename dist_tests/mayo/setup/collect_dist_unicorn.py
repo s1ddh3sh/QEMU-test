@@ -51,7 +51,7 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             fixed_set, sample_for_distribution, active_lengths,
             secret_buf, secret_pos, secret_val,
             eph_secret=eph_set,
-            eph_seed=f"eph:{seed}:{secret_buf}:{secret_pos}:{secret_val}",
+            eph_seed=f"eph:{seed}",
         )
     except (TrialError, Exception) as e:
         raise RunFailed(
@@ -116,9 +116,9 @@ def main():
                      help="ignored -- accepted only for CLI compatibility.")
     ap.add_argument("--fixed-scalars", default="")
     ap.add_argument("--eph-secret", default="",
-                    help="comma-separated ephemeral-secret buffers: sampled "
-                         "fresh per (seed, secret value), shared by the "
-                         "correct and faulty run, never held fixed.")
+                    help="comma-separated ephemeral-secret buffers: one draw per "
+                         "public seed (same N seeds as p), shared by the correct and faulty "
+                         "run and by every swept secret value of that seed.")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument("--seed", type=int, default=0)

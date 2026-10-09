@@ -75,8 +75,8 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
 
     # Ephemeral secrets (named by <alg>.json "eph_secret"): not public, so
     # not held fixed with the background. Drawn from a dedicated RNG per
-    # (seed, secret value) -- fresh for every evaluation, identical for the
-    # correct and faulty run of it -- using the buffer's own witness
+    # public seed (r_k for seed p_k) -- independent across seeds, identical for
+    # the correct and faulty run and for every swept secret value of that seed -- using the buffer's own witness
     # "distribution" (sample_for_distribution inside run_trial).
     eph_set = set(s for s in (eph_secret or "").split(",") if s)
     for name in eph_set:
@@ -90,7 +90,7 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             secret_buf, secret_pos, secret_val,
             also_override_hook=_dilithium_override_hook,
             eph_secret=eph_set,
-            eph_seed=f"eph:{seed}:{secret_buf}:{secret_pos}:{secret_val}",
+            eph_seed=f"eph:{seed}",
         )
     except TrialTimeout as e:
         raise RunTimeout(
@@ -227,8 +227,9 @@ def main():
     ap.add_argument("--fixed-scalars", default="")
     ap.add_argument("--eph-secret", default="",
                     help="comma-separated ephemeral-secret buffers: sampled "
-                         "fresh per (seed, secret value) from their own "
-                         "distribution, shared by correct and faulty run.")
+                         "one draw per public seed (same N seeds as the public background), "
+                         "from their own distribution, shared by the correct and faulty run "
+                         "and by every swept secret value of that seed.")
     ap.add_argument("--secret-buf", default=None)
     ap.add_argument("--secret-pos", type=int, default=None)
     ap.add_argument("--seed", type=int, default=0)

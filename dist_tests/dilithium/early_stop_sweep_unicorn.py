@@ -94,6 +94,7 @@ if os.path.dirname(os.path.abspath(__file__)) not in sys.path:
 
 from setup.collect_dist_unicorn import run_one, RunFailed, RunTimeout  # noqa: E402  (unmodified, in-process Unicorn backend)
 from setup.distributions_unicorn import infer_field_mod, domain_values, domain_bounds  # noqa: E402
+from dist_tests.common.ineffective import IneffectiveTracker  # noqa: E402
 from ineffective_dilithium import (                 # noqa: E402  (unmodified)
     decode_words,
     get_buffer,
@@ -245,11 +246,18 @@ def main():
     want_ineffective = args.test in ("ineffective", "both")
     want_correction = args.test in ("correction", "both")
 
-    # Ineffective test: per position, only the DISTINCT eq values seen so
-    # far (each mapped to one witness sv) are kept.
-    ineffective_seen = [dict() for _ in range(active_len_words)]  # bool -> sv
+    # Ineffective test over ALL N public seeds (each seed = one public
+    # background p_k and, with --eph-secret, one ephemeral draw r_k):
+    #   no eph : forall p exists s1,s2  (a pair on EVERY seed, may differ)
+    #   eph    : s1 ineffective and s2 effective on EVERY seed's (p_k, r_k)
+    # See dist_tests/common/ineffective.py.
+    has_eph = bool(args.eph_secret)
+    if has_eph and len(seeds) < 2:
+        print("[!] --eph-secret with fewer than 2 seeds: 'forall r' is "
+              "vacuous (one ephemeral draw per seed).", file=sys.stderr)
+    ineff_tracker = IneffectiveTracker(active_len_words, len(seeds), has_eph)
 
-    ineffective_hit = None  # (pos, sv_ineffective, sv_effective)
+    ineffective_hit = None  # (pos, [(sv_ineffective, sv_effective), ...])
     correction_hit = None   # (pos, sv, alpha)
 
     n_collected = 0
@@ -320,17 +328,27 @@ def main():
                 file=sys.stderr,
             )
 
-        for pos in range(n_pos):
-            if want_ineffective and ineffective_hit is None:
-                bucket = ineffective_seen[pos]
-                e = bool(eq[pos])
-                bucket.setdefault(e, sval)
-                if True in bucket and False in bucket:
-                    ineffective_hit = (pos, bucket[True], bucket[False])
-                    print(f"[+] INEFFECTIVE hit at pos {pos}: "
-                          f"s1={bucket[True]} (d1=True, ineffective) vs "
-                          f"s2={bucket[False]} (d2=False, effective)")
+        if want_ineffective and ineffective_hit is None:
+            ineff_tracker.update(
+                sval,
+                np.stack([(trials[p][0] == trials[p][1])[:n_pos] for p in seeds]),
+            )
+            h = ineff_tracker.hit()
+            if h is not None:
+                pos, wit = h
+                ineffective_hit = (pos, wit)
+                if has_eph:
+                    print(f"[+] INEFFECTIVE hit at pos {pos}: s1={wit[0][0]} "
+                          f"ineffective and s2={wit[0][1]} effective on all "
+                          f"{len(seeds)} seeds (p_k, r_k) (seeds={seeds})")
+                else:
+                    print(f"[+] INEFFECTIVE hit at pos {pos}: a pair exists on "
+                          f"each of {len(seeds)} public seeds {seeds}: "
+                          + ", ".join(f"p={p}: s1={a} (ineffective) vs "
+                                      f"s2={b} (effective)"
+                                      for p, (a, b) in zip(seeds, wit)))
 
+        for pos in range(n_pos):
             if want_correction and correction_hit is None:
                 # exists alpha, s: for all p, y1 = y2 xor alpha, i.e.
                 # Delta_p(s) is the same value alpha for every public p.
@@ -367,9 +385,11 @@ def main():
     print()
     if want_ineffective:
         if ineffective_hit:
-            pos, sv_in, sv_eff = ineffective_hit
+            pos, wit = ineffective_hit
+            sv_in, sv_eff = wit[0]
             print(f"[RESULT] ineffective test: DETECTED at pos {pos} "
-                  f"(s1={sv_in} ineffective, s2={sv_eff} effective)")
+                  f"(s1={sv_in} ineffective, s2={sv_eff} effective; "
+                  f"{'on every seed (p_k, r_k)' if has_eph else 'pair on each of ' + str(len(seeds)) + ' public seeds'})")
         else:
             print("[RESULT] ineffective test: no disagreement found "
                   "in range swept")

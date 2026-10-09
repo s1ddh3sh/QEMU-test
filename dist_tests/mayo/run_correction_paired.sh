@@ -53,6 +53,7 @@ ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --out-buf) OUT_BUF_OVERRIDE="$2"; shift 2 ;;
+        --has-eph) shift ;;   # accepted for CLI symmetry; the correction query is unchanged
         --result-suffix) RESULT_SUFFIX="$2"; shift 2 ;;
         --elf-dir) ELF_DIR="$2"; shift 2 ;;
         --seeds) SEEDS="$2"; shift 2 ;;
