@@ -84,7 +84,7 @@ input buffer/scalar filled — either from its declared distribution
 (realistic) or a plain uniform fill — and every `role: output` buffer read
 back afterward. The result is always
 `{"inputs": {...}, "outputs": {...}}`.
-
+<!-- 
 - **QEMU + gdb** (`dist_tests/<algo>/setup/driver_dist.py`, driven by
   `collect_dist.py`): boots `qemu-system-arm -M mps2-an386 -S -gdb
   tcp::1234`, then a `gdb-multiarch -batch` script breaks at `main()`'s
@@ -92,7 +92,7 @@ back afterward. The result is always
   raw entry to resolve pointer-argument addresses off gdb's live DWARF
   frame, fills every buffer, runs to a manually-set return-address
   breakpoint, and reads outputs. One QEMU + gdb process pair per trial —
-  robust, but ~1s+ of subprocess/boot overhead each time.
+  robust, but ~1s+ of subprocess/boot overhead each time. -->
 
 - **Unicorn** (`dist_tests/common/`, driven by
   `dist_tests/<algo>/setup/collect_dist_unicorn.py`) — **the newer,
@@ -140,18 +140,17 @@ information about the secret — i.e. it **leaks**.
 
 ### 5. Two ways to run a sweep
 
-- **`run_tests_unicorn.sh <func_name>`** (all three algos) — the full
+<!-- - **`run_tests_unicorn.sh <func_name>`** (all three algos) — the full
   exhaustive pipeline: calibrate active buffer lengths → sweep the secret
   through **every** value `0..field_mod-1` with one shared random
   background → run both paired tests. `field_mod` is auto-derived from
   the secret buffer's own declared distribution (e.g. MAYO is always 16 —
   GF(16); a Dilithium/Kyber secret's domain size comes straight from its
   distribution's real range, which can be very large — e.g. a
-  `masking vector y` buffer's domain is 262144).
-- **`run_combined_unicorn.sh <func_name>`** (Dilithium/Kyber only —
-  **the recommended entry point**) — same auto-derivation, but sweeps
+  `masking vector y` buffer's domain is 262144). -->
+- **`run_combined_unicorn.sh <func_name>`** — same auto-derivation, but sweeps
   secret values `sv = 0, 1, 2, ...` and **stops as soon as either test
-  finds a hit** (existence questions don't need the rest of the domain).
+  finds a hit** (existence questions don't need the rest of the domain) in case of Kyber/Dilithium or enumerate all 16 possible values for MAYO (GF(16)).
   In practice this settles in tens to a few hundred trials even when the
   full domain would be hundreds of thousands. Resumable: it reuses any
   already-collected trial file on disk instead of re-running it.
@@ -161,22 +160,21 @@ looked up from `<algo>.json` (`{"func_name": {"secret-buf": "...",
 "fixed-scalars": "..."}}`) unless passed explicitly.
 
 ```bash
-# Dilithium/Kyber: early-stopping, in-process, recommended
+# Per-function testing for <scheme> (mayo,dilithium,kyber)
 ./dist_tests/dilithium/run_combined_unicorn.sh pqcrystals_dilithium2_ref_polyvecl_add
 ./dist_tests/kyber/run_combined_unicorn.sh pqcrystals_kyber768_ref_poly_add
+./dist_tests/mayo/run_combined_unicorn.sh mat_add
 
-# MAYO: full sweep (no early-stop variant), in-process
-./dist_tests/mayo/run_tests_unicorn.sh mat_add
-
-# Original QEMU+gdb backend (any algo) — still available
-./dist_tests/dilithium/run_tests.sh pqcrystals_dilithium2_ref_poly_add a --secret-pos 0
+# Complete testing for all the scheme functions 
+#(builds the elfs and runs the run_combined_unicorn.sh for each)
+./dist_tests/<scheme>/run_tests_all.sh  
 ```
 
 Every faulty ELF found anywhere under the function's build directory
 (`build/tests_<algo>/<func_name>/`, recursively) is swept in turn, each
 into its own result file under `tests_<algo>/<func_name>/<fault-stem>/`.
 
-### 6. Reporting: `report_findings.py`
+### 6. Reporting: `rgeneric_tests_plot.py`
 
 Scans `tests_mayo/`, `tests_kyber/`, `tests_dilithium/` for every
 `test_result.txt` (early-stop backend) and
@@ -188,27 +186,29 @@ renders `fault_report_<scheme>.png` — a detection-rate-by-function bar
 chart (requires `matplotlib`).
 
 ```bash
-python3 report_findings.py                        # all three schemes, CSV only
-python3 report_findings.py --schemes mayo --plot   # one scheme + chart
+python3 generic_tests_plot.py                        # all three schemes, CSV only
+python3 generic_tests_plot.py --schemes mayo --plot   # one scheme + plot
+python3 generic_tests_plot.py --plot --style summary # summary plot for all schemes
+python3 generic_tests_plot.py --plot --combined # combined plot for all three schemes
 ```
 
-This supersedes `report.sh`/`fault_detection_report.md` (which only ever
+<!-- This supersedes `report.sh`/`fault_detection_report.md` (which only ever
 covered MAYO/Kyber's paired-sweep results in markdown) — `report_findings.py`
 covers all three schemes, both backends' result formats, and machine-readable
-output.
+output. -->
 
 ## Setup
 
 ```bash
 pip install -r dist_tests/common/requirements.txt   # unicorn, capstone, pyelftools, numpy
-pip install matplotlib                               # optional, for report_findings.py --plot
+pip install matplotlib                               # optional, for generic_tests_plot.py --plot
 ```
 
-The Unicorn backend needs no other tools. The original QEMU+gdb backend
+<!-- The Unicorn backend needs no other tools. The original QEMU+gdb backend
 additionally needs `qemu-system-arm` and `gdb-multiarch` on `PATH`. Building
-ELFs needs the `arm-none-eabi-*` GCC toolchain.
+ELFs needs the `arm-none-eabi-*` GCC toolchain. -->
 
-## Other files worth knowing about
+<!-- ## Other files worth knowing about
 
 - **`reports/`** — a separate tool that reads the faulty `.ll`/IR diff
   itself (not test results) to describe *what* a given mutation does
@@ -221,4 +221,4 @@ ELFs needs the `arm-none-eabi-*` GCC toolchain.
 - **MAYO's `driver_dist_sig.py`** — a separate, more advanced
   whole-signature fault harness (faults a function called from within a
   real `mayo_sign_signature` call, not the standalone per-function
-  driver) — not covered by the Unicorn backend or `run_combined_unicorn.sh`.
+  driver) — not covered by the Unicorn backend or `run_combined_unicorn.sh`. -->

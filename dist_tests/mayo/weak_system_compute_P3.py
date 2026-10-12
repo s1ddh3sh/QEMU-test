@@ -88,8 +88,7 @@ input already -- this test would show residual=0 in BOTH the correct and
 the faulty binary for those (a true negative, not evidence of anything),
 because there is no quadratic term to lose in the first place. A fault
 there calls for a different equation-based check: does the output still
-respond to its secret input at all (see weak_system_mat_add.py's
-finite-difference/rank-collapse test).
+respond to its secret input at all.
 
 Usage
 -------
