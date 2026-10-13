@@ -34,6 +34,9 @@ SKIP_CALIBRATION_BELOW = 128  # buffers <= this size: just use full
 # mismatched buffer than a real one.
 MAX_SAFE_PROBE_LEN = 16384
 
+ZERO_LENGTH_RETRIES = 8  # extra seeds tried before believing a buffer is
+                         # unused (active length 0)
+
 
 def run_probe(elf_path, witness_path, func, field_mod, buf_name,
                probe_len, seed, co_seed, machine, fixed_scalars=""):
@@ -61,7 +64,8 @@ class CalibrationFailed(Exception):
 
 def calibrate_buffer(elf_path, witness_path, func, field_mod, buf_name,
                       full_length, machine, n_repeats=3, base_seed=0,
-                      fixed_scalars="", max_probe_len=MAX_SAFE_PROBE_LEN):
+                      fixed_scalars="", max_probe_len=MAX_SAFE_PROBE_LEN,
+                      zero_retries=ZERO_LENGTH_RETRIES):
     """
     Find the minimal prefix length L such that zeroing everything from
     index L onward still reproduces the SAME output as using the full
@@ -71,10 +75,18 @@ def calibrate_buffer(elf_path, witness_path, func, field_mod, buf_name,
     byte 0 matters at all, and does not measure how far sensitivity
     extends.
 
+    If prefix length 0 already matches the reference, the match may be a
+    coincidence (e.g. a small output can collide by chance), so
+    up to `zero_retries` further (seed, co_seed) pairs are tried, each
+    with its own fresh reference. The first pair under which length 0
+    does NOT match is kept for the rest of the search; 0 is reported only
+    if every pair matches.
+
     Raises CalibrationFailed (with a clear message) instead of letting a
     target crash propagate as an opaque traceback -- callers should catch
     this per-buffer and continue with the rest of the function's buffers.
     """
+    seed = base_seed
     co_seed = base_seed
 
     effective_length = full_length
@@ -99,30 +111,43 @@ def calibrate_buffer(elf_path, witness_path, func, field_mod, buf_name,
         )
         effective_length = max_probe_len
 
-    def probe(length, seed):
+    def probe(length, seed, co_seed):
         return run_probe(elf_path, witness_path, func, field_mod,
                           buf_name, length, seed, co_seed, machine,
                           fixed_scalars)
 
-    try:
-        reference = probe(effective_length, base_seed)
-    except RuntimeError as e:
-        raise CalibrationFailed(
-            f"{buf_name}: reference probe at length {effective_length} "
-            f"failed -- cannot calibrate this buffer at all.\n{e}"
-        ) from e
+    def make_reference(seed, co_seed):
+        try:
+            return probe(effective_length, seed, co_seed)
+        except RuntimeError as e:
+            raise CalibrationFailed(
+                f"{buf_name}: reference probe at length {effective_length} "
+                f"failed -- cannot calibrate this buffer at all.\n{e}"
+            ) from e
+
+    reference = make_reference(seed, co_seed)
 
     def matches_reference(length):
         for r in range(n_repeats):
-            result = probe(length, base_seed)
+            result = probe(length, seed, co_seed)
             if result != reference:
                 return False
         return True
 
     if matches_reference(0):
-        print(f"[!] {buf_name}: output identical to full-buffer reference "
-              f"even with prefix length 0 -- buffer may be unused.")
-        return 0
+        for k in range(1, zero_retries + 1):
+            seed = co_seed = base_seed + k
+            reference = make_reference(seed, co_seed)
+            if not matches_reference(0):
+                print(f"[i] {buf_name}: length-0 probe matched the reference "
+                      f"under seed {base_seed} by coincidence; continuing "
+                      f"with seed {seed}.")
+                break
+        else:
+            print(f"[!] {buf_name}: output identical to full-buffer reference "
+                  f"even with prefix length 0 under {zero_retries + 1} "
+                  f"seeds -- buffer may be unused.")
+            return 0
 
     lo, hi = 0, 1
     while hi < effective_length and not matches_reference(hi):
