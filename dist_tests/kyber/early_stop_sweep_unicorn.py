@@ -96,7 +96,7 @@ from ineffective_kyber import (              # noqa: E402  (unmodified)
 )
 
 
-def load_or_collect(sval, c_path, f_path, args, seed):
+def load_or_collect(sval, c_path, f_path, args, seed, eph_index=0):
     """Collect via run_one() ONLY for whichever of the two files is
     missing on disk, then load and return both parsed trial JSONs. This
     is what makes the script transparently resumable/replayable: point
@@ -119,7 +119,7 @@ def load_or_collect(sval, c_path, f_path, args, seed):
                 args.bg_field_mod, seed, variant, out_path, args.machine,
                 args.fixed_scalars, args.kyber_k,
                 args.secret_buf, args.secret_pos, sval,
-                args.secret_word_size, args.eph_secret)
+                args.secret_word_size, args.eph_secret, eph_index)
     with open(c_path) as f:
         c = json.load(f)
     with open(f_path) as f:
@@ -149,8 +149,18 @@ def main():
                     help="comma-separated EPHEMERAL-secret buffers (from "
                          "the function's \"eph_secret\" json entry): not "
                          "public, so never fixed with the background -- "
-                         "sampled fresh per (seed, secret value) from their "
-                         "own distribution, same value for correct/faulty.")
+                         "sampled from their own distribution as --eph-draws "
+                         "draws r_j, independent of the public seeds; every "
+                         "seed is run with every draw, same value for "
+                         "correct/faulty and for every swept secret value.")
+    ap.add_argument("--eph-draws", type=int, default=4,
+                    help="J, the number of ephemeral draws r_0..r_{J-1} "
+                         "(only with --eph-secret; otherwise J = 1). The "
+                         "ineffective test requires s1 ineffective and s2 "
+                         "effective on all J draws for every public seed; "
+                         "the correction test requires the same alpha on "
+                         "every (p, r). Draw j > 0 of a seed is stored in "
+                         "<seed dir>/eph<j>/. Default: %(default)s")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument(
@@ -231,16 +241,17 @@ def main():
     want_ineffective = args.test in ("ineffective", "both")
     want_correction = args.test in ("correction", "both")
 
-    # Ineffective test over ALL N public seeds (each seed = one public
-    # background p_k and, with --eph-secret, one ephemeral draw r_k):
-    #   no eph : forall p exists s1,s2  (a pair on EVERY seed, may differ)
-    #   eph    : s1 ineffective and s2 effective on EVERY seed's (p_k, r_k)
-    # See dist_tests/common/ineffective.py.
-    has_eph = bool(args.eph_secret)
-    if has_eph and len(seeds) < 2:
-        print("[!] --eph-secret with fewer than 2 seeds: 'forall r' is "
-              "vacuous (one ephemeral draw per seed).", file=sys.stderr)
-    ineff_tracker = IneffectiveTracker(active_len_words, len(seeds), has_eph)
+    # Grid sample: every public seed p_k x every ephemeral draw r_j (J = 1
+    # without --eph-secret). Ineffective test:
+    #   forall p exists s1,s2: (forall r Delta(s1)=0) and (forall r Delta(s2)!=0)
+    # -- a pair on EVERY seed (may differ per seed), each constant over all
+    # J draws. See dist_tests/common/ineffective.py.
+    n_eph = args.eph_draws if args.eph_secret else 1
+    if args.eph_secret and n_eph < 2:
+        print("[!] --eph-secret with --eph-draws < 2: 'forall r' is "
+              "vacuous (one ephemeral draw).", file=sys.stderr)
+    grid = [(p, j) for p in seeds for j in range(n_eph)]   # seed-major
+    ineff_tracker = IneffectiveTracker(active_len_words, len(seeds))
 
     ineffective_hit = None  # (pos, [(sv_ineffective, sv_effective), ...])
     correction_hit = None   # (pos, sv, alpha)
@@ -249,32 +260,34 @@ def main():
     n_reused = 0
 
     for idx, sval in enumerate(sweep_values):
-        trials = {}   # seed -> (co, fo)
+        trials = {}   # (seed, eph draw) -> (co, fo)
         already_present = True
         failed = False
-        for p in seeds:
+        for p, j in grid:
             pdir = args.outdir if p == primary_seed else \
                 os.path.join(args.outdir, f"seed{p}")
+            if j > 0:
+                pdir = os.path.join(pdir, f"eph{j}")
             os.makedirs(pdir, exist_ok=True)
             c_path = os.path.join(pdir, f"correct_sv{idx:03d}.json")
             f_path = os.path.join(pdir, f"faulty_sv{idx:03d}.json")
             already_present &= os.path.exists(c_path) and os.path.exists(f_path)
             try:
-                c, fdata = load_or_collect(sval, c_path, f_path, args, p)
+                c, fdata = load_or_collect(sval, c_path, f_path, args, p, j)
             except RunTimeout as e:
                 # Not skippable: a hanging ELF hangs for every sv. Abort
                 # this ELF so the caller moves on to the next one. The
                 # marker below is what generic_tests_plot.py looks for.
-                print(f"[!] sv={sval} seed={p}: {e}", file=sys.stderr)
+                print(f"[!] sv={sval} seed={p} eph={j}: {e}", file=sys.stderr)
                 print("[RESULT] aborted: subprocess.TimeoutExpired -- "
                       "emulation timed out, moving on to the next ELF")
                 sys.exit(124)
             except RunFailed as e:
-                print(f"[!] sv={sval} seed={p}: collection failed, "
+                print(f"[!] sv={sval} seed={p} eph={j}: collection failed, "
                       f"skipping sv.\n{e}", file=sys.stderr)
                 failed = True
                 break
-            trials[p] = tuple(
+            trials[(p, j)] = tuple(
                 np.asarray(
                     decode_words(get_buffer(d, args.out_buf),
                                  args.out_word_size),
@@ -289,7 +302,7 @@ def main():
         else:
             n_collected += 1
 
-        co, fo = trials[primary_seed]
+        co, fo = trials[(primary_seed, 0)]
 
         # Diff-mode-independent: xor(a,b)==0 iff a==b, so a plain
         # elementwise equality check IS the ineffective test regardless
@@ -297,8 +310,8 @@ def main():
         # and correction_kyber.py's docstrings that both modes agree
         # exactly on whether y1==y2).
         eq = (co == fo)
-        deltas = [compute_delta(trials[p][0], trials[p][1], args.diff_mode,
-                                args.modulus) for p in seeds]
+        deltas = [compute_delta(trials[key][0], trials[key][1], args.diff_mode,
+                                args.modulus) for key in grid]
 
         # Safety clamp: --active-len may exceed the OUTPUT buffer's real
         # decoded length (e.g. it was derived from a different buffer, or
@@ -319,27 +332,25 @@ def main():
         if want_ineffective and ineffective_hit is None:
             ineff_tracker.update(
                 sval,
-                np.stack([(trials[p][0] == trials[p][1])[:n_pos] for p in seeds]),
+                np.stack([np.stack([(trials[(p, j)][0] == trials[(p, j)][1])[:n_pos]
+                                    for j in range(n_eph)])
+                          for p in seeds]),            # (K, J, n_pos)
             )
             h = ineff_tracker.hit()
             if h is not None:
                 pos, wit = h
                 ineffective_hit = (pos, wit)
-                if has_eph:
-                    print(f"[+] INEFFECTIVE hit at pos {pos}: s1={wit[0][0]} "
-                          f"ineffective and s2={wit[0][1]} effective on all "
-                          f"{len(seeds)} seeds (p_k, r_k) (seeds={seeds})")
-                else:
-                    print(f"[+] INEFFECTIVE hit at pos {pos}: a pair exists on "
-                          f"each of {len(seeds)} public seeds {seeds}: "
-                          + ", ".join(f"p={p}: s1={a} (ineffective) vs "
-                                      f"s2={b} (effective)"
-                                      for p, (a, b) in zip(seeds, wit)))
+                print(f"[+] INEFFECTIVE hit at pos {pos}: a pair exists on "
+                      f"each of {len(seeds)} public seeds {seeds}, constant "
+                      f"over {n_eph} ephemeral draw(s): "
+                      + ", ".join(f"p={p}: s1={a} (ineffective) vs "
+                                  f"s2={b} (effective)"
+                                  for p, (a, b) in zip(seeds, wit)))
 
         for pos in range(n_pos):
             if want_correction and correction_hit is None:
-                # exists alpha, s: for all p, y1 = y2 xor alpha, i.e.
-                # Delta_p(s) is the same value alpha for every public p.
+                # exists alpha, s: for all r, p: y1 = y2 xor alpha, i.e.
+                # Delta(s) is the same value alpha on every (p, r) of the grid.
                 alpha = int(deltas[0][pos])
                 # alpha != 0: alpha == 0 means y1 == y2 (position
                 # unaffected by the fault) -- a false positive.
@@ -347,7 +358,8 @@ def main():
                     correction_hit = (pos, sval, alpha)
                     print(f"[+] CORRECTION hit at pos {pos}: "
                           f"s={sval}, alpha={alpha} constant across "
-                          f"{len(seeds)} public backgrounds (seeds={seeds})")
+                          f"{len(seeds)} public backgrounds (seeds={seeds}) "
+                          f"x {n_eph} ephemeral draw(s)")
 
         found = []
         if want_ineffective:
@@ -377,7 +389,8 @@ def main():
             sv_in, sv_eff = wit[0]
             print(f"[RESULT] ineffective test: DETECTED at pos {pos} "
                   f"(s1={sv_in} ineffective, s2={sv_eff} effective; "
-                  f"{'on every seed (p_k, r_k)' if has_eph else 'pair on each of ' + str(len(seeds)) + ' public seeds'})")
+                  f"pair on each of {len(seeds)} public seeds, constant "
+                  f"over {n_eph} ephemeral draw(s))")
         else:
             print("[RESULT] ineffective test: no disagreement found "
                   "in range swept")
@@ -386,7 +399,7 @@ def main():
             pos, sv, alpha = correction_hit
             print(f"[RESULT] correction test: SATISFIED at pos {pos} "
                   f"(s={sv}, alpha={alpha}: y1 = y2 xor alpha for all "
-                  f"{len(seeds)} swept p)")
+                  f"{len(seeds)} swept p x {n_eph} ephemeral draw(s))")
         else:
             print("[RESULT] correction test: no (s, alpha) with constant "
                   "Delta across p found in range swept")

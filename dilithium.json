@@ -4,7 +4,6 @@
     },
     "pqcrystals_dilithium2_ref_signature_internal":{
         "secret-buf": "sk",
-        "eph_secret":"rnd",
         "fixed-scalars":"mlen,prelen"
     },
     "pqcrystals_dilithium2_ref_polyvecl_add":{

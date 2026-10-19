@@ -23,7 +23,7 @@
 #       [--out-buf NAME] [--out-word-size 1|2|4] \
 #       [--diff-mode xor|mod-sub] [--modulus N] \
 #       [--test ineffective|correction|both] [--require any|all] \
-#       [--seed N] [--seeds p0,p1,...] [--dilithium-mode 2|3|5] [--fresh]
+#       [--seed N] [--seeds p0,p1,...] [--eph-draws J] [--dilithium-mode 2|3|5] [--fresh]
 #
 # --fresh: delete each faulty ELF's dist_paired/ directory (and its
 # seed<N>/ subdirs) before collecting, instead of reusing whatever
@@ -45,6 +45,11 @@
 # --seeds: comma-separated public-background seeds for the CORRECTION test
 # (exists alpha != 0, s: for all p, y1 = y2 xor alpha). Needs >= 2 values to
 # be meaningful. The first seed is also the one used by the ineffective test.
+#
+# --eph-draws J: for a function with an "eph_secret", J ephemeral draws
+# r_0..r_{J-1}, independent of the public seeds; every seed is swept with
+# every draw (draw j > 0 in <seed dir>/eph<j>/). Default 4; unused
+# without an eph_secret.
 #
 # Example:
 #   ./run_combined_unicorn.sh pqcrystals_dilithium2_ref_poly_add
@@ -134,6 +139,7 @@ TEST=both
 REQUIRE=all
 SEED=0
 SEEDS="0,1,2,3"
+EPH_DRAWS=4
 DILITHIUM_MODE_OVERRIDE=""
 FRESH=0
 
@@ -152,6 +158,7 @@ while [[ $# -gt 0 ]]; do
         --require) REQUIRE="$2"; shift 2 ;;
         --seed) SEED="$2"; shift 2 ;;
         --seeds) SEEDS="$2"; shift 2 ;;
+        --eph-draws) EPH_DRAWS="$2"; shift 2 ;;
         --dilithium-mode) DILITHIUM_MODE_OVERRIDE="$2"; shift 2 ;;
         --fresh) FRESH=1; shift ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
@@ -387,7 +394,7 @@ fi
 echo "[i] func:        ${FUNC_NAME} [unicorn backend -- no qemu-system-arm/gdb-multiarch required]"
 echo "[i] secret-buf:  ${SECRET_BUF} (byte pos ${SECRET_POS})"
 echo "[i] out-buf:     ${OUT_BUF} (active-len ${ACTIVE_LEN} bytes, word-size ${WORD_SIZE}, diff-mode ${DIFF_MODE})"
-echo "[i] eph-secret:  ${EPH_SECRET:-<none>} (one draw per public seed, never fixed)"
+echo "[i] eph-secret:  ${EPH_SECRET:-<none>} (${EPH_DRAWS} draw(s) if set, each run with every public seed)"
 echo "[i] field-mod:   ${FIELD_MOD}, dilithium-mode: ${DILITHIUM_MODE}"
 echo "[i] elf-dir:     ${ELF_DIR}"
 echo "[i] correct elf: ${CORRECT_ELF}"
@@ -453,7 +460,7 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
         --secret-buf "$SECRET_BUF" --secret-pos "$SECRET_POS" --seed "$SEED" \
         --outdir "$DIST_PAIRED_DIR" --machine "$MACHINE" \
         --fixed-scalars "$FIXED_SCALARS" \
-        --eph-secret "$EPH_SECRET" \
+        --eph-secret "$EPH_SECRET" --eph-draws "$EPH_DRAWS" \
         --out-buf "$OUT_BUF" --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" --diff-mode "$DIFF_MODE" \
         --modulus "$MODULUS" --test "$TEST" --require "$REQUIRE" \

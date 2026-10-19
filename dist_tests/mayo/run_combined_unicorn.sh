@@ -20,7 +20,13 @@
 # Usage:
 #   ./run_tests_unicorn.sh <func_name> [--secret-buf NAME] [--secret-pos POS] \
 #       [--elf-dir DIR] [--fixed-scalars name1,name2,...] [--seed N] \
-#       [--seeds p0,p1,...] [--out-buf NAME] [--field-mod N]
+#       [--seeds p0,p1,...] [--eph-draws J] [--out-buf NAME] [--field-mod N]
+#
+# --eph-draws J: for a function with an "eph_secret" (mayo.json), J
+# ephemeral draws r_0..r_{J-1}, independent of the public seeds; every
+# public seed is swept with every draw, and the ineffective test requires
+# its outcome to be the same on all J draws. Default 4; ignored (J = 1)
+# without an eph_secret. Draw j > 0 goes to <dist dir>_eph<j>/.
 #
 # --seeds p0,p1,...: public-background seeds for the CORRECTION test
 # (exists alpha != 0, s: for all p, y1 = y2 xor alpha; needs >= 2). One
@@ -69,6 +75,7 @@ SEED=0
 SEEDS="0,1,2,3"
 OUT_BUF_OVERRIDE=""
 FIELD_MOD=""
+EPH_DRAWS=4
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -80,6 +87,7 @@ while [[ $# -gt 0 ]]; do
         --seeds) SEEDS="$2"; shift 2 ;;
         --out-buf) OUT_BUF_OVERRIDE="$2"; shift 2 ;;
         --field-mod) FIELD_MOD="$2"; shift 2 ;;
+        --eph-draws) EPH_DRAWS="$2"; shift 2 ;;
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
@@ -125,6 +133,7 @@ PYEOF
 [[ "$JSON_FIXED_SCALARS" == "__NONE__" ]] && JSON_FIXED_SCALARS=""
 [[ "$JSON_EPH_SECRET" == "__NONE__" ]] && JSON_EPH_SECRET=""
 EPH_SECRET="$JSON_EPH_SECRET"
+[[ -z "$EPH_SECRET" ]] && EPH_DRAWS=1
 
 if [[ -n "$SECRET_BUF_OVERRIDE" ]]; then
     SECRET_BUF="$SECRET_BUF_OVERRIDE"
@@ -175,7 +184,7 @@ fi
 
 echo "[i] function:     ${FUNC_NAME} [unicorn backend -- no qemu-system-arm/gdb-multiarch required]"
 echo "[i] secret buf:    ${SECRET_BUF} (pos ${SECRET_POS}), field-mod ${FIELD_MOD:-16 (GF(16) default)}"
-echo "[i] eph secret:    ${EPH_SECRET:-<none>} (one draw per public seed, never fixed)"
+echo "[i] eph secret:    ${EPH_SECRET:-<none>} (${EPH_DRAWS} draw(s), each run with every public seed)"
 echo "[i] correct elf:   ${CORRECT_ELF}"
 echo "[i] faulty elfs:   ${#FAULTY_ELFS[@]} found under ${ELF_DIR}"
 for f in "${FAULTY_ELFS[@]}"; do
@@ -198,21 +207,26 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     echo "--- collect_dist (unicorn): ${FUNC_NAME} / $(basename "$faulty_elf") ---"
     for i in "${!SEED_LIST[@]}"; do
         p="${SEED_LIST[$i]}"
-        COLLECT_ARGS=(
-            "$FUNC_NAME" "$CORRECT_ELF" "$faulty_elf" "$SECRET_BUF"
-            --secret-pos "$SECRET_POS"
-            --fixed-scalars "$FIXED_SCALARS"
-            --eph-secret "$EPH_SECRET"
-            --seed "$p"
-        )
-        if [[ $i -gt 0 ]]; then
-            COLLECT_ARGS+=(--dist-dir-name "dist_paired_seed${p}")
-        fi
-        if [[ -n "$FIELD_MOD" ]]; then
-            COLLECT_ARGS+=(--field-mod "$FIELD_MOD")
-        fi
-        echo "    [seed p=${p}]"
-        "${SCRIPT_DIR}/collect_dist_unicorn.sh" "${COLLECT_ARGS[@]}"
+        for ((j = 0; j < EPH_DRAWS; j++)); do
+            # dist_paired[_seed<p>][_eph<j>] -- must match the grid that
+            # run_ineffective_paired.sh / run_correction_paired.sh read.
+            dname="dist_paired"
+            [[ $i -gt 0 ]] && dname="dist_paired_seed${p}"
+            [[ $j -gt 0 ]] && dname="${dname}_eph${j}"
+            COLLECT_ARGS=(
+                "$FUNC_NAME" "$CORRECT_ELF" "$faulty_elf" "$SECRET_BUF"
+                --secret-pos "$SECRET_POS"
+                --fixed-scalars "$FIXED_SCALARS"
+                --eph-secret "$EPH_SECRET" --eph-index "$j"
+                --seed "$p"
+                --dist-dir-name "$dname"
+            )
+            if [[ -n "$FIELD_MOD" ]]; then
+                COLLECT_ARGS+=(--field-mod "$FIELD_MOD")
+            fi
+            echo "    [seed p=${p}, eph draw r=${j}]"
+            "${SCRIPT_DIR}/collect_dist_unicorn.sh" "${COLLECT_ARGS[@]}"
+        done
     done
 done
 
@@ -252,9 +266,7 @@ for OUT_BUF_CUR in "${OUT_BUFS[@]}"; do
     if [[ -n "$OUT_BUF_CUR" ]]; then
         RUN_ARGS+=(--out-buf "$OUT_BUF_CUR")
     fi
-    if [[ -n "$EPH_SECRET" ]]; then
-        RUN_ARGS+=(--has-eph)
-    fi
+    RUN_ARGS+=(--eph-draws "$EPH_DRAWS")
     if [[ "$MULTI_OUT" -eq 1 ]]; then
         RUN_ARGS+=(--result-suffix "_${OUT_BUF_CUR}")
         echo ""

@@ -28,6 +28,9 @@
 # dist_paired/, every other seed p in dist_paired_seed<p>/. The test is
 # exists alpha != 0, s: for all p, y1 = y2 xor alpha, so >= 2 are needed.
 #
+# --eph-draws J: ephemeral draws per public seed (default 1); draw j > 0 of
+# a seed lives in <dir>_eph<j>/. The test then holds for all r and all p.
+#
 # Example:
 #   ./run_correction_paired.sh mat_add in
 #   ./run_correction_paired.sh EF A_pre        # in-place function
@@ -49,11 +52,12 @@ SECRET_BUF_BASE="${SECRET_BUF%_pre}"
 OUT_BUF_OVERRIDE=""
 RESULT_SUFFIX=""   # appended to the per-fault RESULT folder only (multi-output functions)
 SEEDS=""
+EPH_DRAWS=1       # ephemeral draws r_j per public seed (1: no eph input)
 ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --out-buf) OUT_BUF_OVERRIDE="$2"; shift 2 ;;
-        --has-eph) shift ;;   # accepted for CLI symmetry; the correction query is unchanged
+        --eph-draws) EPH_DRAWS="$2"; shift 2 ;;
         --result-suffix) RESULT_SUFFIX="$2"; shift 2 ;;
         --elf-dir) ELF_DIR="$2"; shift 2 ;;
         --seeds) SEEDS="$2"; shift 2 ;;
@@ -264,13 +268,23 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     faulty_stem="$(rel_stem "$faulty_elf" "$ELF_DIR")"
     DIST_PAIRED_DIR="${OUT_DIR}/${faulty_stem}/dist_paired"
 
-    DIST_DIRS=("$DIST_PAIRED_DIR")
-    if [[ -n "$SEEDS" ]]; then
-        read -r -a SEED_LIST <<< "${SEEDS//,/ }"
-        for p in "${SEED_LIST[@]:1}"; do
-            DIST_DIRS+=("${OUT_DIR}/${faulty_stem}/dist_paired_seed${p}")
+    # Grid of sweeps, seed-major: public seed p_k x ephemeral draw r_j
+    # (correction: Delta must be the same alpha over ALL of them).
+    # dist_paired[_seed<p>][_eph<j>]: first seed has no _seed suffix, draw
+    # 0 has no _eph suffix (functions without an eph input use J = 1).
+    read -r -a SEED_LIST <<< "${SEEDS//,/ }"
+    [[ ${#SEED_LIST[@]} -eq 0 ]] && SEED_LIST=(0)
+    DIST_DIRS=()
+    for i in "${!SEED_LIST[@]}"; do
+        base="dist_paired"
+        [[ $i -gt 0 ]] && base="dist_paired_seed${SEED_LIST[$i]}"
+        for ((j = 0; j < EPH_DRAWS; j++)); do
+            d="$base"
+            [[ $j -gt 0 ]] && d="${base}_eph${j}"
+            DIST_DIRS+=("${OUT_DIR}/${faulty_stem}/${d}")
         done
-    else
+    done
+    if [[ -z "$SEEDS" ]]; then
         echo "[!] no --seeds given: only one public background, so 'for all p' is vacuous" >&2
     fi
 

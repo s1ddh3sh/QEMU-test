@@ -32,7 +32,7 @@ class RunFailed(Exception):
 
 def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             seed, variant, out_path, machine, fixed_scalars,
-            secret_buf, secret_pos, secret_val, eph_secret=None):
+            secret_buf, secret_pos, secret_val, eph_secret=None, eph_index=0):
     with open(witness_path) as f:
         layout = json.load(f)["layout"]
     with open(active_lengths_path) as f:
@@ -51,7 +51,9 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             fixed_set, sample_for_distribution, active_lengths,
             secret_buf, secret_pos, secret_val,
             eph_secret=eph_set,
-            eph_seed=f"eph:{seed}",
+            # r_j depends on the draw index only, not on the public seed,
+            # so every public seed is run with every ephemeral draw.
+            eph_seed=f"eph:{eph_index}",
         )
     except (TrialError, Exception) as e:
         raise RunFailed(
@@ -85,7 +87,7 @@ def run_sweep(args):
                 run_one(elf_path, args.witness, args.active_lengths, args.func,
                         args.field_mod, args.seed, variant, out_path, args.machine,
                         args.fixed_scalars, args.secret_buf, args.secret_pos, sval,
-                        args.eph_secret)
+                        args.eph_secret, args.eph_index)
             except RunFailed as e:
                 print(f"[!] FAILED: {variant} sval={sval}\n{e}", flush=True)
                 failures.append((variant, sval, str(e)))
@@ -116,9 +118,11 @@ def main():
                      help="ignored -- accepted only for CLI compatibility.")
     ap.add_argument("--fixed-scalars", default="")
     ap.add_argument("--eph-secret", default="",
-                    help="comma-separated ephemeral-secret buffers: one draw per "
-                         "public seed (same N seeds as p), shared by the correct and faulty "
-                         "run and by every swept secret value of that seed.")
+                    help="comma-separated ephemeral-secret buffers: draw --eph-index, "
+                         "independent of --seed, shared by the correct and faulty "
+                         "run and by every swept secret value.")
+    ap.add_argument("--eph-index", type=int, default=0,
+                    help="ephemeral draw r_j to use (default: %(default)s)")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument("--seed", type=int, default=0)

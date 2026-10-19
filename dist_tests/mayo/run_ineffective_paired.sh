@@ -7,7 +7,7 @@
 #
 # Usage:
 #   ./run_ineffective_paired.sh <func_name> <secret_buf> \
-#       [--out-buf NAME] [--elf-dir DIR]
+#       [--out-buf NAME] [--elf-dir DIR] [--seeds p0,p1,...] [--eph-draws J]
 #
 # NAMESPACE NOTE (_pre suffix):
 #   For in-place functions -- those whose layout marks a buffer
@@ -52,7 +52,7 @@ SECRET_BUF_BASE="${SECRET_BUF%_pre}"
 
 OUT_BUF_OVERRIDE=""
 SEEDS=""
-HAS_EPH=0
+EPH_DRAWS=1       # ephemeral draws r_j per public seed (1: no eph input)
 RESULT_SUFFIX=""   # appended to the per-fault RESULT folder only (multi-output functions)
 ELF_DIR="build/tests_mayo/${FUNC_NAME}"
 while [[ $# -gt 0 ]]; do
@@ -69,9 +69,9 @@ while [[ $# -gt 0 ]]; do
             SEEDS="$2"
             shift 2
             ;;
-        --has-eph)
-            HAS_EPH=1
-            shift
+        --eph-draws)
+            EPH_DRAWS="$2"
+            shift 2
             ;;
         --result-suffix)
             RESULT_SUFFIX="$2"
@@ -321,14 +321,22 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     faulty_stem="$(rel_stem "$faulty_elf" "$ELF_DIR")"
     DIST_PAIRED_DIR="${OUT_DIR}/${faulty_stem}/dist_paired"
 
-    # one sweep dir per public seed (p_k [, r_k]); first seed = dist_paired/
-    DIST_DIRS=("$DIST_PAIRED_DIR")
-    if [[ -n "$SEEDS" ]]; then
-        read -r -a SEED_LIST <<< "${SEEDS//,/ }"
-        for p in "${SEED_LIST[@]:1}"; do
-            DIST_DIRS+=("${OUT_DIR}/${faulty_stem}/dist_paired_seed${p}")
+    # Grid of sweeps, seed-major: public seed p_k x ephemeral draw r_j.
+    # dist_paired[_seed<p>][_eph<j>]: first seed has no _seed suffix, draw
+    # 0 has no _eph suffix (functions without an eph input use J = 1).
+    read -r -a SEED_LIST <<< "${SEEDS//,/ }"
+    [[ ${#SEED_LIST[@]} -eq 0 ]] && SEED_LIST=(0)
+    DIST_DIRS=()
+    for i in "${!SEED_LIST[@]}"; do
+        base="dist_paired"
+        [[ $i -gt 0 ]] && base="dist_paired_seed${SEED_LIST[$i]}"
+        for ((j = 0; j < EPH_DRAWS; j++)); do
+            d="$base"
+            [[ $j -gt 0 ]] && d="${base}_eph${j}"
+            DIST_DIRS+=("${OUT_DIR}/${faulty_stem}/${d}")
         done
-    else
+    done
+    if [[ -z "$SEEDS" ]]; then
         echo "[!] no --seeds given: only one public seed" >&2
     fi
     missing=0
@@ -351,7 +359,7 @@ for faulty_elf in "${FAULTY_ELFS[@]}"; do
     echo "=== ineffective (paired) test: ${FUNC_NAME} / ${faulty_stem} ==="
     python3 -u "${TEST_DIR}/ineffective_mayo.py" \
         --dist-dir "${DIST_DIRS[@]}" \
-        $([[ "$HAS_EPH" -eq 1 ]] && echo --eph) \
+        --eph-draws "$EPH_DRAWS" \
         --out-buf "$OUT_BUF" \
         --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" \

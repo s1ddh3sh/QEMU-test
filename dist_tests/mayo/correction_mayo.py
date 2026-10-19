@@ -6,12 +6,13 @@ Correction-fault query:
 
     y1 = f_correct(s, p),  y2 = f_faulty(s, p)
 
-    exists alpha, s  such that  for all p:  y1 = y2 xor alpha
+    exists alpha, s  such that  for all r, p:  y1 = y2 xor alpha
 
 i.e. there is a secret value s for which the divergence Delta_p(s) =
-y1 xor y2 is one constant alpha across EVERY public background p. Each
+y1 xor y2 is one constant alpha across EVERY background (p, r). Each
 --dist-dir holds one single-background secret sweep (correct_sv*.json /
-faulty_sv*.json) collected with a different public background p (seed).
+faulty_sv*.json) collected with one public seed p and one ephemeral draw r
+(the grid of every seed x every draw; just the seeds without an eph input).
 For each output position, every secret value s present in all dirs is
 checked: if Delta_p(s) is identical for all p, (s, alpha) is a witness.
 alpha = 0 is excluded (y1 == y2: position unaffected by the fault).
@@ -97,7 +98,7 @@ def load_sweep(dist_dir, out_buf, active_len, out_word_size):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dist-dir", required=True, nargs="+",
-                    help="one sweep directory per public background p")
+                    help="one sweep directory per background (public seed p, eph draw r)")
     ap.add_argument("--out-buf", required=True)
     ap.add_argument("--active-len", type=int, required=True)
     ap.add_argument("--out-word-size", type=int, default=1, choices=[1, 4])
@@ -116,7 +117,7 @@ def main():
         raise RuntimeError("no secret value present in every --dist-dir")
 
     print(f"[i] {len(secret_values)} secret values x {len(sweeps)} "
-          f"public backgrounds")
+          f"backgrounds (public seed x ephemeral draw)")
 
     # --active-len is normally derived from the SECRET buffer's length,
     # which can exceed the OUTPUT buffer's true length; clamp to the
@@ -142,7 +143,7 @@ def main():
         if args.verbose or witnesses:
             print("=" * 75)
             print(f"pos {pos}: {len(witnesses)}/{len(secret_values)} secret "
-                  f"values with y1 = y2 xor alpha (alpha != 0) for all {len(sweeps)} p")
+                  f"values with y1 = y2 xor alpha (alpha != 0) for all {len(sweeps)} (p, r)")
             for sv, alpha in witnesses[:10]:
                 print(f"    s={sv}, alpha={alpha}")
             if len(witnesses) > 10:

@@ -9,14 +9,13 @@ collected by collect_paired_sweep.py, per your algorithm:
     y3 = f_correct(s2, p),  y4 = f_faulty(s2, p),  delta2 = y3 xor y4
     d1 = (delta1 == 0),     d2 = (delta2 == 0)
 
-Updated query (see the document): the test runs over ALL N public seeds, one
---dist-dir per seed (seed k = one public background p_k and, if the function
-has an ephemeral input, one ephemeral draw r_k):
+Updated query (see the document): the sample is a grid of K public seeds
+p_k x J ephemeral draws r_j (drawn independently; J = 1 without an
+ephemeral input), one --dist-dir per (p_k, r_j), passed seed-major:
 
-    no ephemeral input :  forall p  exists s1,s2 : d(s1,p)=True and d(s2,p)=False
-                          -> a disagreeing pair must exist on EVERY seed
-    --eph              :  forall p exists s1,s2 : (forall r d(s1,r,p)) and (forall r not d(s2,r,p))
-                          -> s1 ineffective AND s2 effective on EVERY seed's (p_k, r_k)
+    forall p  exists s1,s2 : (forall r d(s1,r,p)) and (forall r not d(s2,r,p))
+    -> for EVERY seed a pair exists (it may differ per seed) with s1
+       ineffective on all J draws and s2 effective on all J draws
 
 The text below describes the original single-background form.
 
@@ -102,14 +101,15 @@ def load_sweep(dist_dir, out_buf, active_len, out_word_size):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dist-dir", required=True, nargs="+",
-                    help="one sweep directory per public seed (p_k [, r_k])")
+                    help="one sweep directory per (public seed p_k, ephemeral "
+                         "draw r_j), seed-major: the J draws of seed 0, then "
+                         "the J draws of seed 1, ...")
     ap.add_argument("--out-buf", required=True)
     ap.add_argument("--active-len", type=int, required=True)
     ap.add_argument("--out-word-size", type=int, default=1, choices=[1, 4])
-    ap.add_argument("--eph", action="store_true",
-                    help="the function has an ephemeral input (eph_secret): "
-                         "require s1 ineffective / s2 effective on every seed "
-                         "instead of a per-seed pair")
+    ap.add_argument("--eph-draws", type=int, default=1,
+                    help="J, the number of ephemeral draws per public seed "
+                         "(default 1: no ephemeral input)")
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
@@ -119,12 +119,13 @@ def main():
     if len(secret_values) < 2:
         raise RuntimeError(f"only {len(secret_values)} secret values common to all --dist-dir")
 
-    K, S = len(sweeps), len(secret_values)
-    mode = ("eph: s1 ineffective & s2 effective on every seed" if args.eph
-            else "per-seed pair (forall p exists s1,s2)")
-    print(f"[i] loaded {S} secret values x {K} public seeds -- {mode}")
-    if args.eph and K < 2:
-        print("[!] only one seed: 'forall r' is vacuous (one r per seed).")
+    J = args.eph_draws
+    if J < 1 or len(sweeps) % J:
+        raise RuntimeError(f"{len(sweeps)} --dist-dir values is not a "
+                           f"multiple of --eph-draws={J}")
+    K, S = len(sweeps) // J, len(secret_values)
+    print(f"[i] loaded {S} secret values x {K} public seeds x {J} "
+          f"ephemeral draw(s) -- per-seed pair, constant over all draws")
 
     # Safety clamp (see original note): bound the position loop by the real
     # output length, not the secret buffer's calibrated length.
@@ -138,29 +139,24 @@ def main():
         )
 
     eq = np.stack([np.stack([w[sv][:safe_len] for sv in secret_values])
-                   for w in sweeps])                    # (K, S, P)
-    n_pairs, leak = analyse(eq, args.eph)
-    total = S * (S - 1)
+                   for w in sweeps])                    # (K*J, S, P)
+    eq = eq.reshape(K, J, S, safe_len)                  # seed-major
+    n_pairs, leak = analyse(eq)
+    total = S * (S - 1) // 2
 
     for pos in range(safe_len):
         if not (args.verbose or leak[pos]):
             continue
         print("=" * 75)
+        # "pos N: X/Y pairs disagree" is parsed by generic_tests_plot.py.
         print(f"pos {pos}: {int(n_pairs[pos])}/{total} pairs disagree "
-              f"(d1 != d2)")
+              f"(d1 != d2; unordered pairs, minimum over seeds)")
         if leak[pos]:
-            if args.eph:
-                ine = [sv for i, sv in enumerate(secret_values) if eq[:, i, pos].all()]
-                eff = [sv for i, sv in enumerate(secret_values) if (~eq[:, i, pos]).all()]
-                print(f"    s1 ineffective on all {K} seeds: {ine[:10]}"
-                      + (f" ... +{len(ine) - 10}" if len(ine) > 10 else ""))
-                print(f"    s2 effective   on all {K} seeds: {eff[:10]}"
-                      + (f" ... +{len(eff) - 10}" if len(eff) > 10 else ""))
-            else:
-                for k, d in enumerate(args.dist_dir):
-                    ine = [sv for i, sv in enumerate(secret_values) if eq[k, i, pos]]
-                    eff = [sv for i, sv in enumerate(secret_values) if not eq[k, i, pos]]
-                    print(f"    seed#{k}: s1={ine[0]} (ineffective) vs s2={eff[0]} (effective)")
+            for k in range(K):
+                ine = [sv for i, sv in enumerate(secret_values) if eq[k, :, i, pos].all()]
+                eff = [sv for i, sv in enumerate(secret_values) if (~eq[k, :, i, pos]).all()]
+                print(f"    seed#{k}: s1={ine[0]} (ineffective) vs s2={eff[0]} "
+                      f"(effective), on all {J} ephemeral draw(s)")
         print("=" * 75)
 
 

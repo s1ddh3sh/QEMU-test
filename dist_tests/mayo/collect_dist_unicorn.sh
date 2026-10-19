@@ -21,7 +21,10 @@
 #       [--timeout SECONDS] [--field-mod N] [--dist-dir-name NAME]
 #
 # --dist-dir-name NAME: output subdir name under the faulty-ELF dir
-# (default dist_paired); used to keep one sweep per public seed.
+# (default dist_paired); used to keep one sweep per (public seed, eph draw).
+#
+# --eph-index J: ephemeral draw r_j for the --eph-secret buffers (default 0),
+# independent of --seed.
 #
 # --secret-pos defaults to 0. --field-mod defaults to 16 (GF(16),
 # MAYO_FIELD_MOD -- a fixed constant, not auto-derived, see
@@ -45,6 +48,7 @@ SECRET_BUF="$1"; shift
 SECRET_POS=0
 FIXED_SCALARS=""
 EPH_SECRET=""
+EPH_INDEX=0
 SEED=0
 TIMEOUT_SECS=120   # per-collection wall-clock cap; adjust if legitimate
                     # sweeps for large functions routinely exceed this
@@ -59,6 +63,7 @@ while [[ $# -gt 0 ]]; do
         --secret-pos) SECRET_POS="$2"; shift 2 ;;
         --fixed-scalars) FIXED_SCALARS="$2"; shift 2 ;;
         --eph-secret) EPH_SECRET="$2"; shift 2 ;;
+        --eph-index) EPH_INDEX="$2"; shift 2 ;;
         --seed) SEED="$2"; shift 2 ;;
         --timeout) TIMEOUT_SECS="$2"; shift 2 ;;
         --field-mod) FIELD_MOD="$2"; shift 2 ;;
@@ -115,7 +120,7 @@ timeout --signal=TERM --kill-after=10 "$TIMEOUT_SECS" \
         --secret-buf "$SECRET_BUF" --secret-pos "$SECRET_POS" --seed "$SEED" \
         --outdir "$DIST_PAIRED_DIR" --machine "$MACHINE" \
         --fixed-scalars "$FIXED_SCALARS" \
-        --eph-secret "$EPH_SECRET"
+        --eph-secret "$EPH_SECRET" --eph-index "$EPH_INDEX"
 STATUS=$?
 set -e
 

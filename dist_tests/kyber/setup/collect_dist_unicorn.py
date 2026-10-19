@@ -62,7 +62,8 @@ def _make_kyber_override_hook(word_size):
 
 def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             seed, variant, out_path, machine, fixed_scalars, kyber_k,
-            secret_buf, secret_pos, secret_val, word_size, eph_secret=""):
+            secret_buf, secret_pos, secret_val, word_size, eph_secret="",
+            eph_index=0):
     with open(witness_path) as f:
         layout = json.load(f)["layout"]
     with open(active_lengths_path) as f:
@@ -71,10 +72,12 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
     fixed_set = set(s for s in (fixed_scalars or "").split(",") if s)
 
     # Ephemeral secrets (named by <alg>.json "eph_secret"): not public, so
-    # not held fixed with the background. Drawn from a dedicated RNG per
-    # public seed (r_k for seed p_k) -- independent across seeds, identical for
-    # the correct and faulty run and for every swept secret value of that seed -- using the buffer's own witness
-    # "distribution" (sample_for_distribution inside run_trial).
+    # not held fixed with the background. Draw r_j comes from a dedicated
+    # RNG seeded by eph_index alone -- independent of the public seed, so
+    # every public seed p_k is run with every draw r_j -- identical for the
+    # correct and faulty run and for every swept secret value, using the
+    # buffer's own witness "distribution" (sample_for_distribution inside
+    # run_trial).
     eph_set = set(s for s in (eph_secret or "").split(",") if s)
     for name in eph_set:
         if name not in layout:
@@ -94,7 +97,7 @@ def run_one(elf_path, witness_path, active_lengths_path, func, field_mod,
             secret_buf, byte_pos, secret_val,
             also_override_hook=_make_kyber_override_hook(word_size),
             eph_secret=eph_set,
-            eph_seed=f"eph:{seed}",
+            eph_seed=f"eph:{eph_index}",
         )
     except TrialTimeout as e:
         raise RunTimeout(
@@ -150,7 +153,7 @@ def run_sweep(args):
                         args.field_mod, args.seed, variant, out_path, args.machine,
                         args.fixed_scalars, args.kyber_k,
                         args.secret_buf, args.secret_pos, sval, args.word_size,
-                        args.eph_secret)
+                        args.eph_secret, args.eph_index)
             except RunFailed as e:
                 print(f"[!] FAILED: {variant} sval={sval}\n{e}", flush=True)
                 failures.append((variant, sval, str(e)))
@@ -183,9 +186,11 @@ def main():
     ap.add_argument("--fixed-scalars", default="")
     ap.add_argument("--eph-secret", default="",
                     help="comma-separated ephemeral-secret buffers: sampled "
-                         "one draw per public seed (same N seeds as the public background), "
-                         "from their own distribution, shared by the correct and faulty run "
-                         "and by every swept secret value of that seed.")
+                         "from their own distribution with the draw index "
+                         "--eph-index (independent of --seed), shared by the "
+                         "correct and faulty run and by every swept secret value.")
+    ap.add_argument("--eph-index", type=int, default=0,
+                    help="ephemeral draw r_j to use (default: %(default)s)")
     ap.add_argument("--secret-buf", required=True)
     ap.add_argument("--secret-pos", type=int, required=True)
     ap.add_argument("--word-size", type=int, default=2, choices=(1, 2))

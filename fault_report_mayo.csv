@@ -804,9 +804,9 @@ mayo,mat_add,loadStoreSkip/mat_add_line10_mem,ineffective_paired_result.txt,inef
 mayo,mat_add,loadStoreSkip/mat_add_line5_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 mayo,mat_add,loadStoreSkip/mat_add_line5_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 mayo,mat_add,loadStoreSkip/mat_add_line7_mem,correction_paired_result.txt,correction,yes,pos 0: 15/16 secret values with y1 = y2 xor alpha
-mayo,mat_add,loadStoreSkip/mat_add_line7_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 15/240 pairs disagree
+mayo,mat_add,loadStoreSkip/mat_add_line7_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 15/120 pairs disagree
 mayo,mat_add,loopOrFuncSkip/mat_add_fnSkip_add_f_line8,correction_paired_result.txt,correction,yes,pos 0: 15/16 secret values with y1 = y2 xor alpha
-mayo,mat_add,loopOrFuncSkip/mat_add_fnSkip_add_f_line8,ineffective_paired_result.txt,ineffective,yes,pos 0: 15/240 pairs disagree
+mayo,mat_add,loopOrFuncSkip/mat_add_fnSkip_add_f_line8,ineffective_paired_result.txt,ineffective,yes,pos 0: 15/120 pairs disagree
 mayo,mat_mul,loadStoreSkip/mat_mul_line11_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 mayo,mat_mul,loadStoreSkip/mat_mul_line11_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 15/240 pairs disagree
 mayo,mat_mul,loopOrFuncSkip/mat_mul_fnSkip_lincomb_line10,correction_paired_result.txt,correction,no,no position with disagreeing pairs

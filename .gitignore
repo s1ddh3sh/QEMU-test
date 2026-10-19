@@ -2,3 +2,4 @@ obj
 build
 tests*
 __pycache__
+project.tex
