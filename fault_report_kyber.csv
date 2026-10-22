@@ -1,173 +1,253 @@
 scheme,function,fault,source,test,detected,detail
 kyber,cbd2,loadStoreSkip/cbd2_line27_mem,correction_paired_result.txt,correction,yes,pos 0: 47616/65280 pairs disagree (+1 more position(s))
 kyber,cbd2,loadStoreSkip/cbd2_line27_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,cbd2,loadStoreSkip/cbd2_line27_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'buf'
 kyber,cbd2,loadStoreSkip/cbd2_line27_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 30720/65280 pairs disagree (+1 more position(s))
 kyber,cbd2,loadStoreSkip/cbd2_line27_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line22_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_opA,test_result.txt,ineffective,yes,"DETECTED at pos 103 (s1=36 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line22_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_opB,test_result.txt,ineffective,yes,"DETECTED at pos 160 (s1=40 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line22_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_undef,test_result.txt,ineffective,yes,"DETECTED at pos 160 (s1=40 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line22_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line22_zero,test_result.txt,ineffective,yes,"DETECTED at pos 160 (s1=40 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line26_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_opA,test_result.txt,ineffective,yes,"DETECTED at pos 160 (s1=40 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line26_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_opB,test_result.txt,ineffective,yes,"DETECTED at pos 124 (s1=26 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line26_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_undef,test_result.txt,ineffective,yes,"DETECTED at pos 160 (s1=40 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line26_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,binOpFault/keccak_absorb_line26_zero,test_result.txt,ineffective,yes,"DETECTED at pos 172 (s1=22 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line46_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line46_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line46_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line46_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line46_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line50_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line50_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line50_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,binOpFault/keccak_absorb_line50_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,binOpFault/keccak_absorb_line50_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line17_mem,correction_paired_result.txt,correction,yes,pos 0: 65018/65280 pairs disagree (+199 more position(s))
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line17_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line17_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line17_mem,ineffective_paired_result.txt,ineffective,yes,pos 1: 510/65280 pairs disagree (+119 more position(s))
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line17_mem,test_result.txt,ineffective,yes,"DETECTED at pos 160 (s1=40 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line25_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line25_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line25_mem,test_result.txt,ineffective,yes,"DETECTED at pos 124 (s1=26 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line27_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line27_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line27_mem,test_result.txt,ineffective,yes,"DETECTED at pos 124 (s1=26 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line41_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line41_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line41_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line41_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line41_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line49_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line49_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line49_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line51_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line51_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,loadStoreSkip/keccak_absorb_line51_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb,loopOrFuncSkip/keccak_absorb_fnSkip_KeccakF1600_StatePermute_line34,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb,loopOrFuncSkip/keccak_absorb_fnSkip_KeccakF1600_StatePermute_line34,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb,loopOrFuncSkip/keccak_absorb_fnSkip_KeccakF1600_StatePermute_line34,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line26_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line43_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line47_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_opA,test_result.txt,correction,yes,"SATISFIED at pos 64 (s=0, alpha=6: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_undef,test_result.txt,correction,yes,"SATISFIED at pos 64 (s=0, alpha=6: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_zero,test_result.txt,correction,yes,"SATISFIED at pos 64 (s=0, alpha=6: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line60_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_opA,test_result.txt,correction,yes,"SATISFIED at pos 71 (s=0, alpha=128: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_opB,test_result.txt,correction,yes,"SATISFIED at pos 64 (s=0, alpha=6: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_undef,test_result.txt,correction,yes,"SATISFIED at pos 71 (s=0, alpha=128: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_zero,test_result.txt,correction,yes,"SATISFIED at pos 64 (s=0, alpha=6: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,binOpFault/keccak_absorb_once_line66_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line25_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line25_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line25_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line27_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line27_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line27_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line38_mem,correction_paired_result.txt,correction,yes,pos 0: 65280/65280 pairs disagree
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line38_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line38_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line38_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line38_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line46_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line46_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line46_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line48_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line48_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line48_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line59_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line59_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line59_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line61_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line61_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line61_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line65_mem,test_result.txt,correction,yes,"SATISFIED at pos 64 (s=0, alpha=6: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line65_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line65_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line67_mem,test_result.txt,correction,yes,"SATISFIED at pos 64 (s=0, alpha=6: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line67_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line67_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line7_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line7_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,loadStoreSkip/keccak_absorb_once_line7_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_KeccakF1600_StatePermute_line32,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_KeccakF1600_StatePermute_line32,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_KeccakF1600_StatePermute_line32,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_load64_line23,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_load64_line23,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_load64_line23,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_load64_line23,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,keccak_absorb_once,loopOrFuncSkip/keccak_absorb_once_fnSkip_load64_line23,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_opA,test_result.txt,correction,timeout,subprocess.TimeoutExpired
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_opA,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_opA,test_result.txt,ineffective,timeout,subprocess.TimeoutExpired
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_undef,test_result.txt,correction,timeout,subprocess.TimeoutExpired
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_undef,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_undef,test_result.txt,ineffective,timeout,subprocess.TimeoutExpired
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_zero,test_result.txt,correction,timeout,subprocess.TimeoutExpired
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_zero,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line15_zero,test_result.txt,ineffective,timeout,subprocess.TimeoutExpired
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_opA,test_result.txt,correction,timeout,subprocess.TimeoutExpired
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_opA,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_opA,test_result.txt,ineffective,timeout,subprocess.TimeoutExpired
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_undef,test_result.txt,correction,timeout,subprocess.TimeoutExpired
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_undef,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_undef,test_result.txt,ineffective,timeout,subprocess.TimeoutExpired
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_zero,test_result.txt,correction,timeout,subprocess.TimeoutExpired
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_zero,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line17_zero,test_result.txt,ineffective,timeout,subprocess.TimeoutExpired
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_opB,test_result.txt,ineffective,yes,"DETECTED at pos 8 (s1=183 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_undef,test_result.txt,ineffective,yes,"DETECTED at pos 8 (s1=183 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line19_zero,test_result.txt,ineffective,yes,"DETECTED at pos 8 (s1=183 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_opA,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_opB,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_undef,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line22_zero,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_opA,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_opB,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_undef,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line23_zero,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_opA,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=20 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line25_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line29_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line29_opA,test_result.txt,ineffective,no,no disagreement found in range swept
@@ -180,480 +260,653 @@ kyber,keccak_squeeze,binOpFault/keccak_squeeze_line29_zero,test_result.txt,ineff
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line33_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,binOpFault/keccak_squeeze_line34_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line21_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line21_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line21_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,correction_paired_result.txt,correction,yes,pos 0: 65280/65280 pairs disagree
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 's'
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree
 kyber,keccak_squeeze,loadStoreSkip/keccak_squeeze_line27_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,keccak_squeeze,loopOrFuncSkip/keccak_squeeze_fnSkip_KeccakF1600_StatePermute_line8,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,keccak_squeeze,loopOrFuncSkip/keccak_squeeze_fnSkip_KeccakF1600_StatePermute_line8,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,keccak_squeeze,loopOrFuncSkip/keccak_squeeze_fnSkip_KeccakF1600_StatePermute_line8,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,load64,binOpFault/load64_line10_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,load64,binOpFault/load64_line10_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,load64,binOpFault/load64_line10_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,load64,binOpFault/load64_line10_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,load64,binOpFault/load64_line10_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'x'
 kyber,load64,binOpFault/load64_line10_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,load64,binOpFault/load64_line10_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=0, alpha=255: y1 = y2 xor alpha for all 4 swept p)"
+kyber,load64,binOpFault/load64_line10_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'x'
 kyber,load64,binOpFault/load64_line10_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=255 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,load64,binOpFault/load64_line10_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,load64,binOpFault/load64_line10_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'x'
 kyber,load64,binOpFault/load64_line10_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,load64,binOpFault/load64_line11_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,load64,binOpFault/load64_line11_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'x'
 kyber,load64,binOpFault/load64_line11_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,load64,binOpFault/load64_line11_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,load64,binOpFault/load64_line11_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,load64,binOpFault/load64_line11_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,load64,binOpFault/load64_line11_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=0, alpha=255: y1 = y2 xor alpha for all 4 swept p)"
+kyber,load64,binOpFault/load64_line11_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'x'
 kyber,load64,binOpFault/load64_line11_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=255 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,load64,binOpFault/load64_line11_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,load64,binOpFault/load64_line11_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'x'
 kyber,load64,binOpFault/load64_line11_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,load64,loadStoreSkip/load64_line6_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,load64,loadStoreSkip/load64_line6_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'x'
 kyber,load64,loadStoreSkip/load64_line6_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_poly_compress_line2,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_poly_compress_line2,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_poly_compress_line2,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_poly_compress_line2,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_poly_compress_line2,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_polyvec_compress_line0,correction_paired_result.txt,correction,yes,pos 0: 64696/65280 pairs disagree (+1 more position(s))
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_polyvec_compress_line0,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=26, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_polyvec_compress_line0,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_polyvec_compress_line0,ineffective_paired_result.txt,ineffective,yes,pos 0: 2016/65280 pairs disagree
 kyber,pack_ciphertext,loopOrFuncSkip/pack_ciphertext_fnSkip_pqcrystals_kyber768_ref_polyvec_compress_line0,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=26 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_opA,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_opB,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_undef,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_zero,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line1_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_opB,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_undef,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_zero,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line2_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=67 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_opB,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_undef,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_zero,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line3_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_opA,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_opB,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=253 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_zero,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line5_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_OpA,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_OpA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_OpA,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_OpA,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_OpA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opA,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opA,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opA,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opB,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opB,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opB,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opC,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opC,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opC,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opC,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_opC,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_undef,correction_paired_result.txt,correction,yes,pos 0: 65280/65280 pairs disagree
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_undef,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=253 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_zero,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_zero,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'return' at [0] holds input 'a' at the same index in all 16 trace(s) where the fault changed it
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_zero,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_barrett_reduce,binOpFault/pqcrystals_kyber768_ref_barrett_reduce_line6_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opA,correction_paired_result.txt,correction,yes,pos 0: 65252/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opA,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opB,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opB,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_undef,correction_paired_result.txt,correction,yes,pos 0: 65252/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_undef,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_zero,correction_paired_result.txt,correction,yes,pos 0: 65252/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_zero,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line12_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opA,correction_paired_result.txt,correction,yes,pos 2: 65110/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opA,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opB,correction_paired_result.txt,correction,yes,pos 2: 57248/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opB,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_opB,test_result.txt,ineffective,yes,"DETECTED at pos 1 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_undef,correction_paired_result.txt,correction,yes,pos 2: 65110/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_undef,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_zero,correction_paired_result.txt,correction,yes,pos 2: 65110/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_zero,ineffective_paired_result.txt,ineffective,yes,pos 2: 510/65280 pairs disagree
 kyber,pqcrystals_kyber768_ref_basemul,binOpFault/pqcrystals_kyber768_ref_basemul_line26_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line11_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line11_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line11_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line11_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line11_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line13_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line13_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line13_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line13_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line13_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line14_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line14_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line14_mem,test_result.txt,ineffective,yes,"DETECTED at pos 1 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line16_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line16_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line16_mem,test_result.txt,ineffective,yes,"DETECTED at pos 1 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line19_mem,correction_paired_result.txt,correction,yes,pos 2: 57248/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line19_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line19_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line19_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line19_mem,test_result.txt,ineffective,yes,"DETECTED at pos 1 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line1_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line1_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line1_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line21_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line21_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line21_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line22_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line22_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line22_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line25_mem,correction_paired_result.txt,correction,yes,pos 2: 57248/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line25_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line25_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line25_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line25_mem,test_result.txt,ineffective,yes,"DETECTED at pos 1 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line27_mem,correction_paired_result.txt,correction,yes,pos 2: 57248/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line27_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line27_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line27_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line27_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line3_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line3_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line3_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line5_mem,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line5_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line5_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line5_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line5_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line7_mem,correction_paired_result.txt,correction,yes,pos 0: 61368/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line7_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line7_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line7_mem,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line7_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line8_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line8_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line8_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line9_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line9_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loadStoreSkip/pqcrystals_kyber768_ref_basemul_line9_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line10,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line10,direct_leak_result.txt,direct_leak,yes,"secret-buf: output 'r' at [0, 1] holds input 'a' at the same index in all 16 trace(s) where the fault changed it"
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line10,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line17,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line17,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line17,test_result.txt,ineffective,yes,"DETECTED at pos 1 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line23,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line23,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line23,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line4,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line4,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line4,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line6,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line6,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_basemul,loopOrFuncSkip/pqcrystals_kyber768_ref_basemul_fnSkip_fqmul_line6,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,pqcrystals_kyber768_ref_dec,binOpFault/pqcrystals_kyber768_ref_dec_line15_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
+kyber,pqcrystals_kyber768_ref_dec,binOpFault/pqcrystals_kyber768_ref_dec_line15_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
+kyber,pqcrystals_kyber768_ref_dec,binOpFault/pqcrystals_kyber768_ref_dec_line15_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
+kyber,pqcrystals_kyber768_ref_dec,binOpFault/pqcrystals_kyber768_ref_dec_line15_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_memcpy_line7,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_memcpy_line7,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_memcpy_line7,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_memcpy_line7,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_memcpy_line7,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_cmov_line16,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_cmov_line16,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_cmov_line16,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_cmov_line16,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_cmov_line16,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_dec_line4,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_dec_line4,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_dec_line4,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_dec_line4,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_dec_line4,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line10,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line10,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line10,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line10,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line10,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_kyber_shake256_rkprf_line13,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_kyber_shake256_rkprf_line13,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_kyber_shake256_rkprf_line13,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_kyber_shake256_rkprf_line13,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_kyber_shake256_rkprf_line13,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_verify_line11,correction_paired_result.txt,correction,yes,pos 0: 65032/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_verify_line11,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_verify_line11,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_verify_line11,ineffective_paired_result.txt,ineffective,yes,pos 2: 510/65280 pairs disagree (+14 more position(s))
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber768_ref_verify_line11,test_result.txt,ineffective,yes,"DETECTED at pos 9 (s1=30 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line8,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line8,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line8,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line8,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_dec_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line8,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line2,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line2,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line2,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'ss'
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line2,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line2,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line8,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line8,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line8,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line8,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_memcpy_line8,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line7,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line7,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line7,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'ss'
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line7,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber768_ref_indcpa_enc_line7,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_256_line4,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_256_line4,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_256_line4,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_256_line4,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_256_line4,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line5,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line5,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line5,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'ss'
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line5,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_enc_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_enc_derand_fnSkip_pqcrystals_kyber_fips202_ref_sha3_512_line5,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line14,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line14,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line14,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'seed'
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line14,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line14,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line18,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line18,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line18,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line18,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber768_ref_kyber_shake128_absorb_line18,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber_fips202_ref_shake128_squeezeblocks_line20,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber_fips202_ref_shake128_squeezeblocks_line20,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'seed'
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber_fips202_ref_shake128_squeezeblocks_line20,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber_fips202_ref_shake128_squeezeblocks_line27,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber_fips202_ref_shake128_squeezeblocks_line27,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_gen_matrix,loopOrFuncSkip/pqcrystals_kyber768_ref_gen_matrix_fnSkip_pqcrystals_kyber_fips202_ref_shake128_squeezeblocks_line27,test_result.txt,ineffective,yes,"DETECTED at pos 255 (s1=0 ineffective, s2=168 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line8,correction_paired_result.txt,correction,yes,pos 0: 65020/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line8,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line8,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line8,ineffective_paired_result.txt,ineffective,yes,pos 4: 1016/65280 pairs disagree (+21 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line8,test_result.txt,ineffective,yes,"DETECTED at pos 17 (s1=176 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line10,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line10,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line10,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line10,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line10,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_sub_line9,correction_paired_result.txt,correction,yes,pos 0: 64290/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_sub_line9,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_sub_line9,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_sub_line9,ineffective_paired_result.txt,ineffective,yes,pos 0: 1016/65280 pairs disagree (+7 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_sub_line9,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_tomsg_line11,correction_paired_result.txt,correction,yes,pos 0: 65068/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_tomsg_line11,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_tomsg_line11,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_tomsg_line11,ineffective_paired_result.txt,ineffective,yes,pos 0: 1016/65280 pairs disagree (+17 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_poly_tomsg_line11,test_result.txt,ineffective,yes,"DETECTED at pos 8 (s1=50 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line7,correction_paired_result.txt,correction,yes,pos 0: 65068/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line7,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line7,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line7,ineffective_paired_result.txt,ineffective,yes,pos 3: 510/65280 pairs disagree (+16 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line7,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=22 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line6,correction_paired_result.txt,correction,yes,pos 0: 65050/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line6,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line6,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line6,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree (+16 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line6,test_result.txt,ineffective,yes,"DETECTED at pos 19 (s1=12 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_ciphertext_line4,correction_paired_result.txt,correction,yes,pos 0: 65068/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_ciphertext_line4,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_ciphertext_line4,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_ciphertext_line4,ineffective_paired_result.txt,ineffective,yes,pos 0: 1016/65280 pairs disagree (+17 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_ciphertext_line4,test_result.txt,ineffective,yes,"DETECTED at pos 8 (s1=50 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_sk_line5,correction_paired_result.txt,correction,yes,pos 0: 65068/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_sk_line5,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_sk_line5,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'sk'
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_sk_line5,ineffective_paired_result.txt,ineffective,yes,pos 3: 510/65280 pairs disagree (+16 more position(s))
 kyber,pqcrystals_kyber768_ref_indcpa_dec,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_dec_fnSkip_unpack_sk_line5,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=22 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pack_ciphertext_line51,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pack_ciphertext_line51,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pack_ciphertext_line51,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pack_ciphertext_line51,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pack_ciphertext_line51,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_gen_matrix_line11,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_gen_matrix_line11,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_gen_matrix_line11,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_gen_matrix_line11,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_gen_matrix_line11,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line47,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line47,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line47,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line47,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line47,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line48,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line48,test_result.txt,correction,yes,"SATISFIED at pos 1068 (s=0, alpha=128: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line48,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line48,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_add_line48,test_result.txt,ineffective,yes,"DETECTED at pos 960 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_frommsg_line10,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_frommsg_line10,test_result.txt,correction,yes,"SATISFIED at pos 1068 (s=0, alpha=128: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_frommsg_line10,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_frommsg_line10,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_frommsg_line10,test_result.txt,ineffective,yes,"DETECTED at pos 960 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line19,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line19,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line19,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line19,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line19,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line28,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line28,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line28,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line28,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line28,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line32,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line32,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line32,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line32,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta2_line32,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line45,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line45,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line45,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line45,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_invntt_tomont_line45,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line50,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line50,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line50,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line50,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line50,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_add_line46,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_add_line46,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_add_line46,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_add_line46,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_add_line46,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line40,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line40,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line40,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line40,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line40,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line43,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line43,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line43,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line43,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line43,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_invntt_tomont_line44,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_invntt_tomont_line44,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_invntt_tomont_line44,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_invntt_tomont_line44,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_invntt_tomont_line44,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line33,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line33,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line33,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line33,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line33,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line49,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line49,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line49,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line49,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line49,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_unpack_pk_line9,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_unpack_pk_line9,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_unpack_pk_line9,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'm'
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_unpack_pk_line9,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_indcpa_enc,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_enc_fnSkip_unpack_pk_line9,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pack_pk_line47,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pack_pk_line47,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pack_pk_line47,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pack_sk_line46,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pack_sk_line46,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces; eph_secret: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pack_sk_line46,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line18,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line18,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line18,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line27,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line27,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_getnoise_eta1_line27,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_tomont_line41,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_tomont_line41,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_poly_tomont_line41,test_result.txt,ineffective,no,no disagreement found in range swept
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_add_line44,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line39,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line39,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_basemul_acc_montgomery_line39,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line31,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line31,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line31,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line32,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line32,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold correct output 'sk'; eph_secret: the changed output positions do not hold input 'coins'
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_ntt_line32,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line45,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line45,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces; eph_secret: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_indcpa_keypair_derand,loopOrFuncSkip/pqcrystals_kyber768_ref_indcpa_keypair_derand_fnSkip_pqcrystals_kyber768_ref_polyvec_reduce_line45,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=13, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_opB,direct_leak_result.txt,direct_leak,yes,"secret-buf: output 'r' at [0, 1] holds input 'b' at the same index in all 16 trace(s) where the fault changed it"
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_zero,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_poly_add,binOpFault/pqcrystals_kyber768_ref_poly_add_line8_zero,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line10_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line10_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line10_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line5_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line5_mem,direct_leak_result.txt,direct_leak,yes,"secret-buf: output 'r' at [0, 1] holds input 'b' at the same index in all 16 trace(s) where the fault changed it"
 kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line5_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line7_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=13, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line7_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_poly_add,loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line7_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line13,correction_paired_result.txt,correction,yes,pos 0: 65280/65280 pairs disagree (+1 more position(s))
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line13,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line13,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line13,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line13,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line27,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line27,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line27,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line27,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_poly_basemul_montgomery,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_basemul_montgomery_fnSkip_pqcrystals_kyber768_ref_basemul_line27,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_cbd_eta1,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_cbd_eta1_fnSkip_cbd2_line0,test_result.txt,correction,yes,"SATISFIED at pos 16 (s=0, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_cbd_eta1,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_cbd_eta1_fnSkip_cbd2_line0,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'buf'
 kyber,pqcrystals_kyber768_ref_poly_cbd_eta1,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_cbd_eta1_fnSkip_cbd2_line0,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_cbd_eta2,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_cbd_eta2_fnSkip_cbd2_line0,test_result.txt,correction,yes,"SATISFIED at pos 16 (s=0, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_cbd_eta2,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_cbd_eta2_fnSkip_cbd2_line0,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'buf'
 kyber,pqcrystals_kyber768_ref_poly_cbd_eta2,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_cbd_eta2_fnSkip_cbd2_line0,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_ntt,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_ntt_fnSkip_pqcrystals_kyber768_ref_ntt_line0,correction_paired_result.txt,correction,yes,pos 2: 65280/65280 pairs disagree (+126 more position(s))
 kyber,pqcrystals_kyber768_ref_poly_ntt,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_ntt_fnSkip_pqcrystals_kyber768_ref_ntt_line0,ineffective_paired_result.txt,ineffective,yes,pos 2: 510/65280 pairs disagree (+8 more position(s))
 kyber,pqcrystals_kyber768_ref_poly_ntt,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_ntt_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line1,correction_paired_result.txt,correction,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_poly_ntt,loopOrFuncSkip/pqcrystals_kyber768_ref_poly_ntt_fnSkip_pqcrystals_kyber768_ref_poly_reduce_line1,ineffective_paired_result.txt,ineffective,no,no position with disagreeing pairs
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line16_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line18_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line19_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line20_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_undef,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_undef,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line21_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_opA,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_opA,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_opB,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_opB,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line22_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_opA,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_opA,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_opA,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_opB,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_opB,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_opB,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_undef,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_undef,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_undef,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_zero,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_zero,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,binOpFault/pqcrystals_kyber768_ref_poly_tomsg_line26_zero,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line13_mem,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=835, alpha=1: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line13_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line13_mem,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=835 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line24_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line24_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line24_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line27_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line27_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line27_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line5_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line5_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the fault changed no output in the traces
 kyber,pqcrystals_kyber768_ref_poly_tomsg,loadStoreSkip/pqcrystals_kyber768_ref_poly_tomsg_line5_mem,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_polyvec_add,loopOrFuncSkip/pqcrystals_kyber768_ref_polyvec_add_fnSkip_pqcrystals_kyber768_ref_poly_add_line7,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber768_ref_polyvec_add,loopOrFuncSkip/pqcrystals_kyber768_ref_polyvec_add_fnSkip_pqcrystals_kyber768_ref_poly_add_line7,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'; eph_secret: the changed output positions do not hold input 'b'
 kyber,pqcrystals_kyber768_ref_polyvec_add,loopOrFuncSkip/pqcrystals_kyber768_ref_polyvec_add_fnSkip_pqcrystals_kyber768_ref_poly_add_line7,test_result.txt,ineffective,no,no disagreement found in range swept
 kyber,pqcrystals_kyber768_ref_polyvec_tobytes,loopOrFuncSkip/pqcrystals_kyber768_ref_polyvec_tobytes_fnSkip_pqcrystals_kyber768_ref_poly_tobytes_line7,test_result.txt,correction,yes,"SATISFIED at pos 0 (s=13, alpha=13: y1 = y2 xor alpha for all 4 swept p)"
+kyber,pqcrystals_kyber768_ref_polyvec_tobytes,loopOrFuncSkip/pqcrystals_kyber768_ref_polyvec_tobytes_fnSkip_pqcrystals_kyber768_ref_poly_tobytes_line7,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'a'
 kyber,pqcrystals_kyber768_ref_polyvec_tobytes,loopOrFuncSkip/pqcrystals_kyber768_ref_polyvec_tobytes_fnSkip_pqcrystals_kyber768_ref_poly_tobytes_line7,test_result.txt,ineffective,yes,"DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loadStoreSkip/pqcrystals_kyber_fips202_ref_sha3_256_line10_mem,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber_fips202_ref_sha3_256,loadStoreSkip/pqcrystals_kyber_fips202_ref_sha3_256_line10_mem,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loadStoreSkip/pqcrystals_kyber_fips202_ref_sha3_256_line10_mem,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=169 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_KeccakF1600_StatePermute_line2,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_KeccakF1600_StatePermute_line2,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_KeccakF1600_StatePermute_line2,test_result.txt,ineffective,yes,"DETECTED at pos 22 (s1=45 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_keccak_absorb_once_line1,correction_paired_result.txt,correction,yes,pos 0: 65018/65280 pairs disagree (+31 more position(s))
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_keccak_absorb_once_line1,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_keccak_absorb_once_line1,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_keccak_absorb_once_line1,ineffective_paired_result.txt,ineffective,yes,pos 0: 1016/65280 pairs disagree (+22 more position(s))
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_keccak_absorb_once_line1,test_result.txt,ineffective,yes,"DETECTED at pos 22 (s1=90 ineffective, s2=0 effective; pair on each of 4 public seeds)"
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_store64_line11,correction_paired_result.txt,correction,yes,pos 0: 65018/65280 pairs disagree (+7 more position(s))
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_store64_line11,test_result.txt,correction,no,"no (s, alpha) with constant Delta across p found in range swept"
+kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_store64_line11,direct_leak_result.txt,direct_leak,no,secret-buf: the changed output positions do not hold input 'in'
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_store64_line11,ineffective_paired_result.txt,ineffective,yes,pos 0: 510/65280 pairs disagree (+5 more position(s))
 kyber,pqcrystals_kyber_fips202_ref_sha3_256,loopOrFuncSkip/pqcrystals_kyber_fips202_ref_sha3_256_fnSkip_store64_line11,test_result.txt,ineffective,yes,"DETECTED at pos 2 (s1=169 ineffective, s2=0 effective; pair on each of 4 public seeds)"

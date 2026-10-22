@@ -30,6 +30,11 @@ only) gets one row per test per source file it actually has):
   format and extends with Dilithium + the test_result.txt format +
   machine-readable CSV output).
 
+Direct-leak results are not scanned from tests_<scheme>/: they are read
+from the CSV that dist_tests/run_direct_leak.sh writes (--direct-leak-csv,
+default direct_leak_report.csv), added as a third test "direct_leak" to the
+per-scheme / combined CSVs and to every plot style.
+
 A fault folder's name is its path relative to the function's tests_<algo>/
 <func_name>/ directory (e.g. "loopOrFuncSkip/<faulty_stem>" for a nested
 Dilithium/Kyber fault, or "add_f_line0_opA" for a flat MAYO one), so
@@ -77,11 +82,21 @@ FIELDNAMES = ["scheme", "function", "fault", "source", "test", "detected", "deta
 # the scalar "faults with NO leak detected by either test" callout.
 COLOR_INEFFECTIVE = "#2a78d6"   # categorical slot 1 (blue)
 COLOR_CORRECTION = "#eb6834"    # categorical slot 2 (orange)
+COLOR_DIRECT = "#1baf7a"        # categorical slot 3 (aqua)
 COLOR_UNDETECTED = "#d03b3b"    # status critical (used sparingly, labeled)
 COLOR_TIMEOUT = "#9a9a94"       # neutral grey: "no verdict", not good/bad
 COLOR_GRID = "#d9d8d2"
 COLOR_TEXT = "#0b0b0b"
 COLOR_TEXT_MUTED = "#52514e"
+
+# Every test the plots know about, in fixed order (= fixed colour slot).
+# direct_leak rows come from the direct-leak CSV (dist_tests/run_direct_leak.sh),
+# not from the result files scanned under tests_<scheme>/.
+TESTS = ("ineffective", "correction", "direct_leak")
+TEST_COLORS = {"ineffective": COLOR_INEFFECTIVE, "correction": COLOR_CORRECTION,
+               "direct_leak": COLOR_DIRECT}
+TEST_LABELS = {"ineffective": "ineffective", "correction": "correction",
+               "direct_leak": "direct leak"}
 
 
 def parse_paired_result(path):
@@ -172,6 +187,37 @@ def scan_scheme(scheme, tests_root):
                         }
 
 
+def load_direct_leak(csv_path, schemes):
+    """Rows of the direct-leak CSV (dist_tests/run_direct_leak.sh), already in
+    the FIELDNAMES schema, grouped by scheme. Its "detected" values are
+    yes / no / skip / error: an error caused by an emulation timeout becomes
+    "timeout" (inconclusive, like the other tests); skipped rows (the secret
+    is not in the trace) and other errors are not a verdict and are dropped.
+    Returns ({scheme: [rows]}, n_dropped)."""
+    by_scheme, dropped = {}, 0
+    if not csv_path or not os.path.isfile(csv_path):
+        return by_scheme, dropped
+    with open(csv_path, newline="") as f:
+        for r in csv.DictReader(f):
+            if r.get("scheme") not in schemes:
+                continue
+            status = r.get("detected", "")
+            if status == "error" and "Timeout" in r.get("detail", ""):
+                status = "timeout"
+            if status not in ("yes", "no", "timeout"):
+                dropped += 1
+                continue
+            row = {k: r.get(k, "") for k in FIELDNAMES}
+            row["test"], row["detected"] = "direct_leak", status
+            by_scheme.setdefault(r["scheme"], []).append(row)
+    return by_scheme, dropped
+
+
+def present_tests(counts, funcs):
+    """The tests (in TESTS order) with at least one tested fault in funcs."""
+    return tuple(t for t in TESTS if any(counts[f][t][2] for f in funcs))
+
+
 def aggregate_detection_rates(rows):
     """Collapses `rows` (as written to the CSV) to one status per
     (function, fault, test) -- if ANY source file for a given fault+test says
@@ -188,7 +234,7 @@ def aggregate_detection_rates(rows):
 
     counts = {}
     for (func, _fault, test), status in verdict.items():
-        bucket = counts.setdefault(func, {"ineffective": [0, 0, 0], "correction": [0, 0, 0]})
+        bucket = counts.setdefault(func, {t: [0, 0, 0] for t in TESTS})
         bucket[test][2] += 1
         if status == "yes":
             bucket[test][0] += 1
@@ -199,7 +245,8 @@ def aggregate_detection_rates(rows):
 
 def plot_scheme(scheme, rows, out_path):
     """Horizontal grouped bar chart: one row per function that has at least
-    one tested fault, two bars (ineffective/correction detection rate).
+    one tested fault, one bar per test with data (ineffective / correction /
+    direct leak).
     Requires matplotlib -- raises a clear RuntimeError if it isn't
     installed, rather than a bare ImportError traceback."""
     try:
@@ -214,7 +261,7 @@ def plot_scheme(scheme, rows, out_path):
     counts = aggregate_detection_rates(rows)
     # Drop functions with zero tested faults for BOTH tests -- nothing to
     # plot, and they'd otherwise render as two zero-length bars.
-    funcs = [f for f, c in counts.items() if c["ineffective"][2] or c["correction"][2]]
+    funcs = [f for f, c in counts.items() if any(c[t][2] for t in TESTS)]
     if not funcs:
         raise RuntimeError(f"no plottable data for scheme {scheme!r}")
 
@@ -233,18 +280,21 @@ def plot_scheme(scheme, rows, out_path):
     # as "few detected out of many".
     # Functions keep their scan order (alphabetical by tests_<scheme>/ dir);
     # deliberately not sorted by count.
-    max_total = max(total(f, t) for f in funcs for t in ("ineffective", "correction"))
+    tests = present_tests(counts, funcs)
+    max_total = max(total(f, t) for f in funcs for t in tests)
     n = len(funcs)
-    fig_h = max(3.0, 0.34 * n + 1.5)
+    fig_h = max(3.0, 0.17 * len(tests) * n + 1.5)
     fig, ax = plt.subplots(figsize=(10, fig_h), dpi=150)
     fig.patch.set_facecolor("#fcfcfb")
     ax.set_facecolor("#fcfcfb")
 
     y = range(n)
-    bar_h = 0.36
-    series = (
-        (bar_h / 2 + 0.02, "ineffective", COLOR_INEFFECTIVE, "ineffective test"),
-        (-bar_h / 2 - 0.02, "correction", COLOR_CORRECTION, "correction test"),
+    # One bar per present test, top to bottom in TESTS order.
+    bar_h = 0.76 / len(tests)
+    series = tuple(
+        ((k - (len(tests) - 1) / 2) * (bar_h + 0.02), t, TEST_COLORS[t],
+         f"{TEST_LABELS[t]} test")
+        for k, t in enumerate(tests)
     )
     for k, (offset, test, color, label) in enumerate(series):
         pos = [i + offset for i in y]
@@ -301,7 +351,8 @@ def plot_scheme(scheme, rows, out_path):
 
 def plot_scheme_heatmap(scheme, rows, out_path):
     """Compact alternative to plot_scheme: one row per function (scan
-    order), two columns (ineffective / correction). Each cell is shaded by
+    order), one column per test with data (ineffective / correction /
+    direct leak). Each cell is shaded by
     detection rate and annotated "detected/tested"; cells containing
     timed-out faults get a grey hatched overlay and a "+N TO" note."""
     try:
@@ -316,12 +367,14 @@ def plot_scheme_heatmap(scheme, rows, out_path):
         ) from e
 
     counts = aggregate_detection_rates(rows)
-    funcs = [f for f, c in counts.items() if c["ineffective"][2] or c["correction"][2]]
+    funcs = [f for f, c in counts.items() if any(c[t][2] for t in TESTS)]
     if not funcs:
         raise RuntimeError(f"no plottable data for scheme {scheme!r}")
 
-    tests = ("ineffective", "correction")
-    cmap = LinearSegmentedColormap.from_list("detect", ["#f1f0ec", COLOR_INEFFECTIVE])
+    tests = present_tests(counts, funcs)
+    # Each column is shaded in its own test's hue (one hue, light -> dark).
+    cmaps = {t: LinearSegmentedColormap.from_list(f"detect_{t}", ["#f1f0ec", TEST_COLORS[t]])
+             for t in tests}
 
     n = len(funcs)
     row_h = 0.24
@@ -336,7 +389,7 @@ def plot_scheme_heatmap(scheme, rows, out_path):
             if n_total == 0:
                 continue
             rate = n_hit / n_total
-            ax.add_patch(Rectangle((j, i), 1, 1, facecolor=cmap(rate),
+            ax.add_patch(Rectangle((j, i), 1, 1, facecolor=cmaps[test](rate),
                                    edgecolor="#fcfcfb", linewidth=1.5, zorder=2))
             if n_to:
                 ax.add_patch(Rectangle((j, i), 1, 1, facecolor="none",
@@ -349,7 +402,7 @@ def plot_scheme_heatmap(scheme, rows, out_path):
     ax.set_xlim(0, len(tests))
     ax.set_ylim(n, 0)
     ax.set_xticks([j + 0.5 for j in range(len(tests))])
-    ax.set_xticklabels([f"{t} test" for t in tests], fontsize=9, color=COLOR_TEXT)
+    ax.set_xticklabels([f"{TEST_LABELS[t]} test" for t in tests], fontsize=9, color=COLOR_TEXT)
     ax.xaxis.tick_top()
     ax.set_yticks([i + 0.5 for i in range(n)])
     ax.set_yticklabels(funcs, fontsize=7.5, color=COLOR_TEXT)
@@ -383,20 +436,21 @@ def plot_scheme_summary(scheme, rows, out_path):
         ) from e
 
     counts = aggregate_detection_rates(rows)
-    funcs = [f for f, c in counts.items() if c["ineffective"][2] or c["correction"][2]]
+    funcs = [f for f, c in counts.items() if any(c[t][2] for t in TESTS)]
     if not funcs:
         raise RuntimeError(f"no plottable data for scheme {scheme!r}")
-    tests = ("ineffective", "correction")
-    colors = {"ineffective": COLOR_INEFFECTIVE, "correction": COLOR_CORRECTION}
+    tests = present_tests(counts, funcs)
+    colors = TEST_COLORS
 
     totals = {t: [sum(counts[f][t][k] for f in funcs) for k in range(3)] for t in tests}
 
     n = len(funcs)
     row_h = 0.2
-    fig_h = 1.9 + row_h * (n + 1)
+    fig_h = 1.4 + 0.25 * len(tests) + row_h * (n + 1)
     fig = plt.figure(figsize=(8, fig_h), dpi=150)
     fig.patch.set_facecolor("#fcfcfb")
-    gs = fig.add_gridspec(2, 1, height_ratios=[1.5, row_h * (n + 1)], hspace=0.12)
+    gs = fig.add_gridspec(2, 1, height_ratios=[0.5 * len(tests) + 0.5, row_h * (n + 1)],
+                          hspace=0.12)
 
     # -- summary bars (absolute counts, one shared axis) -------------------
     ax = fig.add_subplot(gs[0])
@@ -415,7 +469,7 @@ def plot_scheme_summary(scheme, rows, out_path):
         ax.text(tot + 0.01 * max_total, i, lab, va="center", ha="left",
                 fontsize=8, color=COLOR_TEXT_MUTED)
     ax.set_yticks(range(len(tests)))
-    ax.set_yticklabels([f"{t} test" for t in tests], fontsize=9, color=COLOR_TEXT)
+    ax.set_yticklabels([f"{TEST_LABELS[t]} test" for t in tests], fontsize=9, color=COLOR_TEXT)
     ax.invert_yaxis()
     ax.set_xlim(0, max_total * 1.45)
     ax.set_xlabel("number of faults (colour = detected, hatched = timed out, "
@@ -439,11 +493,11 @@ def plot_scheme_summary(scheme, rows, out_path):
             return "-"
         return f"{n_hit}/{n_tot}" + (f" (+{n_to} TO)" if n_to else "")
 
-    cells = [[f, cell(f, "ineffective"), cell(f, "correction")] for f in funcs]
+    cells = [[f] + [cell(f, t) for t in tests] for f in funcs]
     tbl = tx.table(cellText=cells,
-                   colLabels=["function", "ineffective", "correction"],
-                   colWidths=[0.6, 0.2, 0.2], cellLoc="left", loc="upper left",
-                   bbox=[0, 0, 1, 1])
+                   colLabels=["function"] + [TEST_LABELS[t] for t in tests],
+                   colWidths=[0.4 + 0.2 * (3 - len(tests))] + [0.2] * len(tests),
+                   cellLoc="left", loc="upper left", bbox=[0, 0, 1, 1])
     tbl.auto_set_font_size(False)
     tbl.set_fontsize(7)
     for (r, c), tc in tbl.get_celld().items():
@@ -473,9 +527,9 @@ def plot_scheme_summary(scheme, rows, out_path):
 
 
 def plot_combined(rows_by_scheme, out_path):
-    """One figure covering every scheme: per scheme, a pair of 100%-stacked
-    bars (ineffective / correction) split into detected / timed out / not
-    detected. Percent-normalized because the schemes test very different
+    """One figure covering every scheme: per scheme, one 100%-stacked bar
+    per test with data (ineffective / correction / direct leak), split into
+    detected / timed out / not detected. Percent-normalized because the schemes test very different
     numbers of faults; the labels carry the absolute counts."""
     try:
         import matplotlib
@@ -486,8 +540,8 @@ def plot_combined(rows_by_scheme, out_path):
             "matplotlib is required for --plot (pip install matplotlib)"
         ) from e
 
-    tests = ("ineffective", "correction")
-    colors = {"ineffective": COLOR_INEFFECTIVE, "correction": COLOR_CORRECTION}
+    tests = TESTS
+    colors = TEST_COLORS
     data = []  # (scheme, test, hit, to, tot)
     for scheme, rows in rows_by_scheme.items():
         counts = aggregate_detection_rates(rows)
@@ -500,22 +554,24 @@ def plot_combined(rows_by_scheme, out_path):
         raise RuntimeError("no plottable data for any scheme")
 
     schemes = list(dict.fromkeys(d[0] for d in data))
-    fig, ax = plt.subplots(figsize=(9, 1.0 + 0.9 * len(schemes)), dpi=150)
+    tests = tuple(t for t in tests if any(d[1] == t for d in data))
+    fig, ax = plt.subplots(figsize=(9, 1.0 + 0.45 * len(tests) * len(schemes)), dpi=150)
     fig.patch.set_facecolor("#fcfcfb")
     ax.set_facecolor("#fcfcfb")
 
-    bar_h = 0.34
-    yticks, ylabels = [], []
+    bar_h = 0.7 / len(tests)
+    yticks, ylabels, labelled = [], [], set()
     for si, scheme in enumerate(schemes):
         for ti, t in enumerate(tests):
-            y = si + (ti - 0.5) * (bar_h + 0.04)
+            y = si + (ti - (len(tests) - 1) / 2) * (bar_h + 0.04)
             match = [d for d in data if d[0] == scheme and d[1] == t]
             if not match:
                 continue
             _s, _t, hit, to, tot = match[0]
             pct = lambda v: 100.0 * v / tot
             ax.barh(y, pct(hit), height=bar_h, color=colors[t], zorder=3,
-                    label=f"{t} test: detected" if si == 0 else None)
+                    label=None if t in labelled else f"{TEST_LABELS[t]} test: detected")
+            labelled.add(t)
             ax.barh(y, pct(to), left=pct(hit), height=bar_h, color=COLOR_TIMEOUT,
                     hatch="///", edgecolor="#fcfcfb", linewidth=0, zorder=3,
                     label="timeout (TimeoutExpired)" if (si, ti) == (0, 0) else None)
@@ -543,7 +599,7 @@ def plot_combined(rows_by_scheme, out_path):
         ax.spines[spine].set_visible(False)
     ax.spines["bottom"].set_color(COLOR_GRID)
     ax.tick_params(left=False, bottom=False)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=4,
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=len(tests) + 2,
               frameon=False, fontsize=8, labelcolor=COLOR_TEXT_MUTED)
 
     fig.tight_layout()
@@ -565,7 +621,7 @@ def main():
     ap.add_argument(
         "--plot", action="store_true",
         help="also write fault_report_<scheme>.png: a horizontal bar chart "
-             "of ineffective/correction detection rate by function "
+             "of ineffective/correction/direct-leak detections by function "
              "(requires matplotlib).",
     )
     ap.add_argument(
@@ -575,6 +631,12 @@ def main():
              "(fault_report_<scheme>_heatmap.png) or 'summary' (overall "
              "stacked bars + per-function table, "
              "fault_report_<scheme>_summary.png).",
+    )
+    ap.add_argument(
+        "--direct-leak-csv", default="direct_leak_report.csv",
+        help="CSV written by dist_tests/run_direct_leak.sh, relative to --root "
+             "unless absolute (default: %(default)s). Its rows are added as the "
+             "'direct_leak' test to the CSVs and plots; ignored if missing.",
     )
     ap.add_argument(
         "--combined", action="store_true",
@@ -588,11 +650,21 @@ def main():
     if args.plot:
         os.makedirs(args.plotdir, exist_ok=True)
 
+    dl_path = args.direct_leak_csv
+    if dl_path and not os.path.isabs(dl_path):
+        dl_path = os.path.join(args.root, dl_path)
+    direct_leak, dl_dropped = load_direct_leak(dl_path, schemes)
+    if direct_leak:
+        print(f"[all] {dl_path}: {sum(map(len, direct_leak.values()))} direct-leak "
+              f"result(s) added ({dl_dropped} skipped/error row(s) left out)")
+    elif dl_path:
+        print(f"[all] {dl_path}: no direct-leak results (file missing or empty)")
+
     all_rows = []
     rows_by_scheme = {}
     for scheme in schemes:
         tests_root = os.path.join(args.root, f"tests_{scheme}")
-        rows = list(scan_scheme(scheme, tests_root))
+        rows = list(scan_scheme(scheme, tests_root)) + direct_leak.get(scheme, [])
         all_rows.extend(rows)
         if rows:
             rows_by_scheme[scheme] = rows
