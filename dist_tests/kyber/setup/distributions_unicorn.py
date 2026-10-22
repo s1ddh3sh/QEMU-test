@@ -430,6 +430,14 @@ def domain_values(dist_name, count, word_size=2):
         else:
             lo, hi = 0, 255
 
+    return range_values(lo, hi, count)
+
+
+def range_values(lo, hi, count):
+    """At most `count` distinct integers in [lo, hi]: 0 first when it is in
+    range, the rest evenly spaced across the range, endpoints included (all
+    of them if count covers the range). Used by domain_values() and directly
+    for a function's declared "secret-range" (kyber.json)."""
     size = hi - lo + 1
     zero_in = lo <= 0 <= hi
     if count >= size:

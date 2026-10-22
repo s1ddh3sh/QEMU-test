@@ -87,7 +87,7 @@ if os.path.dirname(os.path.abspath(__file__)) not in sys.path:
 from collect_dist_unicorn import run_one, RunFailed, RunTimeout  # noqa: E402  (unmodified, in-process Unicorn backend)
 # Same module instance collect_dist_unicorn uses (it puts the repo root on
 # sys.path and exports --kyber-k before importing this).
-from dist_tests.kyber.setup.distributions_unicorn import infer_field_mod, domain_values  # noqa: E402
+from dist_tests.kyber.setup.distributions_unicorn import infer_field_mod, domain_values, range_values  # noqa: E402
 from dist_tests.common.ineffective import IneffectiveTracker  # noqa: E402
 from ineffective_kyber import (              # noqa: E402  (unmodified)
     decode_words,
@@ -176,6 +176,15 @@ def main():
              "full coefficient is forced to an explicit value rather "
              "than just its low byte. Default: %(default)s",
     )
+    ap.add_argument(
+        "--secret-range", default="",
+        help="'lo,hi': sweep the secret value over [lo, hi] (inclusive, as "
+             "the signed coefficient value) instead of the secret buffer's "
+             "distribution range. For a function whose input coefficients "
+             "are not in [0, q), e.g. poly_tomsg, which receives poly_reduce's "
+             "centered output in [-(q-1)/2, (q-1)/2] (kyber.json "
+             "\"secret-range\"). Needs --secret-word-size 2.",
+    )
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument(
         "--seeds", type=int, nargs="+", default=None,
@@ -228,8 +237,16 @@ def main():
     with open(args.witness) as f:
         secret_dist = json.load(f)["layout"].get(args.secret_buf, {}).get("distribution")
     args.bg_field_mod = infer_field_mod(secret_dist)
-    sweep_values = domain_values(secret_dist, args.field_mod,
-                                 args.secret_word_size)
+    if args.secret_range:
+        lo, hi = (int(v) for v in args.secret_range.split(","))
+        if args.secret_word_size != 2 and (lo < 0 or hi > 255):
+            ap.error("--secret-range outside [0, 255] needs --secret-word-size 2")
+        sweep_values = range_values(lo, hi, args.field_mod)
+        print(f"[i] secret range [{lo}, {hi}] (from --secret-range), "
+              f"{len(sweep_values)} value(s) swept")
+    else:
+        sweep_values = domain_values(secret_dist, args.field_mod,
+                                     args.secret_word_size)
     active_len_words = args.active_len // args.out_word_size
     seeds = args.seeds if args.seeds else [args.seed]
     primary_seed = seeds[0]

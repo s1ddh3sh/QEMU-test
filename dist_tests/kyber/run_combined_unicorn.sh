@@ -215,7 +215,7 @@ CORRECT_ELF="${ELF_DIR}/${FUNC_NAME}.elf"
 # convention exactly.
 # ---------------------------------------------------------------------------
 CONFIG_JSON="kyber.json"
-read -r JSON_SECRET_BUF JSON_FIXED_SCALARS JSON_EPH_SECRET <<< "$(python3 - "$CONFIG_JSON" "$FUNC_NAME" <<'PYEOF'
+read -r JSON_SECRET_BUF JSON_FIXED_SCALARS JSON_EPH_SECRET JSON_SECRET_RANGE <<< "$(python3 - "$CONFIG_JSON" "$FUNC_NAME" <<'PYEOF'
 import json, sys
 path, func = sys.argv[1], sys.argv[2]
 try:
@@ -230,13 +230,21 @@ entry = config.get(func) or {}
 # empty on every function that actually has a "fixed-scalars" entry
 # (neither secret-buf nor fixed-scalars ever contains whitespace, so
 # this is a safe, unambiguous join).
-print((entry.get("secret-buf") or "__NONE__") + " " + (entry.get("fixed-scalars") or "__NONE__") + " " + (entry.get("eph_secret") or "__NONE__"))
+print((entry.get("secret-buf") or "__NONE__") + " " + (entry.get("fixed-scalars") or "__NONE__") + " " + (entry.get("eph_secret") or "__NONE__") + " " + (entry.get("secret-range") or "__NONE__").replace(" ", ""))
 PYEOF
 )"
 [[ "$JSON_SECRET_BUF" == "__NONE__" ]] && JSON_SECRET_BUF=""
 [[ "$JSON_FIXED_SCALARS" == "__NONE__" ]] && JSON_FIXED_SCALARS=""
 [[ "$JSON_EPH_SECRET" == "__NONE__" ]] && JSON_EPH_SECRET=""
 EPH_SECRET="$JSON_EPH_SECRET"   # ephemeral secrets: sampled fresh, never fixed
+# "secret-range": "lo,hi" -- the values the function really receives at the
+# swept coefficient, when that is not the distribution's [0, q) (e.g.
+# poly_tomsg gets poly_reduce's centered output). Empty: distribution range.
+[[ "$JSON_SECRET_RANGE" == "__NONE__" ]] && JSON_SECRET_RANGE=""
+SECRET_RANGE_ARGS=()
+# '=' form: a value starting with '-' (e.g. -1664,1664) is otherwise
+# taken by argparse for an option.
+[[ -n "$JSON_SECRET_RANGE" ]] && SECRET_RANGE_ARGS=("--secret-range=${JSON_SECRET_RANGE}")
 
 if [[ -n "$SECRET_BUF_OVERRIDE" ]]; then
     SECRET_BUF="$SECRET_BUF_OVERRIDE"
@@ -489,6 +497,7 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
         --outdir "$DIST_PAIRED_DIR" --machine "$MACHINE" \
         --fixed-scalars "$FIXED_SCALARS" \
         --eph-secret "$EPH_SECRET" --eph-draws "$EPH_DRAWS" \
+        "${SECRET_RANGE_ARGS[@]}" \
         --out-buf "$OUT_BUF" --active-len "$ACTIVE_LEN" \
         --out-word-size "$WORD_SIZE" --diff-mode "$DIFF_MODE" \
         --modulus "$MODULUS" --test "$TEST" --require "$REQUIRE" \

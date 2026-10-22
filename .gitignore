@@ -3,3 +3,4 @@ build
 tests*
 __pycache__
 project.tex
+poly_tomsg_fault_analysis.md
