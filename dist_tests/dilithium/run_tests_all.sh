@@ -59,6 +59,18 @@ if ! [[ "$JOBS" =~ ^[0-9]+$ && "$JOBS" -ge 1 ]]; then
     exit 1
 fi
 
+# Two-level parallelism without oversubscribing the box: this script runs up
+# to JOBS functions at once (outer), and each run_combined_unicorn.sh sweeps
+# up to INNER_JOBS faulty ELFs at once (inner). We divide the core budget so
+# outer*inner <= nproc. With the default JOBS=nproc this gives INNER_JOBS=1
+# (unchanged behavior); lower -j to hand more cores to the per-function ELF
+# sweep -- e.g. -j 1 runs functions one at a time but each sweep uses every
+# core, which is fastest when a few large functions dominate (as in Keccak /
+# signature_internal).
+NPROC="$(nproc 2>/dev/null || echo 1)"
+INNER_JOBS=$(( NPROC / JOBS ))
+(( INNER_JOBS < 1 )) && INNER_JOBS=1
+
 if [[ ! -f "$CONFIG_JSON" ]]; then
     echo "[!] ${CONFIG_JSON} not found -- run this script from the repo root" >&2
     exit 1
@@ -90,7 +102,7 @@ fi
 LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/dilithium_run_all.XXXXXX")"
 trap 'rm -rf "$LOG_DIR"' EXIT
 
-echo "[i] ${#FUNCS[@]} function(s) to run, up to ${JOBS} in parallel"
+echo "[i] ${#FUNCS[@]} function(s) to run, up to ${JOBS} in parallel (x ${INNER_JOBS} inner ELF-sweep job(s) each; nproc=${NPROC})"
 echo "[i] per-function logs: ${LOG_DIR}/<func>.log"
 
 # ---- one function: build then test, capturing status and wall-clock time ---
@@ -108,8 +120,8 @@ run_one() {
         if ! "$DILITHIUM_BUILD" "tests_dilithium/${func}"; then
             echo "[!] FAILED (build): ${func}"
             rc="build"
-        elif echo && echo "=== [test] ${RUN_COMBINED} ${func} --seeds ${SEEDS} --fresh ===" \
-             && ! "$RUN_COMBINED" "$func" --seeds "$SEEDS" --fresh; then
+        elif echo && echo "=== [test] ${RUN_COMBINED} ${func} --seeds ${SEEDS} --jobs ${INNER_JOBS} --fresh ===" \
+             && ! "$RUN_COMBINED" "$func" --seeds "$SEEDS" --jobs "$INNER_JOBS" --fresh; then
             echo "[!] FAILED (test): ${func}"
             rc="test"
         else

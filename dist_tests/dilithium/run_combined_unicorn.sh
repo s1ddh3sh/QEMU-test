@@ -142,9 +142,16 @@ SEEDS="0,1,2,3"
 EPH_DRAWS=4
 DILITHIUM_MODE_OVERRIDE=""
 FRESH=0
+# Inner parallelism: how many faulty-ELF sweeps to run at once. Each sweep
+# is independent -- it only READS the (immutable) correct ELF + the shared
+# active_lengths.json and writes into its OWN per-faulty-ELF output dir, so
+# there is no cross-sweep contention. Default to all cores when run on its
+# own; run_tests_all.sh passes a divided budget so outer*inner <= nproc.
+JOBS="$(nproc 2>/dev/null || echo 1)"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        -j|--jobs) JOBS="$2"; shift 2 ;;
         --elf-dir) ELF_DIR_OVERRIDE="$2"; shift 2 ;;
         --secret-buf) SECRET_BUF_OVERRIDE="$2"; shift 2 ;;
         --fixed-scalars) FIXED_SCALARS_OVERRIDE="$2"; shift 2 ;;
@@ -164,6 +171,10 @@ while [[ $# -gt 0 ]]; do
         *) echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
     esac
 done
+
+if ! [[ "$JOBS" =~ ^[0-9]+$ ]] || [[ "$JOBS" -lt 1 ]]; then
+    echo "[!] --jobs must be a positive integer (got: ${JOBS})" >&2; exit 1
+fi
 
 SEEDS_ARGS=()
 if [[ -n "$SEEDS" ]]; then
@@ -257,7 +268,7 @@ fi
 FAULTY_ELFS=()
 while IFS= read -r -d '' f; do
     FAULTY_ELFS+=("$f")
-done < <(find "$ELF_DIR" -type f -name '*.elf' -not -path '*/full_dilithium_gated/*' -not -samefile "$CORRECT_ELF" -print0 | sort -z)
+done < <(find "$ELF_DIR" -type f -name '*.elf' -not -path '*/full_dilithium*/*' -not -samefile "$CORRECT_ELF" -print0 | sort -z)
 
 if [[ ${#FAULTY_ELFS[@]} -eq 0 ]]; then
     echo "[!] no faulty ELFs found under $ELF_DIR (besides $CORRECT_ELF)" >&2
@@ -433,26 +444,36 @@ python3 "${SETUP_DIR}/calibrate_unicorn.py" \
 # table is printed at the end.
 # ---------------------------------------------------------------------------
 echo ""
-echo "########## [2/2] early_stop_sweep_unicorn.py (${#FAULTY_ELFS[@]} faulty ELF(s)) ##########"
-declare -a SUMMARY_ROWS=()
+echo "########## [2/2] early_stop_sweep_unicorn.py (${#FAULTY_ELFS[@]} faulty ELF(s), up to ${JOBS} in parallel) ##########"
 OVERALL_STATUS=0
 
-for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
+# Each faulty-ELF sweep records its exit code into RC_DIR so the ordered
+# summary pass below can read it back; parallel jobs can't safely append to
+# a shared array. RC_DIR is per-run and removed when this function returns.
+RC_DIR="$(mktemp -d "${TMPDIR:-/tmp}/dil_sweep_rc.XXXXXX")"
+trap 'rm -rf "$RC_DIR"' EXIT
+
+# One faulty ELF: self-contained. Reads only the immutable correct ELF and
+# the shared read-only active_lengths.json; writes solely into its own
+# per-faulty-ELF dirs (dist_paired + test_result.txt), so any number of
+# these may run concurrently without colliding.
+run_one_sweep() {
+    local FAULTY_ELF="$1"
+    local FAULTY_STEM DIST_PAIRED_DIR RESULT_FILE STATUS RC_KEY
     FAULTY_STEM="$(rel_stem "$FAULTY_ELF" "$ELF_DIR")"
     DIST_PAIRED_DIR="${OUT_DIR}/${FAULTY_STEM}/dist_paired"
     if [[ "$FRESH" -eq 1 && -d "$DIST_PAIRED_DIR" ]]; then
-        echo "[i] --fresh: removing ${DIST_PAIRED_DIR}"
         rm -rf "$DIST_PAIRED_DIR"
     fi
     mkdir -p "$DIST_PAIRED_DIR"
-
     RESULT_FILE="${OUT_DIR}/${FAULTY_STEM}/test_result.txt"
     mkdir -p "$(dirname "$RESULT_FILE")"
 
-    echo ""
-    echo "=== early-stop sweep (unicorn): ${FUNC_NAME} / ${FAULTY_STEM} ==="
-    set +e
-    python3 -u "${SCRIPT_DIR}/early_stop_sweep_unicorn.py" \
+    echo "[start] ${FAULTY_STEM}"
+    # Output is redirected (not tee'd) so concurrent sweeps don't interleave
+    # on the console; the full log still lands in RESULT_FILE as before. The
+    # if-guard keeps a non-zero exit from tripping `set -e` inside the job.
+    if python3 -u "${SCRIPT_DIR}/early_stop_sweep_unicorn.py" \
         --witness "$WITNESS" --active-lengths "$ACTIVE_LENGTHS" \
         --correct-elf "$CORRECT_ELF" --faulty-elf "$FAULTY_ELF" \
         --func "$FUNC_NAME" --field-mod "$FIELD_MOD" \
@@ -465,32 +486,57 @@ for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
         --out-word-size "$WORD_SIZE" --diff-mode "$DIFF_MODE" \
         --modulus "$MODULUS" --test "$TEST" --require "$REQUIRE" \
         "${SEEDS_ARGS[@]}" \
-        2>&1 | tee "$RESULT_FILE"
-    STATUS=${PIPESTATUS[0]}
-    set -e
-    if [[ $STATUS -ne 0 && $STATUS -ne 124 ]]; then
+        > "$RESULT_FILE" 2>&1; then
+        STATUS=0
+    else
+        STATUS=$?
+    fi
+    RC_KEY="${FAULTY_STEM//\//_}"
+    echo "$STATUS" > "${RC_DIR}/${RC_KEY}.rc"
+    echo "[done ] ${FAULTY_STEM} (rc=${STATUS})"
+}
+
+# Bounded job pool: launch up to JOBS sweeps at once, throttling with
+# `wait -n`. Same pattern as run_tests_all.sh's function-level pool.
+active=0
+for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
+    run_one_sweep "$FAULTY_ELF" &
+    active=$((active + 1))
+    if (( active >= JOBS )); then
+        wait -n 2>/dev/null || wait
+        active=$((active - 1))
+    fi
+done
+wait
+
+# Deterministic summary pass: iterate the faulty ELFs in their original
+# order and read back each sweep's result file + recorded exit code.
+declare -a SUMMARY_ROWS=()
+for FAULTY_ELF in "${FAULTY_ELFS[@]}"; do
+    FAULTY_STEM="$(rel_stem "$FAULTY_ELF" "$ELF_DIR")"
+    RESULT_FILE="${OUT_DIR}/${FAULTY_STEM}/test_result.txt"
+    RC_KEY="${FAULTY_STEM//\//_}"
+    STATUS="$(cat "${RC_DIR}/${RC_KEY}.rc" 2>/dev/null || echo 1)"
+    if [[ "$STATUS" -ne 0 && "$STATUS" -ne 124 ]]; then
         OVERALL_STATUS=1
     fi
 
     INEFF_STATUS="-"
     CORR_STATUS="-"
-    if [[ $STATUS -eq 124 ]] || grep -q "TimeoutExpired" "$RESULT_FILE"; then
+    if [[ "$STATUS" -eq 124 ]] || grep -q "TimeoutExpired" "$RESULT_FILE" 2>/dev/null; then
         INEFF_STATUS="TIMEOUT"
         CORR_STATUS="TIMEOUT"
-    elif grep -q "^\[RESULT\] ineffective test: DETECTED" "$RESULT_FILE"; then
+    elif grep -q "^\[RESULT\] ineffective test: DETECTED" "$RESULT_FILE" 2>/dev/null; then
         INEFF_STATUS="DETECTED"
-    elif grep -q "^\[RESULT\] ineffective test:" "$RESULT_FILE"; then
+    elif grep -q "^\[RESULT\] ineffective test:" "$RESULT_FILE" 2>/dev/null; then
         INEFF_STATUS="not detected"
     fi
-    if grep -q "^\[RESULT\] correction test: SATISFIED" "$RESULT_FILE"; then
+    if grep -q "^\[RESULT\] correction test: SATISFIED" "$RESULT_FILE" 2>/dev/null; then
         CORR_STATUS="SATISFIED"
-    elif grep -q "^\[RESULT\] correction test:" "$RESULT_FILE"; then
+    elif grep -q "^\[RESULT\] correction test:" "$RESULT_FILE" 2>/dev/null; then
         CORR_STATUS="not satisfied"
     fi
     SUMMARY_ROWS+=("${FAULTY_STEM}|${INEFF_STATUS}|${CORR_STATUS}")
-
-    echo "=== done: ${FUNC_NAME} / ${FAULTY_STEM} ==="
-    echo "[i] result -> ${RESULT_FILE}"
 done
 
 echo ""

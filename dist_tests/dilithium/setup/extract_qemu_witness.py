@@ -325,7 +325,9 @@ def find_arg_anchor(ll_text: str, reg_name: str) -> Tuple[str, int]:
     return m.group("anchor"), bits // 8
 
 
-def find_ret_anchor(ll_text: str, fn_name: str) -> str:
+def find_ret_anchor(ll_text: str, fn_name: str) -> Tuple[str, int]:
+    """Return (anchor_global_name, byte_width) for the scalar return value,
+    reading the real store width rather than assuming one byte."""
     anchor_name = f"__mbc_ret_anchor_{fn_name}"
     pattern = re.compile(
         r'store\s+volatile\s+i(?P<bits>\d+)[^\n]*?@' + re.escape(anchor_name)
@@ -336,7 +338,128 @@ def find_ret_anchor(ll_text: str, fn_name: str) -> str:
             f"Expected a 'store volatile ... @{anchor_name}' anchor write "
             f"in main() for scalar-output function '{fn_name}', found none."
         )
-    return anchor_name
+    return anchor_name, max(1, int(m.group("bits")) // 8)
+
+
+def find_fut_params(ll_text: str, fn_name: str) -> List[Tuple[str, str]]:
+    """Parse `define ... @<fn_name>(<params>)` into [(type, name), ...] in
+    declaration order (the C parameter names clang preserves), used by the
+    config-driven path which has no function_inputs sample to name the
+    layout entries from. Splits on top-level commas only so attributes like
+    range(i32 -128, 128) don't break the split."""
+    m = re.search(r'^define[^\n]*@' + re.escape(fn_name) + r'\(',
+                  ll_text, re.MULTILINE)
+    if not m:
+        raise ValueError(f"Could not find the definition of @{fn_name}")
+    pieces, depth, cur = [], 0, ""
+    for ch in ll_text[m.end():]:
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            if depth == 0:
+                break
+            depth -= 1
+        if ch == "," and depth == 0:
+            pieces.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    pieces.append(cur)
+    params: List[Tuple[str, str]] = []
+    for i, raw in enumerate(p.strip() for p in pieces):
+        if not raw:
+            continue
+        ty = raw.split()[0]
+        nm = re.search(r'%([\w.]+)\s*$', raw)
+        name = nm.group(1) if nm and not nm.group(1).isdigit() else f"arg{i}"
+        params.append((ty, name))
+    return params
+
+
+def load_config_entry(config_path: Path, fn_name: str):
+    """Return the scheme-json (dilithium.json) entry for fn_name, or None."""
+    if not config_path.exists():
+        return None
+    with open(config_path) as f:
+        cfg = json.load(f)
+    return cfg.get(fn_name)
+
+
+def derive_layout_from_config(ll_text: str, fn_name: str,
+                              output_keys: List[str],
+                              distributions: Dict[str, object]) -> Dict[str, dict]:
+    """Build the witness layout WITHOUT a function_inputs sample: parameter
+    names come from the FUT's own `define` line, inputs default to zero, and
+    the output parameter(s) (or the "return"/"ret" scalar-return sentinel)
+    plus any per-argument distribution come from the scheme json entry."""
+    allocas, scalar_ptr_names = extract_allocas(ll_text)
+    call_args = find_fut_call(find_main_body(ll_text), fn_name)
+    params = find_fut_params(ll_text, fn_name)
+
+    if len(params) != len(call_args):
+        raise ValueError(
+            f"Mismatch: @{fn_name} has {len(params)} params "
+            f"{[n for _, n in params]}, but main() calls it with "
+            f"{len(call_args)} arguments {call_args}."
+        )
+
+    is_scalar_return = (len(output_keys) == 1
+                        and output_keys[0] in ("return", "ret"))
+    if not is_scalar_return and any(o in ("return", "ret") for o in output_keys):
+        raise ValueError(
+            f"'{fn_name}': the return sentinel can't be combined with "
+            f"named-argument outputs ({output_keys})."
+        )
+
+    key_to_arg = {name: arg for (_, name), arg in zip(params, call_args)}
+    layout: Dict[str, dict] = {}
+    ptr_keys = set()
+
+    for key, (kind, val) in key_to_arg.items():
+        if kind == "ptr":
+            if val not in allocas:
+                raise ValueError(
+                    f"Call argument %{val} (param '{key}') has no matching "
+                    f"alloca with !llvmbmc.var in main()"
+                )
+            layout[key] = {"role": "input", "length": allocas[val]}
+            ptr_keys.add(key)
+            if val in scalar_ptr_names:
+                layout[key]["type"] = "scalar_ptr"
+                layout[key]["init_value"] = 0
+        elif kind == "reg":
+            anchor_name, byte_width = find_arg_anchor(ll_text, val)
+            layout[key] = {
+                "role": "input",
+                "type": "scalar",
+                "anchor": anchor_name,
+                "length": byte_width,
+                "init_value": find_global_init(ll_text, anchor_name),
+            }
+        elif kind == "imm":
+            print(f"[!] param '{key}' is a bare immediate ({val}); not "
+                  f"patchable.")
+        if key in layout and key in distributions:
+            layout[key]["distribution"] = distributions[key]
+
+    if is_scalar_return:
+        anchor, byte_width = find_ret_anchor(ll_text, fn_name)
+        layout["return"] = {
+            "role": "output",
+            "length": byte_width,
+            "type": "scalar",
+            "anchor": anchor,
+        }
+    else:
+        for output_key in output_keys:
+            if output_key not in ptr_keys:
+                raise ValueError(
+                    f"'output' key '{output_key}' does not map to a pointer "
+                    f"argument of @{fn_name} (params: {[n for _, n in params]})."
+                )
+            layout[output_key]["role"] = "output"
+
+    return layout
 
 
 def find_global_init(ll_text: str, anchor_name: str) -> int:
@@ -536,10 +659,10 @@ def derive_layout(ll_text: str, fn_name: str, sample: Dict[str, object]) -> Dict
                 layout[key]["output_distribution"] = post
 
     if is_scalar_return:
-        anchor = find_ret_anchor(ll_text, fn_name)
+        anchor, byte_width = find_ret_anchor(ll_text, fn_name)
         layout["return"] = {
             "role": "output",
-            "length": 1,
+            "length": byte_width,
             "type": "scalar",
             "anchor": anchor,
         }
@@ -591,6 +714,14 @@ def main():
              "and pqcrystals_dilithium_fips202_ref_). May be passed "
              "multiple times.",
     )
+    ap.add_argument(
+        "--config", type=Path, default=Path("dilithium.json"),
+        help="scheme json carrying per-function 'output'/'distribution' "
+             "(default: %(default)s). When the function's entry here has an "
+             "'output' key, the witness is built from it directly -- no "
+             "function_inputs sample is needed. Otherwise the sample under "
+             "--inputs-dir is used (legacy path).",
+    )
     args = ap.parse_args()
 
     ll_path = args.ll_file
@@ -602,17 +733,34 @@ def main():
         sys.exit(1)
 
     fn_name = ll_path.stem
-    sample_name = strip_dilithium_prefix(fn_name, args.extra_prefix)
-
-    inputs_json = args.inputs_dir / f"{sample_name}.json"
-    if not inputs_json.exists():
-        print(f"[!] function_inputs file not found: {inputs_json}", file=sys.stderr)
-        sys.exit(1)
-
     ll_text = ll_path.read_text()
-    sample = load_first_sample(inputs_json)
 
-    layout = derive_layout(ll_text, fn_name, sample)
+    # Primary path: the scheme json entry carries 'output' (and optional
+    # 'distribution'); needs no per-function trace sample.
+    entry = load_config_entry(args.config, fn_name)
+    if entry and "output" in entry:
+        raw_output = entry["output"]
+        output_keys = raw_output if isinstance(raw_output, list) else [raw_output]
+        if not output_keys:
+            print(f"[!] {args.config} entry for '{fn_name}' has an empty "
+                  f"'output'", file=sys.stderr)
+            sys.exit(1)
+        distributions = entry.get("distribution") or {}
+        layout = derive_layout_from_config(ll_text, fn_name, output_keys, distributions)
+        print(f"[i] {fn_name}: output/distribution taken from {args.config}")
+        sample = None
+    else:
+        # Legacy fallback: derive output/distribution from a trace sample.
+        sample_name = strip_dilithium_prefix(fn_name, args.extra_prefix)
+        inputs_json = args.inputs_dir / f"{sample_name}.json"
+        if not inputs_json.exists():
+            print(f"[!] no 'output' for '{fn_name}' in {args.config}, and no "
+                  f"function_inputs file: {inputs_json}", file=sys.stderr)
+            sys.exit(1)
+        sample = load_first_sample(inputs_json)
+
+    if sample is not None:
+        layout = derive_layout(ll_text, fn_name, sample)
     witness = build_qemu_witness(fn_name, layout)
 
     out_dir = args.out_dir / fn_name

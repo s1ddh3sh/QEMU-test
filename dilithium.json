@@ -1,113 +1,147 @@
 {
-    "pqcrystals_dilithium2_ref_poly_add":{
-        "secret-buf": "b"
+    "pqcrystals_dilithium2_ref_poly_add": {
+      "secret-buf": "b"
     },
-    "pqcrystals_dilithium2_ref_signature_internal":{
-        "secret-buf": "sk",
-        "eph_secret":"rnd",
-        "fixed-scalars":"mlen,prelen"
+    "pqcrystals_dilithium2_ref_signature_internal": {
+      "secret-buf": "sk",
+      "eph_secret": "rnd",
+      "fixed-scalars": "mlen,prelen"
     },
-    "pqcrystals_dilithium2_ref_polyvecl_add":{
-        "secret-buf":"u",
-        "eph_secret":"v"
+    "pqcrystals_dilithium2_ref_polyvecl_add": {
+      "secret-buf": "u",
+      "eph_secret": "v"
     },
-    "pqcrystals_dilithium2_ref_poly_ntt":{
-        "secret-buf":"a"
+    "pqcrystals_dilithium2_ref_poly_ntt": {
+      "secret-buf": "a"
     },
-    "pqcrystals_dilithium2_ref_invntt_tomont":{
-        "secret-buf":"a"
+    "pqcrystals_dilithium2_ref_invntt_tomont": {
+      "secret-buf": "a"
     },
-    "pqcrystals_dilithium2_ref_ntt":{
-        "secret-buf":"a"
+    "pqcrystals_dilithium2_ref_ntt": {
+      "secret-buf": "a"
     },
-    "pqcrystals_dilithium2_ref_open(calibrate error)":{
-        "secret-buf":"sm",
-        "fixed-scalars":"mlen,smlen,ctxlen"
+    "pqcrystals_dilithium2_ref_open": {
+      "secret-buf": "sm",
+      "fixed-scalars": "mlen,smlen,ctxlen"
     },
-    "pqcrystals_dilithium2_ref_poly_caddq":{
-        "secret-buf":"a"
+    "pqcrystals_dilithium2_ref_poly_caddq": {
+      "secret-buf": "a"
     },
-    "pqcrystals_dilithium2_ref_poly_decompose":{
-        "secret-buf":"a"
+    "pqcrystals_dilithium2_ref_poly_decompose": {
+      "secret-buf": "a"
     },
-    "pqcrystals_dilithium2_ref_poly_invntt_tomont":{
-        "secret-buf":"a"
+    "pqcrystals_dilithium2_ref_poly_invntt_tomont": {
+      "secret-buf": "a"
     },
-    "pqcrystals_dilithium2_ref_poly_make_hint":{
-        "secret-buf":"a0"
+    "pqcrystals_dilithium2_ref_poly_make_hint": {
+      "secret-buf": "a0"
     },
-    "pqcrystals_dilithium2_ref_poly_pointwise_montgomery":{
-        "secret-buf":"b"
+    "pqcrystals_dilithium2_ref_poly_pointwise_montgomery": {
+      "secret-buf": "b"
     },
-    "pqcrystals_dilithium2_ref_poly_sub":{
-        "secret-buf":"b"
+    "pqcrystals_dilithium2_ref_poly_sub": {
+      "secret-buf": "b"
     },
-    "pqcrystals_dilithium2_ref_poly_uniform":{
-        "secret-buf":"seed",
-        "fixed-scalars":"nonce"
+    "pqcrystals_dilithium2_ref_poly_uniform": {
+      "secret-buf": "seed",
+      "fixed-scalars": "nonce"
     },
-    "pqcrystals_dilithium2_ref_poly_uniform_eta":{
-        "secret-buf":"seed",
-        "fixed-scalars":"nonce"
+    "pqcrystals_dilithium2_ref_poly_uniform_eta": {
+      "secret-buf": "seed",
+      "fixed-scalars": "nonce"
     },
-    "pqcrystals_dilithium2_ref_poly_uniform_gamma1":{
-        "secret-buf":"seed",
-        "fixed-scalars":"nonce"
+    "pqcrystals_dilithium2_ref_poly_uniform_gamma1": {
+      "secret-buf": "seed",
+      "fixed-scalars": "nonce"
     },
-    "pqcrystals_dilithium2_ref_polyvec_matrix_pointwise_montgomery":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyvec_matrix_pointwise_montgomery": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_add":{
-        "secret-buf":"u",
-        "eph_secret":"v"
+    "pqcrystals_dilithium2_ref_polyveck_add": {
+      "secret-buf": "u",
+      "eph_secret": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_caddq":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyveck_caddq": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_decompose":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyveck_decompose": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_invntt_tomont":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyveck_invntt_tomont": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_ntt":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyveck_ntt": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_pointwise_poly_montgomery":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyveck_pointwise_poly_montgomery": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_reduce":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyveck_reduce": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_shiftl":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyveck_shiftl": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyveck_sub":{
-        "secret-buf":"v",
-        "eph_secret":"u"
+    "pqcrystals_dilithium2_ref_polyveck_sub": {
+      "secret-buf": "v",
+      "eph_secret": "u"
     },
-    "pqcrystals_dilithium2_ref_polyveck_uniform_eta":{
-        "secret-buf":"seed",
-        "fixed-scalars":"nonce"
+    "pqcrystals_dilithium2_ref_polyveck_uniform_eta": {
+      "secret-buf": "seed",
+      "fixed-scalars": "nonce"
     },
-    "pqcrystals_dilithium2_ref_polyvecl_invntt_tomont":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyvecl_invntt_tomont": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyvecl_ntt":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyvecl_ntt": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyvecl_pointwise_acc_montgomery":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyvecl_pointwise_acc_montgomery": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyvecl_pointwise_poly_montgomery":{
-        "secret-buf":"v"
+    "pqcrystals_dilithium2_ref_polyvecl_pointwise_poly_montgomery": {
+      "secret-buf": "v"
     },
-    "pqcrystals_dilithium2_ref_polyvecl_uniform_eta":{
-        "secret-buf":"seed",
-        "fixed-scalars":"nonce"
+    "pqcrystals_dilithium2_ref_polyvecl_uniform_eta": {
+      "secret-buf": "seed",
+      "fixed-scalars": "nonce"
     },
-    "pqcrystals_dilithium2_ref_polyvecl_uniform_gamma1":{
-        "secret-buf":"seed",
-        "fixed-scalars":"nonce"
+    "pqcrystals_dilithium2_ref_polyvecl_uniform_gamma1": {
+      "secret-buf": "seed",
+      "fixed-scalars": "nonce"
+    },
+    "keccak_absorb": {
+      "secret-buf": "in",
+      "fixed-scalars": "pos,r,inlen",
+      "output": "s"
+    },
+    "pqcrystals_dilithium2_ref_decompose": {
+      "secret-buf": "a",
+      "output": "a0"
+    },
+    "pqcrystals_dilithium2_ref_power2round": {
+      "secret-buf": "a",
+      "output": "a0"
+    },
+    "pqcrystals_dilithium2_ref_polyveck_chknorm": {
+      "secret-buf": "v",
+      "fixed-scalars": "bound",
+      "output": "return"
+    },
+    "pqcrystals_dilithium2_ref_polyvecl_chknorm": {
+      "secret-buf": "v",
+      "fixed-scalars": "bound",
+      "output": "return"
+    },
+    "pqcrystals_dilithium2_ref_unpack_sk": {
+      "secret-buf": "sk",
+      "output": [
+        "rho",
+        "tr",
+        "key",
+        "t0",
+        "s1",
+        "s2"
+      ]
     }
 }
