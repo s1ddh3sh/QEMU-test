@@ -265,6 +265,19 @@ def _equal_fraction(a, b):
     return sum(1 for i in range(n) if a[i] == b[i]) / n
 
 
+def _entropy_bits(coeffs):
+    """Shannon entropy in bits of the empirical value distribution of a list of
+    coefficients. 0.0 for an empty or constant list; at most log2(#distinct)."""
+    if not coeffs:
+        return 0.0
+    total = len(coeffs)
+    h = 0.0
+    for cnt in collections.Counter(coeffs).values():
+        p = cnt / total
+        h -= p * math.log2(p)
+    return h
+
+
 def collect(label, elf_path, seeds, cfg):
     sess = SecretVectorSession(elf_path, cfg)
     # one capture (list of coeff lists) per swept seed
@@ -283,6 +296,19 @@ def collect(label, elf_path, seeds, cfg):
         allc = [poly for polys in per_seed for poly in polys[lo:hi]]
         group_hist[gname] = _value_hist(allc) if allc else {}
 
+    # Per-polynomial Shannon entropy (bits/coeff) of the sampled coefficients,
+    # pooled over the swept seeds, plus a per-group summary. This feeds the
+    # independent entropy test: a fault that biases or collapses one sampler
+    # lowers that polynomial's entropy, whether or not it also collides a pair.
+    poly_entropy = []
+    for i in range(cfg.n_polys):
+        coeffs_i = [v for polys in per_seed if len(polys) > i for v in polys[i]]
+        poly_entropy.append(_entropy_bits(coeffs_i))
+    group_entropy = {}
+    for gname, (lo, hi) in cfg.groups.items():
+        allc = [v for polys in per_seed for poly in polys[lo:hi] for v in poly]
+        group_entropy[gname] = _entropy_bits(allc) if allc else 0.0
+
     # equal-coordinate fraction per configured pair, averaged over the seeds
     # where both polynomials of the pair were captured.
     pair_fracs = []
@@ -297,6 +323,8 @@ def collect(label, elf_path, seeds, cfg):
         "n_polys_expected": cfg.n_polys, "min_polys_captured": min_polys,
         "n_full_seeds": len(full),
         "group_hist": group_hist,
+        "group_entropy": group_entropy,
+        "poly_entropy": poly_entropy,
         "pair_equal_fracs": pair_fracs,
         "mean_pair_equal_frac": mean_pair,
     }
@@ -305,29 +333,50 @@ def collect(label, elf_path, seeds, cfg):
     for gname in cfg.groups:
         hs = " ".join(f"{k}:{v*100:.0f}%" for k, v in res["group_hist"][gname].items())
         print(f"[i] {label}: {gname} value dist (top): {hs}")
+    for gname in cfg.groups:
+        print(f"[i] {label}: {gname} entropy {res['group_entropy'][gname]:.2f} bits/coeff")
     print(f"[i] {label}: {cfg.pair_desc} equal-coordinate fraction "
           f"{mean_pair:.3f} (per pair: {[round(f,3) for f in pair_fracs]})")
     return res
 
 
-def compare(res_c, res_f, cfg):
+def compare(res_c, res_f, cfg, entropy_drop=1.0):
     fc = res_c["mean_pair_equal_frac"]
     ff = res_f["mean_pair_equal_frac"]
+    # --- Nonce-reuse test (compares a pair of polynomials to each other) ---
     # Nonce-reuse collapse: the faulty pair-equality is near-total AND much
     # higher than the correct build's chance level.
     reuse = ff >= 0.90 and ff >= fc + 0.40
     # Skipped-secret collapse: the faulty build samples fewer secret polys.
     missing = res_f["min_polys_captured"] < res_c["min_polys_captured"]
+
+    # --- Entropy test (independent: each polynomial against itself) ---
+    # For each sampled polynomial, compare the faulty build's per-coefficient
+    # entropy with the correct build's. A drop of more than `entropy_drop` bits
+    # flags a biased or collapsed sampler, even with no nonce-reuse collision.
+    # entropy_drop=None disables the test.
+    ent_c = res_c["poly_entropy"]
+    ent_f = res_f["poly_entropy"]
+    m = min(len(ent_c), len(ent_f))
+    ent_drops = [round(ent_c[i] - ent_f[i], 3) for i in range(m)]
+    max_drop = max(ent_drops) if ent_drops else 0.0
+    low_entropy = entropy_drop is not None and max_drop > entropy_drop
+
     return {"correct_equal_frac": fc, "faulty_equal_frac": ff, "delta": ff - fc,
             "correct_min_polys": res_c["min_polys_captured"],
             "faulty_min_polys": res_f["min_polys_captured"],
             "nonce_reuse": reuse, "missing_secret_poly": missing,
-            "collapsed": reuse or missing}
+            "correct_poly_entropy": [round(x, 3) for x in ent_c],
+            "faulty_poly_entropy": [round(x, 3) for x in ent_f],
+            "entropy_drops": ent_drops, "max_entropy_drop": max_drop,
+            "entropy_drop_threshold": entropy_drop, "low_entropy": low_entropy,
+            "collapsed": reuse or missing,
+            "leak": reuse or missing or low_entropy}
 
 
-def run(cfg, correct_elf, faulty_elf, seeds, report=None):
+def run(cfg, correct_elf, faulty_elf, seeds, report=None, entropy_drop=1.0):
     print("=" * 74)
-    print(f"{cfg.name}: secret-vector distribution + coordinate-equality test")
+    print(f"{cfg.name}: secret-vector nonce-reuse + entropy test")
     print("=" * 74)
     try:
         res_c = collect("correct", correct_elf, seeds, cfg)
@@ -336,38 +385,58 @@ def run(cfg, correct_elf, faulty_elf, seeds, report=None):
         print(f"[!] emulation failed: {e}", file=sys.stderr)
         return 2
 
-    cmp = compare(res_c, res_f, cfg)
+    cmp = compare(res_c, res_f, cfg, entropy_drop)
     print()
     print("=" * 74)
     print("Verdict")
     print("=" * 74)
+
+    # --- Test 1: nonce-reuse collision (a pair compared to each other) ---
+    print("[test 1] nonce-reuse collision")
     print(f"[i] {cfg.pair_desc} equal-coordinate fraction: "
           f"correct {cmp['correct_equal_frac']:.3f} vs faulty "
           f"{cmp['faulty_equal_frac']:.3f} (delta {cmp['delta']:+.3f})")
     print(f"[i] secret polys sampled: correct {cmp['correct_min_polys']} vs "
           f"faulty {cmp['faulty_min_polys']} (of {cfg.n_polys} expected)")
-
     if cmp["nonce_reuse"]:
         print(f"[!] NONCE-REUSE COLLAPSE: in the faulty build the {cfg.pair_desc} "
               "polynomials are identical on almost every coordinate, while the "
               "correct build is near the noise chance level -- the sampling nonce "
               "no longer separates them, collapsing the LWE/mask hardness.")
-        exit_code = 1
     elif cmp["missing_secret_poly"]:
         print(f"[!] MISSING SECRET POLY: the faulty build sampled only "
               f"{cmp['faulty_min_polys']} of {cfg.n_polys} secret polynomials "
               "(a sampler call was skipped), so part of the secret vector is left "
               "unset -- a secret-generation fault.")
-        exit_code = 1
     else:
-        print(f"[i] NO COLLAPSE: the faulty build's {cfg.pair_desc} polynomials are "
-              "no more equal than the correct build's.")
-        exit_code = 0
+        print(f"[i] no nonce-reuse / missing-poly collapse ({cfg.pair_desc} no more "
+              "equal than the correct build).")
+
+    # --- Test 2: independent per-polynomial entropy ---
+    print("[test 2] secret / ephemeral entropy")
+    if entropy_drop is None:
+        print("[i] entropy test disabled (--no-entropy)")
+    else:
+        print(f"[i] per-poly entropy (bits/coeff): correct {cmp['correct_poly_entropy']}")
+        print(f"[i] per-poly entropy (bits/coeff): faulty  {cmp['faulty_poly_entropy']}")
+        print(f"[i] max entropy drop {cmp['max_entropy_drop']:.3f} bit(s) "
+              f"(threshold {entropy_drop})")
+        if cmp["low_entropy"]:
+            print(f"[!] LOW ENTROPY: the faulty build lost more than {entropy_drop} "
+                  "bit(s) of entropy on some sampled polynomial -- a biased or "
+                  "collapsed secret sampler, independent of any nonce-reuse "
+                  "collision.")
+        else:
+            print("[i] no significant entropy drop.")
+
+    exit_code = 1 if cmp["leak"] else 0
 
     if report:
         with open(report, "w") as f:
             json.dump({"scheme": cfg.name, "correct": res_c, "faulty": res_f,
-                       "comparison": cmp, "collapse_detected": exit_code == 1},
+                       "comparison": cmp, "collapse_detected": cmp["collapsed"],
+                       "low_entropy_detected": cmp["low_entropy"],
+                       "leak_detected": exit_code == 1},
                       f, indent=2)
         print(f"[i] report written to {report}")
     return exit_code
@@ -422,6 +491,12 @@ def main():
     ap.add_argument("--n-seeds", type=int, default=32)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--report", default=None)
+    ap.add_argument("--entropy-drop", type=float, default=1.0,
+                    help="entropy test: flag a sampled polynomial whose entropy "
+                         "falls more than this many bits below the correct build "
+                         "(default 1.0)")
+    ap.add_argument("--no-entropy", action="store_true",
+                    help="disable the independent entropy test (test 2)")
     args = ap.parse_args()
 
     cfg = CONFIGS[args.scheme]()
@@ -436,7 +511,9 @@ def main():
     rng = random.Random(args.seed)
     seeds = [bytes(rng.randrange(256) for _ in range(cfg.secret_len))
              for _ in range(args.n_seeds)]
-    sys.exit(run(cfg, args.correct_elf, args.faulty_elf, seeds, args.report))
+    entropy_drop = None if args.no_entropy else args.entropy_drop
+    sys.exit(run(cfg, args.correct_elf, args.faulty_elf, seeds, args.report,
+                 entropy_drop))
 
 
 if __name__ == "__main__":

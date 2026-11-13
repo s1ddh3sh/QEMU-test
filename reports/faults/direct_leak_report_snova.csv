@@ -16,22 +16,22 @@ snova,_SNOVA_I_S_AES_ref_sign,binOpFault/_SNOVA_I_S_AES_ref_sign_line189_opA,dir
 snova,_SNOVA_I_S_AES_ref_sign,binOpFault/_SNOVA_I_S_AES_ref_sign_line189_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
 snova,_SNOVA_I_S_AES_ref_sign,binOpFault/_SNOVA_I_S_AES_ref_sign_line189_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
 snova,_SNOVA_I_S_AES_ref_sign,binOpFault/_SNOVA_I_S_AES_ref_sign_line189_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
-snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line184_mem,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line184_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
 snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line187_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
 snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line191_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
 snova,_SNOVA_I_S_AES_ref_sk_expand,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sk_expand_fnSkip_memcpy_line0,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'sk'
-snova,compress_gf,binOpFault/compress_gf_line19_opA,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line19_opB,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line19_undef,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line19_zero,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line21_opA,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line21_opB,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line21_undef,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line21_zero,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line22_opA,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
+snova,compress_gf,binOpFault/compress_gf_line19_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line19_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line19_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line19_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line21_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line21_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line21_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line21_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line22_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
 snova,compress_gf,binOpFault/compress_gf_line22_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
-snova,compress_gf,binOpFault/compress_gf_line22_undef,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
-snova,compress_gf,binOpFault/compress_gf_line22_zero,direct_leak_result.txt,direct_leak,error,"RunFailed: faulty run for gf_array[-1]=0 (seed=0) raised: TrialError: layout has 2 pointer buffers ['byte_array', 'gf_array'], but DWARF says compress_gf has 1 pointer-typed formal parameters (out of 2 total: [True, False]) — order/count mismatch"
+snova,compress_gf,binOpFault/compress_gf_line22_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
+snova,compress_gf,binOpFault/compress_gf_line22_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
 snova,compress_gf,binOpFault/compress_gf_line37_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
 snova,compress_gf,binOpFault/compress_gf_line37_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
 snova,compress_gf,binOpFault/compress_gf_line37_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'gf_array'
@@ -261,61 +261,61 @@ snova,keccak_inc_finalize,loadStoreSkip/keccak_inc_finalize_line1_mem,direct_lea
 snova,keccak_inc_finalize,loadStoreSkip/keccak_inc_finalize_line21_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc_pre'
 snova,keccak_inc_finalize,loadStoreSkip/keccak_inc_finalize_line23_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc_pre'
 snova,keccak_inc_finalize,loadStoreSkip/keccak_inc_finalize_line8_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc_pre'
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_opA,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_opB,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_undef,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_zero,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line11_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line18_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line21_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line30_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line38_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line40_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line55_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line62_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line6_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line71_mem,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
-snova,keccak_inc_squeeze,loopOrFuncSkip/keccak_inc_squeeze_fnSkip_KeccakF1600_StatePermute_line46,direct_leak_result.txt,direct_leak,error,RuntimeError: no collected trace and no witness/active_lengths.json to collect one (run the scheme's calibrate first)
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line12_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line14_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line15_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line22_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line24_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line25_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line26_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line27_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line39_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line59_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_opA,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_opB,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_undef,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,binOpFault/keccak_inc_squeeze_line68_zero,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line11_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line18_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line21_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line30_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line38_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line40_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line55_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line62_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line6_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loadStoreSkip/keccak_inc_squeeze_line71_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
+snova,keccak_inc_squeeze,loopOrFuncSkip/keccak_inc_squeeze_fnSkip_KeccakF1600_StatePermute_line46,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 's_inc'
 snova,randombytes,loopOrFuncSkip/randombytes_fnSkip_memcpy_line29,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals correct output 'x'
 snova,randombytes,loopOrFuncSkip/randombytes_fnSkip_memcpy_line35,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals correct output 'x'
 snova,shake256,loopOrFuncSkip/shake256_fnSkip_shake_squeeze_line4,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'in'
@@ -327,3 +327,104 @@ snova,shake_finalize,loadStoreSkip/shake_finalize_line1_mem,direct_leak_result.t
 snova,shake_finalize,loopOrFuncSkip/shake_finalize_fnSkip_keccak_inc_finalize_line3,direct_leak_result.txt,direct_leak,yes,secret-buf: output 'instance' equals input 'instance_pre' in all 16 trace(s) (the correct output differs from it in 16)
 snova,shake_squeeze,loadStoreSkip/shake_squeeze_line1_mem,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
 snova,shake_squeeze,loopOrFuncSkip/shake_squeeze_fnSkip_keccak_inc_squeeze_line3,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'instance'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line238_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line330_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line340_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line399_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line427_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line472_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line477_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line566_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line574_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line624_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line675_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line741_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line794_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line823_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line832_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line841_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line843_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line845_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line847_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line853_mem,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line857_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line865_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line868_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line876_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line880_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line886_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line888_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line892_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line904_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line911_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line918_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line919_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loadStoreSkip/_SNOVA_I_S_AES_ref_sign_line922_mem,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_compress_gf_line948,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_expand_T12_line37,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_inv_line858,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_line116,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_line646,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_line73,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line284,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line446,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line453,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line518,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line641,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line760,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line765,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mat_mul_add_lr_line943,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line239,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line341,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line406,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line434,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line575,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line631,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line684,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line748,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line803,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line866,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line889,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_mult_line914,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line133,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line142,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line240,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line342,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line407,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line435,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line576,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line632,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line685,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line749,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line804,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_set_add_line915,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_sub_line473,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_sub_line890,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_gf_sub_line920,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_memcpy_line926,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_memset_line158,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_shake256_init_line166,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_shake_absorb_line168,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_shake_absorb_line169,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_shake_absorb_line170,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_shake_absorb_line171,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_shake_finalize_line172,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_shake_squeeze_line180,direct_leak_result.txt,direct_leak,timeout,"subprocess.TimeoutExpired: no verdict within 120 s, skipped"
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line154,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line195,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line196,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line197,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line198,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line367,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line368,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line373,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line40,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line482,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line483,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line603,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line604,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line605,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line712,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line713,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line714,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
+snova,_SNOVA_I_S_AES_ref_sign,loopOrFuncSkip/_SNOVA_I_S_AES_ref_sign_fnSkip_snova_memset_line82,direct_leak_result.txt,direct_leak,no,secret-buf: no faulty output equals input 'skx'
