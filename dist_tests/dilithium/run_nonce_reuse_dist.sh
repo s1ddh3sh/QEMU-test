@@ -125,13 +125,22 @@ plan_one_func() {
 
     local correct_elf="${elf_dir}/${GATED_DIR}/${SCHEME}_${func_name}.elf"
 
-    if [[ ! -f "$correct_elf" && "$NO_BUILD" -eq 0 && "$elf_dir_default" -eq 1 ]]; then
+    if [[ "$NO_BUILD" -eq 0 && "$elf_dir_default" -eq 1 ]]; then
         if [[ ! -d "${src_dir}/${GATED_DIR}" ]]; then
-            echo "[!] ${func_name}: no gated ELFs under ${elf_dir} and no gated source IR under ${src_dir}/${GATED_DIR}/ -- skipping" >&2
+            echo "[!] ${func_name}: no gated source IR under ${src_dir}/${GATED_DIR}/ -- skipping" >&2
             return 1
         fi
         [[ -x "$BUILD_SH" ]] || { echo "[!] ${SCHEME}_build.sh not found/executable: $BUILD_SH" >&2; return 1; }
-        echo "[i] ${func_name}: gated ELFs not found; building from ${src_dir} via ${SCHEME}_build.sh ..."
+        # Force a fresh compile of the (possibly regenerated, gated) .ll: drop any
+        # stale ELF tree for this function first. This removes BOTH the correct
+        # build (${elf_dir}/${GATED_DIR}/) and every faulty build
+        # (${elf_dir}/**/${GATED_DIR}/), so new gated IR is never shadowed by old
+        # ELFs. Pass --no-build to reuse an existing tree as-is.
+        if [[ -d "$elf_dir" ]]; then
+            echo "[i] ${func_name}: removing stale ELF tree ${elf_dir} to force a fresh rebuild"
+            rm -rf "$elf_dir"
+        fi
+        echo "[i] ${func_name}: building gated ELFs from ${src_dir} via ${SCHEME}_build.sh ..."
         "$BUILD_SH" "$src_dir" || { echo "[!] ${func_name}: build failed -- skipping" >&2; return 1; }
     fi
 

@@ -291,6 +291,7 @@ The computation looks like:
 [+] INEFFECTIVE hit at pos 0: a pair exists on each of 4 public seeds [0, 1, 2, 3], constant over 1 ephemeral draw(s): 
 p=0: s1=0 (ineffective) vs s2=-829 (effective), p=1: s1=0 (ineffective) vs s2=-829 (effective), 
 p=2: s1=0 (ineffective) vs s2=-829 (effective), p=3: s1=0 (ineffective) vs s2=-829 (effective)
+
 [+] CORRECTION hit at pos 0: s=-829, alpha=1 constant across 4 public backgrounds (seeds=[0, 1, 2, 3]) x 1 ephemeral draw(s)
 [i] stopping sweep at sv=-829: 66 secret values examined (66 newly collected, 0 reused from disk), out of a possible 3329 -- 2.0% of the full sweep.
 
@@ -298,93 +299,71 @@ p=2: s1=0 (ineffective) vs s2=-829 (effective), p=3: s1=0 (ineffective) vs s2=-8
 [RESULT] correction test: SATISFIED at pos 0 (s=-829, alpha=1: y1 = y2 xor alpha for all 4 swept p x 1 ephemeral draw(s))
 ```
 
-# DONE TILL HERE.
-
 ### **Target function.** `poly_add(r, a, b)` :
 
 - computes `r[i] = a[i] + b[i]`.
 - In `indcpa_enc`  encryption function, the second ciphertext component `v` is built by two of these
 
 ```c
-v = tᵀr + e2                      // poly_add(&v, &v, &epp)   
-v = tᵀr + e2 + Decompress(m)      // poly_add(&v, &v, &k)     
-pack_ciphertext(c, &b, &v);       // v IS the ciphertext coefficient
+poly_add(&v, &v, &epp);                          // v = tᵀr + e2 (epp = e2)
+poly_add(&v, &v, &k);                            // v = tᵀr + e2 + decomp(m)
+poly_reduce(&v);
+pack_ciphertext(c, &b, &v);                   // v Is packed into the ciphertext
 ```
 
-### Hermelink, Pessl, Pöppelmann, *Fault-Enabled Chosen-Ciphertext Attacks on Kyber* :
+### Hermelink, Pessl, Poppelmann, *Fault-Enabled Chosen-Ciphertext Attacks on Kyber* :
 
-The paper flips one **bit** of a valid ciphertext and lets a fault **"correct"**
-that ciphertext again during decapsulation, using the Fujisaki–Okamoto
-re-encryption + equality test as an oracle (decapsulation succeeds ⇔ the net
-perturbation did not change the decoded message). We do not inject bit faults,
-so the match is **not the same location or primitive** — but the framework
-flags the same *correctable additive perturbation of the ciphertext* through
-the **correction test (T_CF)** on `poly_add`.
+The paper flips **one** **bit** of a valid ciphertext and lets a fault **"correct"**
+that ciphertext again during decapsulation. We do not inject bit faults,
+so the match is **not the same location or primitive,** but flags the same *correctable output of the ciphertext* through the **correction test (T_CF)** on `poly_add`.
 
-So `a = v` (the running accumulator) and `b` is the term being folded into
-the ciphertext (`e2`, resp. the message encoding `k = Decompress(m)`). This
-same `poly_add` is re-executed in the FO **re-encryption** during decapsulation.
+So `a = v` (the running accumulator) and `b = epp` is the term added.
 
-**Target instructions from taint:**
+**Target instructions from `poly_add`:**
 
 | IR line | instruction | meaning |
 | --- | --- | --- |
 | 5 | `%0 = load a[i]` | running `v` |
-| 7 | `%1 = load b[i]` | the addend being folded in |
+| 7 | `%1 = load b[i]` | load 2nd operand |
 | 8 | `%add = add %0, %1` | `v + b` |
 | 10 | `store r[i]` | write the ciphertext coefficient |
 
-**Fault : drop the addend `b`** — `line7_mem` (skip the load of `b`) or
-`line8_opA` (drop that operand of the add). Either leaves
+**Fault : skip the load `b`** or `%add = add %0, 0` (zeroB). Either fault leaves 
 
-```
-r = a            instead of   r = a + b
-```
+`v = v instead of  v = v + epp`
 
 so the ciphertext coefficient is shifted by the **constant additive
 correction `α = b`** — exactly an additive ciphertext manipulation that a
 later step could "correct" by adding `b` back.
 
-**Detection : correction test (T_CF).** The induced divergence is a clean,
-secret-dependent additive offset `(y1 − y2) mod q = α`, and here `α` equals the
-dropped addend itself:
+**Detection : correction test (T_CF).** 
 
 ```
-// loadStoreSkip/pqcrystals_kyber768_ref_poly_add_line7_mem/correction_smt_result.txt
-// (identical witness for binOpFault/..._line8_opA)
-[i] 256 secret value(s) of b[0] x every public background p (symbolic)
-pos 0: 255/256 secret values with (y1 - y2) mod 3329 = alpha (alpha != 0) for all p
-    s=13, alpha=13
-    s=26, alpha=26
-    ...
-[RESULT] correction test: SATISFIED at pos 0 (s=13, alpha=13: (y1 - y2) mod 3329 = alpha for every p)
+[+] INEFFECTIVE hit at pos 0: a pair exists on each of 4 public seeds [0, 1, 2, 3], constant over 1 ephemeral draw(s): 
+p=0: s1=0 (ineffective) vs s2=13 (effective), p=1: s1=0 (ineffective) vs s2=13 (effective), 
+p=2: s1=0 (ineffective) vs s2=13 (effective), p=3: s1=0 (ineffective) vs s2=13 (effective)
+
+[+] CORRECTION hit at pos 0: s=13, alpha=13 constant across 4 public backgrounds (seeds=[0, 1, 2, 3]) x 1 ephemeral draw(s)
+[i] stopping sweep at sv=13: 2 secret values examined (2 newly collected, 0 reused from disk), out of a possible 3329 -- 0.1% of the full sweep.
+
+[RESULT] ineffective test: DETECTED at pos 0 (s1=0 ineffective, s2=13 effective; pair on each of 4 public seeds, constant over 1 ephemeral draw(s))
+[RESULT] correction test: SATISFIED at pos 0 (s=13, alpha=13: y1 = y2 xor alpha for all 4 swept p x 1 ephemeral draw(s))
 ```
 
-- `α = s` for 255/256 swept values ⇒ the correction amount **is** the secret
-addend `b`; a correct-and-observe primitive on `v` therefore leaks it.
-- Only dropping the **clean addend `b`** gives a constant `α`. Dropping the
-running accumulator (`line5_mem`, i.e. `r = b`) or skipping the store
-(`line10_mem`) is proven **not satisfied** — `Δ` then tracks the public
-background, not a fixed correction.
-
-**Why this is the Hermelink analog.** Hermelink needs a *controlled additive
-perturbation of the ciphertext that can be corrected*, with the FO verdict as
-the secret oracle. The paper realizes it as a bit-flip + a correcting fault;
-here the correction test proves `poly_add` admits a **fixed, secret-dependent
-additive correction `α` on the ciphertext coefficient `v`** — the same primitive
-through a different fault model (operand drop, not bit-flip). Like the paper's
-attack, it is tied to the ciphertext arithmetic rather than one precise skipped
-instruction, and the fault window spans both encryption and FO re-encryption.
+# DONE TILL HERE
 
 ---
 
-## Target Function. PRF `= SHAKE256(noiseseed ‖ nonce)`: the noise sampler
+## Target Function. `indcpa_keypair_derand` : keygen for kyber
 
 In `indcpa_keypair_derand` the secret and error polynomials are drawn as
 
 ```
-s[i] = CBD_η( PRF(noiseseed, nonce = i)     )   for i = 0..k−1
-e[i] = CBD_η( PRF(noiseseed, nonce = k+i)   )   for i = 0..k−1
+
+  for (i = 0; i < KYBER_K; i++)
+    poly_getnoise_eta1(&skpv[i], noiseseed, nonce++);
+  for (i = 0; i < KYBER_K; i++)
+    poly_getnoise_eta1(&e[i], noiseseed, nonce++);
 ```
 
 The **nonce** is the only thing that makes the `2k` draws differ. The PRF is
@@ -393,38 +372,76 @@ permute (`KeccakF1600_StatePermute`), squeeze (`keccak_squeeze`).
 
 ### Ravi, et al., *Number "Not Used" Once* :
 
-- **Freeze / drop the nonce inside the PRF so every draw uses the same
-keystream.** A fault that makes the sponge state independent of the
-absorbed nonce byte — e.g.
+**Detection : $T_{\mathrm{DIST}}$ (`project.tex`).** The test captures the
+`2k = 6` sampled polynomials over `N` random seeds and flags a leak if either
+part fires:
 
 ```
-keccak_absorb_once_line38_mem   // skip the store that mixes in the nonce byte
-KeccakF1600_StatePermute_line8_mem   // skip permutation so output ignores the input
-keccak_squeeze_line27_mem       // squeeze the same state for every nonce
+φ_ENT ≡ ∃ i :  H_i^ref − H_i > τ            // some poly loses > τ (≈1 bit) of entropy
+φ_CMP ≡ (ē ≥ ē_ref + τ_e)  ∨  (ft sampled fewer polynomials than f)
+φ_DIST = φ_ENT ∨ φ_CMP
 ```
 
-makes `PRF(seed, i)` identical for all `i`, so **all `2k` polynomials
-collapse onto each other**: `s[0] = s[1] = … = e[k−1]`.
+where `H_i` is the per-coefficient entropy of polynomial `i` and `ē` is the mean
+equal-fraction `eq(s_i, e_i)` over the pairs. Correct draws agree only by chance
+(`ē_ref ≈ 0.27` for `CBD(η=2)`); a frozen nonce drives `ē → 1`.
 
-**Detection : nonce-reuse distribution test.** Sample the `2k = 6`
-polynomials over many seeds and compare:
+The **genuine NNUO leak** is the nonce-reuse branch of `φ_CMP`: `ē` jumps to
+`1.0` **while entropy stays ~2.0 bits** (`φ_ENT` does *not* fire) — the
+polynomials are still random per seed, they have just stopped depending on the
+nonce, so `s_i = e_i`. The 20 flagged faults fall into three groups by which
+clause fires:
+
+#### Group 1 — `φ_CMP` nonce reuse, entropy intact (the real NNUO) — 14 faults
+
+The PRF sponge is made **independent of the absorbed nonce**, so every
+`PRF(seed, i)` returns the same stream and all 6 polys become identical
+(`ē = 1.0`) yet still vary per seed (`H_i ≈ 2.0`). `φ_CMP` fires, `φ_ENT` does not.
 
 ```
-// nonce_reuse_dist_report.json  (comparison)
-correct_equal_frac : 0.273     // ~coincidental CBD agreement
-faulty_equal_frac  : 1.0       // every pair of polys is identical
-nonce_reuse        : true
-faulty_poly_entropy: [2.04, 2.04, 2.04, 2.04, 2.04, 2.04]   // still ~log2(5) bits
-low_entropy        : false
+keccak_absorb_once : line38_mem, line59_mem, line61_mem   // skip the stores that fold the
+                     line43_{zero,opB,undef}              //   nonce byte + rate words into
+                     line47_{zero,opA,undef}              //   the sponge state
+                     line60_{zero,opB}
+KeccakF1600_StatePermute : line8_mem                      // skip the permutation → squeezed
+                                                          //   stream ignores the absorbed nonce
+keccak_squeeze     : line27_mem, line25_undef             // squeeze the same state for every nonce
 ```
 
-- `faulty_equal_frac → 1.0` with **entropy preserved (~2.0 bits)** is the
-signature of genuine reuse: the polynomials are still random *per seed*,
-they have simply stopped depending on the nonce, so `s` and `e` are now the
-**same samples** — catastrophic, the key falls out directly.
-- Contrast with a **collapse** (`poly_cbd_eta1` skip `cbd2` → every output 0):
-there `faulty_equal_frac = 1.0` too, but `faulty_poly_entropy = 0` and
-`low_entropy = true` — the independent entropy test flags that case instead.
-- Contrast with a **missing poly** (`indcpa_keypair_derand` skip one
-`poly_getnoise_eta1` call): one poly has entropy `0`, flagged by the
-entropy test, `nonce_reuse = false`.
+```
+// e.g. keccak_absorb_once_line38_mem / KeccakF1600_StatePermute_line8_mem
+ē_ref (correct) : 0.273          ē (faulty) : 1.0        → φ_CMP fires
+H_i (faulty)    : [2.02 … 2.04]  (≈ full log2(5) bits)   → φ_ENT does NOT fire
+```
+
+These are catastrophic: `s` and `e` are now the **same samples**, the key falls
+out directly.
+
+#### Group 2 — `φ_CMP` ∧ `φ_ENT` (reuse by collapse to a constant) — 4 faults
+
+The sampler output is forced to a **constant**, so the polys are trivially equal
+(`ē = 1.0`) *and* carry no entropy (`H_i = 0`). Both clauses fire; here `φ_ENT`
+is the honest flag (reuse only in the degenerate sense `s = e = 0`).
+
+```
+keccak_squeeze : line21_mem, line25_zero, line25_opB   // zero the squeezed output
+poly_cbd_eta1  : fnSkip_cbd2_line0                     // skip cbd2 → every coefficient 0
+```
+```
+ē (faulty) : 1.0    H_i (faulty) : [0, 0, …, 0]   → φ_CMP ∧ φ_ENT
+```
+
+#### Group 3 — `φ_CMP` fewer-polynomials ∧ `φ_ENT` (missing poly) — 2 faults
+
+Skipping one sampler call means one of the 6 polynomials is **never drawn** and
+stays zero. The equal-fraction does not rise (`ē ≈ 0.18`, no reuse), but the
+*fewer-polynomials* branch of `φ_CMP` fires and that zero polynomial trips
+`φ_ENT`.
+
+```
+indcpa_keypair_derand : fnSkip_poly_getnoise_eta1_line18, _line27
+```
+```
+ē (faulty) : 0.18 (no reuse)   H_i (faulty) : [2.0, 2.0, 2.0, 2.0, 2.0, 0.0]
+→ φ_CMP (fewer polys) ∧ φ_ENT (the 6th poly)
+```
