@@ -2,5 +2,5 @@ obj
 build
 tests*
 __pycache__
-project.tex
+project*
 poly_tomsg_fault_analysis.md

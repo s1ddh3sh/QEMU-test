@@ -1,30 +1,38 @@
 #!/usr/bin/env python3
 """
-Scan tests_kyber/ and tests_dilithium/ for nonce_reuse_dist_report.json files
-and plot the faults flagged as a leak by the scheme-specific distribution test
-(secret_vector_dist.py): any report with top-level "leak_detected": true.
+Scan tests_kyber/ and tests_dilithium/ for the scheme-specific fault-test
+reports and plot every fault flagged as a leak, one panel per scheme. Two tests
+are merged into the same per-function stacked bars:
 
-A leak is raised by either part of T_DIST:
-  - comparison test (nonce reuse): "nonce_reuse" -- a frozen sampling nonce makes
-    two secret polynomials identical (s[i] == e[i] for Kyber, y[i] == y[j] for
-    Dilithium); or "missing_secret_poly" -- a sampler call was skipped;
-  - entropy test: "low_entropy" -- a sampled polynomial lost entropy vs the
-    correct build (a biased/collapsed sampler), independent of any collision.
+  1. distribution test (secret_vector_dist.py) -- nonce_reuse_dist_report.json
+     with top-level "leak_detected": true. Raised by either part of T_DIST:
+       - comparison test (nonce reuse): "nonce_reuse" -- a frozen sampling nonce
+         makes two secret polynomials identical (s[i] == e[i] for Kyber,
+         y[i] == y[j] for Dilithium); or "missing_secret_poly" -- a sampler call
+         was skipped;
+       - entropy test: "low_entropy" -- a sampled polynomial lost entropy vs the
+         correct build (a biased/collapsed sampler), independent of any collision.
+
+  2. range test (range_check.py) -- range_check_report.json with top-level
+     "range_fault_detected": true. A fault pushed a variable that is, by
+     specification, confined to a fixed range out of it -- e.g. the Dilithium
+     "polytope / tail" fault emits a response z with ||z||_inf >= GAMMA1-BETA
+     (the skipped rejection check), an out-of-range release.
 
 Each flagged fault is bucketed by its primary reason (collision > missing poly >
-low entropy) and the per-function counts are drawn as a stacked bar, one panel
-per scheme.
+low entropy > out-of-range) and the per-function counts are drawn as a stacked
+bar, one panel per scheme.
 
 Folder convention (same traversal as the mayo plot / report.sh):
 
-    tests_<scheme>/<function>/<fault-class>/.../<fault-folder>/nonce_reuse_dist_report.json
+    tests_<scheme>/<function>/<fault-class>/.../<fault-folder>/<report>.json
 
 <function>     -- top-level folder directly under tests_<scheme>/
 <fault-folder> -- the report's immediate parent dir
 
 Usage:
     python3 kyber_dilithium_specific.py
-    python3 kyber_dilithium_specific.py --out reports/faults/specific/kyber_dilithium_nonce_reuse_faults.png
+    python3 kyber_dilithium_specific.py --out reports/faults/specific/kyber_dilithium_specific_faults.png
 """
 import argparse
 import glob
@@ -34,13 +42,15 @@ import sys
 from collections import defaultdict, Counter
 
 SCHEMES = ("kyber", "dilithium")
-REPORT_NAME = "nonce_reuse_dist_report.json"
-DEFAULT_OUT = "reports/faults/specific/kyber_dilithium_nonce_reuse_faults.png"
+NONCE_REPORT_NAME = "nonce_reuse_dist_report.json"
+RANGE_REPORT_NAME = "range_check_report.json"
+DEFAULT_OUT = "reports/faults/specific/kyber_dilithium_specific_faults.png"
 
 # Shared categorical palette (matches generic_tests_plot.py).
-COLOR_COLLISION = "#eb6834"   # nonce-reuse collision (orange)
-COLOR_ENTROPY = "#2a78d6"     # low-entropy sampler   (blue)
-COLOR_MISSING = "#1baf7a"     # skipped sampler poly  (aqua)
+COLOR_COLLISION = "#eb6834"   # nonce-reuse collision   (orange)
+COLOR_ENTROPY = "#2a78d6"     # low-entropy sampler     (blue)
+COLOR_MISSING = "#1baf7a"     # skipped sampler poly    (aqua)
+COLOR_RANGE = "#9b59b6"       # out-of-range release    (purple)
 COLOR_GRID = "#d9d8d2"
 COLOR_TEXT = "#0b0b0b"
 COLOR_TEXT_MUTED = "#52514e"
@@ -49,15 +59,16 @@ COLOR_BG = "#fcfcfb"
 # Buckets in draw order; a fault is assigned to the first that applies.
 CATEGORIES = [
     ("collision", "nonce-reuse collision", COLOR_COLLISION),
-    ("missing", "missing secret poly", COLOR_MISSING),
+    ("missing", "missing secret poly (zero initialized)", COLOR_MISSING),
     ("entropy", "low entropy", COLOR_ENTROPY),
+    ("range", "out-of-range release", COLOR_RANGE),
 ]
 CAT_LABEL = {k: lbl for k, lbl, _ in CATEGORIES}
 CAT_COLOR = {k: c for k, _, c in CATEGORIES}
 
 
-def find_reports(root):
-    return sorted(glob.glob(os.path.join(root, "**", REPORT_NAME), recursive=True))
+def find_reports(root, name):
+    return sorted(glob.glob(os.path.join(root, "**", name), recursive=True))
 
 
 def primary_category(cmp):
@@ -71,40 +82,59 @@ def primary_category(cmp):
     return "entropy"  # leak_detected with no flag set: treat as entropy-only
 
 
+def _load(path):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[!] skipping unreadable report {path}: {e}", file=sys.stderr)
+        return None
+
+
+def _record(flagged, root, path, category):
+    rel = os.path.relpath(path, root)
+    parts = rel.split(os.sep)
+    flagged.append({
+        "function": parts[0],
+        "fault": parts[-2] if len(parts) >= 2 else "(root)",
+        "category": category,
+        "path": path,
+    })
+
+
 def collect_scheme(scheme):
-    """Return (flagged, n_scanned) for one scheme. flagged is a list of dicts:
-    function, fault, category, path."""
+    """Return (flagged, n_scanned) for one scheme, merging the distribution test
+    (nonce-reuse / missing / entropy) and the range test (out-of-range release).
+    flagged is a list of dicts: function, fault, category, path."""
     root = f"tests_{scheme}"
     flagged = []
     n_scanned = 0
-    for path in find_reports(root):
+
+    # 1. distribution test: nonce-reuse + entropy (secret_vector_dist.py)
+    for path in find_reports(root, NONCE_REPORT_NAME):
         n_scanned += 1
-        try:
-            with open(path) as f:
-                data = json.load(f)
-        except (OSError, json.JSONDecodeError) as e:
-            print(f"[!] skipping unreadable report {path}: {e}", file=sys.stderr)
+        data = _load(path)
+        if data is None or not data.get("leak_detected"):
             continue
-        if not data.get("leak_detected"):
+        _record(flagged, root, path, primary_category(data.get("comparison", {})))
+
+    # 2. range test: out-of-range release (range_check.py)
+    for path in find_reports(root, RANGE_REPORT_NAME):
+        n_scanned += 1
+        data = _load(path)
+        if data is None or not data.get("range_fault_detected"):
             continue
-        rel = os.path.relpath(path, root)
-        parts = rel.split(os.sep)
-        function = parts[0]
-        fault = parts[-2] if len(parts) >= 2 else "(root)"
-        flagged.append({
-            "function": function,
-            "fault": fault,
-            "category": primary_category(data.get("comparison", {})),
-            "path": path,
-        })
+        _record(flagged, root, path, "range")
+
     return flagged, n_scanned
 
 
 def print_report(scheme, flagged, n_scanned):
     print(f"== {scheme} ==")
     if n_scanned == 0:
-        print(f"  no {REPORT_NAME} found under tests_{scheme}/ "
-              "(run dist_tests/{0}/run_nonce_reuse_dist.sh first)\n".format(scheme))
+        print(f"  no fault-test reports found under tests_{scheme}/ "
+              f"(run dist_tests/{scheme}/run_nonce_reuse_dist.sh and/or "
+              f"run_range_dist.sh first)\n")
         return
     if not flagged:
         print(f"  {n_scanned} report(s) scanned, 0 flagged as leak.\n")
@@ -196,7 +226,8 @@ def plot(results, out_path):
         _panel(ax, scheme, flagged, n_scanned)
 
     total = sum(len(results[s][0]) for s in SCHEMES)
-    fig.suptitle(f"Kyber / Dilithium nonce-reuse + entropy faults: "
+    fig.suptitle(f"Kyber / Dilithium scheme-specific faults "
+                 f"(nonce-reuse + entropy + out-of-range): "
                  f"{total} flagged as leak",
                  fontsize=13, color=COLOR_TEXT, x=0.01, ha="left")
     fig.tight_layout(rect=[0, 0, 1, 0.98])

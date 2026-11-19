@@ -350,98 +350,110 @@ p=2: s1=0 (ineffective) vs s2=13 (effective), p=3: s1=0 (ineffective) vs s2=13 (
 [RESULT] correction test: SATISFIED at pos 0 (s=13, alpha=13: y1 = y2 xor alpha for all 4 swept p x 1 ephemeral draw(s))
 ```
 
-# DONE TILL HERE
+---
+
+# 3. Dilithium
+
+## **Target function.** `polyvecl_add(w, u, v)` → `poly_add(r, a, b)` :
+
+- `polyvecl_add` adds two length-`L` vectors component-wise, one `poly_add` per component:
+
+```c
+void polyvecl_add(polyvecl *w, const polyvecl *u, const polyvecl *v) {
+  for (i = 0; i < L; ++i)
+    poly_add(&(*w)[i], &(*u)[i], &(*v)[i]);   // w[i] = u[i] + v[i]
+}
+```
+
+- In `crypto_sign_signature_internal` it forms the response `z` of the signature. Just before the call, `z` holds `c·s1` (from `polyvecl_pointwise_poly_montgomery(&z, &cp, &s1)` then `polyvecl_invntt_tomont(&z)`), and `y` is the ephemeral masking vector:
+
+```c
+/* Compute z, reject if it reveals secret */
+polyvecl_pointwise_poly_montgomery(&z, &cp, &s1);   // z = c·s1
+polyvecl_invntt_tomont(&z);
+polyvecl_add(&z, &z, &y);                            // z = c·s1 + y   (u = z = c·s1, v = y)
+polyvecl_reduce(&z);
+if (polyvecl_chknorm(&z, GAMMA1 - BETA))
+  goto rej;
+```
+
+So in the `poly_add` for component `i`: `a = z[i] = (c·s1)[i]` (the accumulator), `b = y[i]` is the term added, and `w` aliases `u = z`.
+
+### Ouyang, Haobo, et al. *Improving Skipping Fault Correction Attacks on Randomized Dilithium via MILP* :
+
+> For each signing attempt, the adversary can inject a single instruction-skipping fault during the computation `z = y + c·s1` that skips one coefficient addition in one secret key component. Concretely, if the targeted coefficient is position `i` in component `j`, the faulty signature contains `z'_j[i] = y_j[i]` instead of `z_j[i] = y_j[i] + (c·s1)_j[i]`, while all other coefficients are computed normally.
+
+This is a **skipping / correction fault**: a single additive term is dropped from one `z` coefficient so the faulty `z` differs from the correct one by a **constant additive correction** that does not depend on the public (per-signature) background. That is exactly what the tool's **correction test (T_CF)** flags. Because `w` aliases `u = z`, skipping the whole `poly_add` leaves `z[i]` at its prior value `(c·s1)[i]` and drops the `y` addend — the mirror of the paper's "keep `y`, drop `c·s1`" direction, but the same single-addend skip exposing one coefficient's relation.
+
+**Target instruction from `poly_add` (inside the `polyvecl_add` loop):**
+
+| IR | instruction | meaning |
+| --- | --- | --- |
+| line7 | `call poly_add(&z[i], &z[i], &y[i])` | one component add `z[i] = z[i] + y[i]` |
+
+**Fault : skip the `poly_add` call at iteration 0** (`fnSkip` of `poly_add`, component `j = 0`). The first component's add is removed, so
+
+`z[0] = (c·s1)[0]  instead of  z[0] = (c·s1)[0] + y[0]`
+
+while every other component is computed normally — a single-coefficient additive manipulation matching the paper's skipping-correction fault.
+
+**Detection : correction test (T_CF).** The faulty output differs from the correct one by a constant additive correction `α`, constant across all swept public backgrounds and ephemeral draws:
+
+```
+[+] CORRECTION hit at pos 6: s=0, alpha=1 constant across 4 public backgrounds (seeds=[0, 1, 2, 3]) x 4 ephemeral draw(s)
+[i] swept 157 secret value(s) spread over [-78, 78] (157 newly collected, 0 reused from disk) without satisfying --require=all for --test=both
+
+[RESULT] ineffective test: no disagreement found in range swept
+[RESULT] correction test: SATISFIED at pos 6 (s=0, alpha=1: y1 = y2 xor alpha for all 4 swept p x 4 ephemeral draw(s))
+```
+
+The ineffective test finds no disagreement (the skip never produces an output *identical* to the correct one across the sweep), while the correction test is **SATISFIED**: the faulty coefficient is a fixed correction `α` away from the correct value, independent of the secret — the signature of a single-addend skip on `z = y + c·s1`.
+
+Result file: `tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/loopOrFuncSkip/pqcrystals_dilithium2_ref_polyvecl_add_fnSkip_pqcrystals_dilithium2_ref_poly_add_line7/test_result.txt`
 
 ---
 
+# Distribution tests for Kyber/Dilithium
+
 ## Target Function. `indcpa_keypair_derand` : keygen for kyber
 
-In `indcpa_keypair_derand` the secret and error polynomials are drawn as
+In `indcpa_keypair_derand` the secret and error polynomials are drawn as :
 
 ```
-
+// sampling code in indcpa_keypair_derand():
   for (i = 0; i < KYBER_K; i++)
     poly_getnoise_eta1(&skpv[i], noiseseed, nonce++);
   for (i = 0; i < KYBER_K; i++)
     poly_getnoise_eta1(&e[i], noiseseed, nonce++);
-```
+    
+    
+void poly_getnoise_eta1(poly *r, const uint8_t seed[KYBER_SYMBYTES],
+                        uint8_t nonce) {
+  uint8_t buf[KYBER_ETA1 * KYBER_N / 4];
+  prf(buf, sizeof(buf), seed, nonce);
+  poly_cbd_eta1(r, buf);
+}
 
-The **nonce** is the only thing that makes the `2k` draws differ. The PRF is
-the Keccak sponge: absorb `noiseseed ‖ nonce` (`keccak_absorb_once`),
-permute (`KeccakF1600_StatePermute`), squeeze (`keccak_squeeze`).
+// call chain inside keypair:
+poly_getnoise_eta1(r, seed, nonce)          
+  └─ prf(buf, seed, nonce)               
+       └─ extkey = seed ‖ nonce              
+       └─ shake256(buf, extkey)
+            └─ keccak_absorb_once(s, RATE, extkey, …)   
+            └─ keccak_squeezeblocks(buf, …, s)          
+  └─ poly_cbd_eta1(r, buf)                  
+  
+  
+```
 
 ### Ravi, et al., *Number "Not Used" Once* :
 
-**Detection : $T_{\mathrm{DIST}}$ (`project.tex`).** The test captures the
-`2k = 6` sampled polynomials over `N` random seeds and flags a leak if either
-part fires:
+**Detection : By $T_{\mathrm{DIST}}$** for Kyber/Dilithium
 
-```
-φ_ENT ≡ ∃ i :  H_i^ref − H_i > τ            // some poly loses > τ (≈1 bit) of entropy
-φ_CMP ≡ (ē ≥ ē_ref + τ_e)  ∨  (ft sampled fewer polynomials than f)
-φ_DIST = φ_ENT ∨ φ_CMP
-```
+1. Does the entropy check for each s[i], e[i].
+2. Compare the equal fraction between correct and faulty run. (To check if same sampled)\
+3. Check if all the polynomials are sampled (else are zero).
 
-where `H_i` is the per-coefficient entropy of polynomial `i` and `ē` is the mean
-equal-fraction `eq(s_i, e_i)` over the pairs. Correct draws agree only by chance
-(`ē_ref ≈ 0.27` for `CBD(η=2)`); a frozen nonce drives `ē → 1`.
+### Detected faults:
 
-The **genuine NNUO leak** is the nonce-reuse branch of `φ_CMP`: `ē` jumps to
-`1.0` **while entropy stays ~2.0 bits** (`φ_ENT` does *not* fire) — the
-polynomials are still random per seed, they have just stopped depending on the
-nonce, so `s_i = e_i`. The 20 flagged faults fall into three groups by which
-clause fires:
-
-#### Group 1 — `φ_CMP` nonce reuse, entropy intact (the real NNUO) — 14 faults
-
-The PRF sponge is made **independent of the absorbed nonce**, so every
-`PRF(seed, i)` returns the same stream and all 6 polys become identical
-(`ē = 1.0`) yet still vary per seed (`H_i ≈ 2.0`). `φ_CMP` fires, `φ_ENT` does not.
-
-```
-keccak_absorb_once : line38_mem, line59_mem, line61_mem   // skip the stores that fold the
-                     line43_{zero,opB,undef}              //   nonce byte + rate words into
-                     line47_{zero,opA,undef}              //   the sponge state
-                     line60_{zero,opB}
-KeccakF1600_StatePermute : line8_mem                      // skip the permutation → squeezed
-                                                          //   stream ignores the absorbed nonce
-keccak_squeeze     : line27_mem, line25_undef             // squeeze the same state for every nonce
-```
-
-```
-// e.g. keccak_absorb_once_line38_mem / KeccakF1600_StatePermute_line8_mem
-ē_ref (correct) : 0.273          ē (faulty) : 1.0        → φ_CMP fires
-H_i (faulty)    : [2.02 … 2.04]  (≈ full log2(5) bits)   → φ_ENT does NOT fire
-```
-
-These are catastrophic: `s` and `e` are now the **same samples**, the key falls
-out directly.
-
-#### Group 2 — `φ_CMP` ∧ `φ_ENT` (reuse by collapse to a constant) — 4 faults
-
-The sampler output is forced to a **constant**, so the polys are trivially equal
-(`ē = 1.0`) *and* carry no entropy (`H_i = 0`). Both clauses fire; here `φ_ENT`
-is the honest flag (reuse only in the degenerate sense `s = e = 0`).
-
-```
-keccak_squeeze : line21_mem, line25_zero, line25_opB   // zero the squeezed output
-poly_cbd_eta1  : fnSkip_cbd2_line0                     // skip cbd2 → every coefficient 0
-```
-```
-ē (faulty) : 1.0    H_i (faulty) : [0, 0, …, 0]   → φ_CMP ∧ φ_ENT
-```
-
-#### Group 3 — `φ_CMP` fewer-polynomials ∧ `φ_ENT` (missing poly) — 2 faults
-
-Skipping one sampler call means one of the 6 polynomials is **never drawn** and
-stays zero. The equal-fraction does not rise (`ē ≈ 0.18`, no reuse), but the
-*fewer-polynomials* branch of `φ_CMP` fires and that zero polynomial trips
-`φ_ENT`.
-
-```
-indcpa_keypair_derand : fnSkip_poly_getnoise_eta1_line18, _line27
-```
-```
-ē (faulty) : 0.18 (no reuse)   H_i (faulty) : [2.0, 2.0, 2.0, 2.0, 2.0, 0.0]
-→ φ_CMP (fewer polys) ∧ φ_ENT (the 6th poly)
-```
+TODO
