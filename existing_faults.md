@@ -299,7 +299,7 @@ p=2: s1=0 (ineffective) vs s2=-829 (effective), p=3: s1=0 (ineffective) vs s2=-8
 [RESULT] correction test: SATISFIED at pos 0 (s=-829, alpha=1: y1 = y2 xor alpha for all 4 swept p x 1 ephemeral draw(s))
 ```
 
-### **Target function.** `poly_add(r, a, b)` :
+## **Target function.** `poly_add(r, a, b)` :
 
 - computes `r[i] = a[i] + b[i]`.
 - In `indcpa_enc`  encryption function, the second ciphertext component `v` is built by two of these
@@ -313,9 +313,7 @@ pack_ciphertext(c, &b, &v);                   // v Is packed into the ciphertext
 
 ### Hermelink, Pessl, Poppelmann, *Fault-Enabled Chosen-Ciphertext Attacks on Kyber* :
 
-The paper flips **one** **bit** of a valid ciphertext and lets a fault **"correct"**
-that ciphertext again during decapsulation. We do not inject bit faults,
-so the match is **not the same location or primitive,** but flags the same *correctable output of the ciphertext* through the **correction test (T_CF)** on `poly_add`.
+The paper flips **one** **bit** of a valid ciphertext and lets a fault **"correct"** that ciphertext again during decapsulation. We do not inject bit faults, so the match is **not the same location or primitive,** but flags the same *correctable output of the ciphertext* through the **correction test (T_CF)** on `poly_add`.
 
 So `a = v` (the running accumulator) and `b = epp` is the term added.
 
@@ -354,9 +352,9 @@ p=2: s1=0 (ineffective) vs s2=13 (effective), p=3: s1=0 (ineffective) vs s2=13 (
 
 # 3. Dilithium
 
-## **Target function.** `polyvecl_add(w, u, v)` → `poly_add(r, a, b)` :
+## **Target function.** `polyvecl_add(w, u, v)`:
 
-- `polyvecl_add` adds two length-`L` vectors component-wise, one `poly_add` per component:
+- `polyvecl_add` adds two vectors of length L, component-wise, one `poly_add` per component:
 
 ```c
 void polyvecl_add(polyvecl *w, const polyvecl *u, const polyvecl *v) {
@@ -371,33 +369,30 @@ void polyvecl_add(polyvecl *w, const polyvecl *u, const polyvecl *v) {
 /* Compute z, reject if it reveals secret */
 polyvecl_pointwise_poly_montgomery(&z, &cp, &s1);   // z = c·s1
 polyvecl_invntt_tomont(&z);
-polyvecl_add(&z, &z, &y);                            // z = c·s1 + y   (u = z = c·s1, v = y)
+polyvecl_add(&z, &z, &y);                            // z = c·s1 + y 
 polyvecl_reduce(&z);
 if (polyvecl_chknorm(&z, GAMMA1 - BETA))
   goto rej;
 ```
 
-So in the `poly_add` for component `i`: `a = z[i] = (c·s1)[i]` (the accumulator), `b = y[i]` is the term added, and `w` aliases `u = z`.
+### Attacks detected
 
 ### Ouyang, Haobo, et al. *Improving Skipping Fault Correction Attacks on Randomized Dilithium via MILP* :
 
 > For each signing attempt, the adversary can inject a single instruction-skipping fault during the computation `z = y + c·s1` that skips one coefficient addition in one secret key component. Concretely, if the targeted coefficient is position `i` in component `j`, the faulty signature contains `z'_j[i] = y_j[i]` instead of `z_j[i] = y_j[i] + (c·s1)_j[i]`, while all other coefficients are computed normally.
+> 
 
-This is a **skipping / correction fault**: a single additive term is dropped from one `z` coefficient so the faulty `z` differs from the correct one by a **constant additive correction** that does not depend on the public (per-signature) background. That is exactly what the tool's **correction test (T_CF)** flags. Because `w` aliases `u = z`, skipping the whole `poly_add` leaves `z[i]` at its prior value `(c·s1)[i]` and drops the `y` addend — the mirror of the paper's "keep `y`, drop `c·s1`" direction, but the same single-addend skip exposing one coefficient's relation.
+This is a **correction fault**: a single additive term is dropped from one `z` coefficient so the faulty `z` differs from the correct one by a **additive correction.** Exactly detected by the correction fault test (T_CF) on `polyvecl_add` fn.
 
 **Target instruction from `poly_add` (inside the `polyvecl_add` loop):**
 
 | IR | instruction | meaning |
 | --- | --- | --- |
-| line7 | `call poly_add(&z[i], &z[i], &y[i])` | one component add `z[i] = z[i] + y[i]` |
+| line7 | `call poly_add(&z[i], &z[i], &y[i])` | add `z[i] = z[i] + y[i]` |
 
-**Fault : skip the `poly_add` call at iteration 0** (`fnSkip` of `poly_add`, component `j = 0`). The first component's add is removed, so
+**Fault : skip the `poly_add` call at iteration 0**
 
 `z[0] = (c·s1)[0]  instead of  z[0] = (c·s1)[0] + y[0]`
-
-while every other component is computed normally — a single-coefficient additive manipulation matching the paper's skipping-correction fault.
-
-**Detection : correction test (T_CF).** The faulty output differs from the correct one by a constant additive correction `α`, constant across all swept public backgrounds and ephemeral draws:
 
 ```
 [+] CORRECTION hit at pos 6: s=0, alpha=1 constant across 4 public backgrounds (seeds=[0, 1, 2, 3]) x 4 ephemeral draw(s)
@@ -407,9 +402,220 @@ while every other component is computed normally — a single-coefficient additi
 [RESULT] correction test: SATISFIED at pos 6 (s=0, alpha=1: y1 = y2 xor alpha for all 4 swept p x 4 ephemeral draw(s))
 ```
 
-The ineffective test finds no disagreement (the skip never produces an output *identical* to the correct one across the sweep), while the correction test is **SATISFIED**: the faulty coefficient is a fixed correction `α` away from the correct value, independent of the secret — the signature of a single-addend skip on `z = y + c·s1`.
+### *Loop Aborts Strike Back: Defeating Fault Countermeasures in Lattice Signatures with ILP* (TCHES) :
 
-Result file: `tests_dilithium/pqcrystals_dilithium2_ref_polyvecl_add/loopOrFuncSkip/pqcrystals_dilithium2_ref_polyvecl_add_fnSkip_pqcrystals_dilithium2_ref_poly_add_line7/test_result.txt`
+>The same `z = y + c·s1` spot is the target of the **loop-abort** family. Instead of dropping the
+`+y` addition, the attack **zeros / aborts one coefficient of the mask `y`** (an early loop exit or a
+stuck-at-zero store during `poly_uniform_gamma1`), so the corresponding response coefficient becomes
+>
+`z[i] = (c·s1)[i] + 0 = (c·s1)[i]`
+
+— a `z` coefficient that exposes `c·s1` directly. The paper shows that zeroing even a **single**
+coefficient of `y` suffices for key recovery across all Dilithium security levels via an ILP
+formulation, and that the simple countermeasures proposed earlier (Espitau et al.) are insufficient.
+
+Our tool reaches the **same faulty `z[i] = (c·s1)[i]`** from the mirror injection (skipping the add
+drops `y` rather than zeroing it), so it is flagged by the **same correction test (T_CF)** result
+above. The mask-zeroing root cause itself is caught upstream by the sampler collapse on
+`poly_uniform_gamma1` (see the distribution-test section). Related nonce/mask-reuse DFA:
+**Groot Bruinderink & Pessl, *Differential Fault Attacks on Deterministic Lattice Signatures*
+(TCHES 2018, ePrint 2018/355)**.
+
+---
+
+## Same `poly_add`, direct-leak direction : `z` passes one operand through
+
+The correction entry above drops `y` and keeps `c·s1`. Faulting `poly_add` so that **one operand
+passes straight to the output** is the mirror image, and is flagged by the **Direct_leak test (T_DT)**
+instead of T_CF — the same reading the MAYO `mat_add` entries use (`[output == ephemeral]`).
+
+**Target instruction from `poly_add`** (same IR table as above):
+
+| IR line | fault | effect |
+| --- | --- | --- |
+| line5 | skip `load a` (`line5_mem`) | `a` never loaded ⇒ `c = b` (the addend passes through) |
+| line8 | `opB` on the add | add returns one operand ⇒ `c = b` |
+
+**Detection : direct-leak test (T_DT).**
+
+```
+// poly_add/binOpFault/..._line8_opB/direct_leak_result.txt
+[RESULT] direct-leak test: DETECTED -- secret-buf: output 'c' at [0, 1, 2] holds input 'b'
+  at the same index in all 16 trace(s) where the fault changed it
+
+// poly_add/loadStoreSkip/..._line5_mem/direct_leak_result.txt
+[RESULT] direct-leak test: DETECTED -- secret-buf: output 'c' at [0, 1, 2, 3] holds input 'b'
+  at the same index in all 4 trace(s) where the fault changed it
+```
+
+Depending on the operand binding in `z = (c·s1) + y`, the surviving operand is either the mask `y`
+(reveals the mask of that coefficient) or `c·s1` (reveals the secret term directly) — the leak
+primitive both correction attacks ultimately rely on, here exposed in a single pass.
+
+---
+
+## Rounding / hint / high-bits : constant-α correction on `w1`, `h`, `t0`, `t1`
+
+**(New finding — signing/keygen-side rounding-correction, not covered by a single existing
+Dilithium paper.)**
+
+Dilithium's rounding primitives all have the shape `out = round(in)` with a small, fixed set of
+output values. A skip/zero fault on one of them shifts the rounded value by a **constant additive
+correction α independent of the public per-signature background** — exactly the `T_CF` signature.
+Because the hint mechanism tolerates small perturbations of `w`, a faulted `w1`/`h` can still verify
+while encoding a linear relation on the secret; a faulted `t0`/`t1` perturbs the public key / `c·t0`
+term. This is the signing/keygen-side analogue of the inequality/polytope key recovery in
+Azevedo-Oliveira et al. *Finding a polytope*, and of the verification-side public-parameter attacks
+(ePrint 2023/1796; Bauer et al. 2025/2029).
+
+**Target functions and faults (all `T_CF` SATISFIED with constant α):**
+
+| Function | Role | Fault | α |
+| --- | --- | --- | --- |
+| `decompose` | `w = w1·2γ2 + w0` (signing high/low bits) | `line8_opA`, `line11_opA` | 128 |
+| `poly_decompose` / `polyveck_decompose` | per-coeff / per-vector wrapper | `fnSkip decompose_line7` | — |
+| `power2round` | `t = t1·2^d + t0` (keygen) | `line3_opB/undef/zero`, `line2_undef` | 1 |
+| `make_hint` / `poly_make_hint` | hint bit `h` | `fnSkip make_hint_line9` | 95232 |
+| `polyveck_shiftl` | `t0 << d` | `fnSkip poly_shiftl_line5` | — |
+| `caddq` / `poly_caddq` | conditional `+q` (canonical form) | `fnSkip caddq` | −4190208 (= −q) |
+
+**Detection : correction test (T_CF)** (ineffective T_IF fires alongside on most):
+
+```
+// decompose/binOpFault/..._line11_opA/test_result.txt
+[+] CORRECTION hit at pos 0: s=128, alpha=128 constant across 4 public backgrounds (seeds=[0,1,2,3])
+[RESULT] correction test: SATISFIED at pos 0 (s=128, alpha=128: y1 = y2 xor alpha for all 4 swept p ...)
+
+// poly_make_hint/.../..._fnSkip_..._make_hint_line9/test_result.txt
+[+] CORRECTION hit at pos 0: s=-95232, alpha=95232 constant across 4 public backgrounds
+[RESULT] correction test: SATISFIED at pos 0 (s=-95232, alpha=95232: y1 = y2 xor alpha ...)
+
+// power2round/binOpFault/..._line3_zero/test_result.txt
+[RESULT] correction test: SATISFIED at pos 0 (s=1, alpha=1: y1 = y2 xor alpha for all 4 swept p ...)
+```
+
+The `caddq` case is a pure `T_IF` hit (α = −q leaves a non-canonical negative representative that
+flows into packing) — a candidate signature-malleability/encoding issue to follow up by checking
+whether the packed signature still verifies.
+
+---
+
+# 4. SNOVA
+
+Parameter set `SNOVA_I_S_AES` (NIST level I): `v = 27, o = 5, l = 4, r = 4, q = 16`
+(`n = v + o = 32`, `l² = lr = 16`). The secret an attacker wants is the private
+linear map `T12`; an equivalent key follows from it. For each signature the signer
+derives fresh **vinegar** `V_i` and solves for the oil part so the signature verifies,
+via the reconciliation relation
+
+```
+S = T⁻¹ · V ,   with   S_i + Σ_j T12_ij · S_{v+j} = V_i  and  S_{v+j} = O_j
+```
+
+## **Target function.** `SNOVA_NAMESPACE(sign)` — the per-signature vinegar generator
+
+The vinegar is a SHAKE256 stream **keyed by the private seed**, then two GF(16) nibbles
+are unpacked per squeezed byte ([src/snova_ref.c:881-914](src/snova_ref.c#L881-L914)):
+
+```c
+shake256_init(&v_instance);
+shake_absorb(&v_instance, seed + SEED_LENGTH_PUBLIC, SEED_LENGTH_PRIVATE); // L886: PRIVATE seed
+shake_absorb(&v_instance, digest, BYTES_DIGEST);                          // L887: public
+shake_absorb(&v_instance, salt,   BYTES_SALT);                            // L888: public (in sig)
+shake_absorb(&v_instance, &num_sign, 1);                                  // L889: public counter
+shake_finalize(&v_instance);
+...
+while (t_idx < SNOVA_v * SNOVA_l * SNOVA_r) {
+    if (b_idx >= SK_BLOCK_SIZE) { shake_squeeze(vinegar_in_byte, SK_BLOCK_SIZE, &v_instance); b_idx = 0; }
+    signature_in_GF[t_idx] = vinegar_in_byte[b_idx] & 0xf;  t_idx++;       // L908
+    signature_in_GF[t_idx] = vinegar_in_byte[b_idx] >> 4;   t_idx++;       // L910-911
+    b_idx++;
+}
+```
+
+Only the first absorb (L886) carries the secret; `digest`, `salt`, `num_sign` are all
+public / recoverable from the signature. This block is the C analogue of **line 13 of
+Algorithm 2** in the SNOVA spec — the exact step the only prior fault paper targets.
+
+### Attacks Detected
+
+### Banegas & Villanueva-Polanco, *A Fault Analysis on SNOVA* (ePrint 2024/1883 / arXiv 2509.12879) :
+
+> The only dedicated SNOVA fault attack. It **value-fixes** the vinegar entries `V_i`
+> at Alg. 2 line 13; differencing many signatures cancels the fixed entries, giving
+> linear systems that recover `T12` (≈ 22 faulty signatures at level I). A
+> single-signature "fault-assisted reconciliation attack" (quadratic solve) is also given.
+> The paper's model is **value-fixing only**; it explicitly declines the Keccak-targeting
+> route and does not consider instruction-/store-skip or secret-independence faults.
+
+Our sweep rediscovers the paper's injection point — the vinegar generation in `sign` —
+and reaches it with cheaper fault primitives:
+
+| Target function | Fault | Test | Detail |
+| --- | --- | --- | --- |
+| `_SNOVA_I_S_AES_ref_sign` | `loadStoreSkip/..._line911_mem` | ineffective | skipping the vinegar store leaves a **stale fixed-unknown** entry in that slot every signature — the precondition of the paper's many-signature attack (Alg. 3), reached by a skip instead of precise value control. `pos 6: 15/120 pairs disagree (+9 more positions)` |
+| `_SNOVA_I_S_AES_ref_sign` | `loopOrFuncSkip/..._fnSkip_shake_absorb_line168` | vinegar-entropy | skip of the **private-seed absorb** (src L886) ⇒ vinegar no longer depends on the secret ⇒ **FULL COLLAPSE** (see below) |
+
+---
+
+## Vinegar-entropy (secret-dependence) detection — skipping the private-seed `shake_absorb`
+
+**This is a new vector (A), not in the prior paper.** The four absorbs at L886–889 are
+ordered private-seed → digest → salt → counter. A fault that **skips only the first absorb
+(L886)** gives
+
+```
+vinegar = SHAKE256( digest ‖ salt ‖ num_sign )      // no secret input
+```
+
+so the attacker **recomputes `V` exactly** from public signature data. The reconciliation
+relation `S = T⁻¹·V` then has a **fully known** right-hand side — strictly stronger than the
+paper's *fixed-but-unknown* entry: no constant to guess, no quadratic search. In principle
+**one** faulty signature pins the oil subspace and hence `T12`.
+
+**Detection : vinegar-distribution test (`vinegar_dist_snova.py`)** — a whole-program test
+that holds `digest`, `salt`, `num_sign` fixed and **sweeps the 32-byte private seed**,
+capturing the signing vinegar each time and measuring per-nibble-position Shannon entropy:
+
+- **correct build:** every position moves with the seed → entropy ≈ `Hmax` (≈ 4 bits) — the
+  vinegar is secret-dependent (healthy);
+- **faulty build:** the position is **frozen** (entropy 0) → the vinegar no longer depends on
+  the secret.
+
+The vinegar stays statistically uniform in both builds (flat nibble histogram), so a
+frequency/chi-square test — and the value-level ineffective/correction tests — **cannot** see
+this; only a secret-*dependence* measure can.
+
+**Target instruction (base-IR line in the gated full-program ELF):**
+
+| IR | instruction | meaning |
+| --- | --- | --- |
+| line168 | `call shake_absorb(&v_instance, seed + SEED_LENGTH_PUBLIC, SEED_LENGTH_PRIVATE)` | absorb the **private seed** into the vinegar PRG (src L886) |
+
+**Fault : skip the private-seed `shake_absorb` call**
+
+```
+vinegar = SHAKE256(digest ‖ salt ‖ num_sign)   instead of   SHAKE256(privseed ‖ digest ‖ salt ‖ num_sign)
+```
+
+```
+[ correct ] mean per-position entropy 3.816 bits (Hmax = 4.0), 64/64 seeds distinct, collision_rate 0.00
+[ faulty  ] mean per-position entropy 0.000 bits, 1/64 distinct (all seeds → identical vinegar block), collision_rate 1.00
+[ compare ] 64/64 secret-dependent positions collapsed to frozen -> leak_fraction = 1.00
+
+[RESULT] vinegar-distribution test: COLLAPSE DETECTED (verdict = FULL) at fnSkip shake_absorb line168
+         vinegar frozen across all private seeds -> secret removed from the PRG (vector A)
+```
+
+> The same whole-program collapse is also reported for
+> `fnSkip_shake_finalize_line172` (src L890): skipping the sponge finalize breaks the
+> secret→vinegar dependence the same way.
+> 
+
+A **value-level** vinegar sanity check (rejecting signatures whose fresh vinegar has
+too many repeated/colliding values) would catch the value-fixing / stale-store cases
+(paper's attack, vector B) but **cannot** see vector A — there the vinegar is still
+correctly distributed and merely stops depending on the secret.
 
 ---
 
@@ -442,8 +648,6 @@ poly_getnoise_eta1(r, seed, nonce)
             └─ keccak_absorb_once(s, RATE, extkey, …)   
             └─ keccak_squeezeblocks(buf, …, s)          
   └─ poly_cbd_eta1(r, buf)                  
-  
-  
 ```
 
 ### Ravi, et al., *Number "Not Used" Once* :
@@ -454,6 +658,42 @@ poly_getnoise_eta1(r, seed, nonce)
 2. Compare the equal fraction between correct and faulty run. (To check if same sampled)\
 3. Check if all the polynomials are sampled (else are zero).
 
-### Detected faults:
+### Detected faults (Dilithium):
 
-TODO
+The Dilithium samplers expand one seed into several secret-derived polynomials separated only by an
+incrementing nonce: `s1,s2` via `poly_uniform_eta` and the per-signature mask `y` via
+`poly_uniform_gamma1`. Skipping a sampler (or its inner XOF) **freezes that output / removes the
+secret-seed dependence** — the nonce/domain-separator misuse condition behind
+**Ravi et al. *Number "Not Used" Once*** (`s==e` / `y[i]==y[j]` collapse), the mask-collapse
+loop-abort attacks (*Loop Aborts Strike Back*), and the nonce-reuse DFA of
+**Bruinderink & Pessl** (a repeated mask leaks `s1` via `z = y + c·s1`).
+
+On these gated ELFs the leak surfaces through the **generic `T_CF`/`T_IF`** detectors (the skipped
+sampler leaves the output buffer at a frozen/constant value, so faulty = correct ⊕ const, with
+α = 255 at the byte level and secret-independent effectiveness). The dedicated `T_DIST`
+coordinate-collision statistic is the natural detector for the *collision* variant; via the
+direct-call sign harness its baseline stays 0.000 (NO COLLAPSE) on NTT/pack skips, so the sampler
+collapse is reported at the sampler functions themselves.
+
+| Fault | maps to |
+| --- | --- |
+| `polyvecl_uniform_gamma1 / poly_uniform_gamma1 — fnSkip poly_uniform_gamma1` | mask `y` frozen → Loop-Abort / Bruinderink-Pessl nonce-reuse |
+| `poly_uniform_gamma1 — fnSkip shake256_stream_init / shake256_squeezeblocks` | XOF-skip: mask becomes public-recomputable (NNUO) |
+| `polyvecl_uniform_eta / polyveck_uniform_eta — fnSkip poly_uniform_eta` | `s1,s2` draw skipped/duplicated → NNUO "missing secret poly" |
+| `poly_uniform_eta — fnSkip rej_eta` | η-rejection skipped → secret coeffs leave `[−η,η]` (weak-key keygen; also caught by the **range-check** detector) |
+
+```
+// polyvecl_uniform_gamma1/.../..._fnSkip_..._poly_uniform_gamma1_line9/test_result.txt
+[+] CORRECTION hit at pos 83: s=0, alpha=255 constant across 4 public backgrounds (seeds=[0,1,2,3])
+[RESULT] ineffective test: DETECTED at pos 31 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)
+[RESULT] correction test: SATISFIED at pos 83 (s=0, alpha=255: y1 = y2 xor alpha for all 4 swept p ...)
+
+// poly_uniform_eta/.../..._fnSkip_rej_eta_line4/test_result.txt
+[+] CORRECTION hit at pos 17: s=0, alpha=255 constant across 4 public backgrounds
+[RESULT] ineffective test: DETECTED at pos 9 (s1=0 ineffective, s2=1 effective; pair on each of 4 public seeds)
+[RESULT] correction test: SATISFIED at pos 17 (s=0, alpha=255: y1 = y2 xor alpha ...)
+```
+
+The `rej_eta` skip is a **keygen-integrity** fault (biased/weak `s1,s2`) rather than a signature
+attack, and is under-covered in the Dilithium fault literature — worth flagging to the maintainers
+alongside a sampled-coefficient range assertion as the countermeasure.
