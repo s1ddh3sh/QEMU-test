@@ -611,8 +611,8 @@ def plot_combined(rows_by_scheme, out_path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
-    ap.add_argument("--outdir", default=".", help="where to write CSVs (default: cwd)")
-    ap.add_argument("--plotdir", default="plots",
+    ap.add_argument("--outdir", default="reports/faults", help="where to write CSVs (default: cwd)")
+    ap.add_argument("--plotdir", default="reports/faults/plots",
                     help="where to write PNG plots (default: plots/)")
     ap.add_argument(
         "--schemes", default="mayo,kyber,dilithium",
@@ -633,7 +633,7 @@ def main():
              "fault_report_<scheme>_summary.png).",
     )
     ap.add_argument(
-        "--direct-leak-csv", default="direct_leak_report.csv",
+        "--direct-leak-csv", default="reports/faults/direct_leak_report.csv",
         help="CSV written by dist_tests/run_direct_leak.sh, relative to --root "
              "unless absolute (default: %(default)s). Its rows are added as the "
              "'direct_leak' test to the CSVs and plots; ignored if missing.",

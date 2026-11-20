@@ -152,85 +152,94 @@ def print_report(scheme, flagged, n_scanned):
           f"of {n_scanned} scanned ({tot_detail}).\n")
 
 
-def _panel(ax, scheme, flagged, n_scanned):
-    by_func = defaultdict(Counter)
+def _shade(hex_color, t):
+    """Blend hex_color toward white by fraction t in [0, 1] (0 = base)."""
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    r = int(r + (255 - r) * t)
+    g = int(g + (255 - g) * t)
+    b = int(b + (255 - b) * t)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _segments(flagged):
+    """Ordered (function, count, category) segments for one scheme's single bar.
+
+    Grouped by CATEGORIES draw order, and within a category by descending count,
+    so the bar reads collision -> missing -> entropy -> range, each a run of
+    per-function segments coloured by that category.
+    """
+    by_fc = defaultdict(Counter)            # function -> category -> count
     for item in flagged:
-        by_func[item["function"]][item["category"]] += 1
-    funcs = sorted(by_func, key=lambda f: (sum(by_func[f].values()), f))  # bottom-up
-    ax.set_facecolor(COLOR_BG)
-
-    if not funcs:
-        msg = (f"no leaks flagged\n({n_scanned} report(s) scanned)"
-               if n_scanned else
-               f"no reports under tests_{scheme}/")
-        ax.text(0.5, 0.5, msg, ha="center", va="center", fontsize=10,
-                color=COLOR_TEXT_MUTED, transform=ax.transAxes)
-        ax.set_title(f"{scheme}", fontsize=12, color=COLOR_TEXT, loc="left", pad=10)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        for sp in ax.spines.values():
-            sp.set_visible(False)
-        return
-
-    y = list(range(len(funcs)))
-    left = [0] * len(funcs)
-    for cat, label, color in CATEGORIES:
-        vals = [by_func[f].get(cat, 0) for f in funcs]
-        if not any(vals):
-            continue
-        ax.barh(y, vals, left=left, height=0.62, color=color, zorder=3,
-                label=label)
-        left = [l + v for l, v in zip(left, vals)]
-
-    ax.set_yticks(y)
-    ax.set_yticklabels(funcs, fontsize=8, color=COLOR_TEXT)
-    ax.set_xlabel("faults flagged as leak", fontsize=9, color=COLOR_TEXT_MUTED)
-    total = len(flagged)
-    ax.set_title(f"{scheme}: {total} flagged across {len(funcs)} function(s) "
-                 f"(of {n_scanned} scanned)",
-                 fontsize=12, color=COLOR_TEXT, loc="left", pad=10)
-    import matplotlib.ticker
-    ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
-    ax.set_xlim(0, max(left) + 1)
-    ax.grid(axis="x", color=COLOR_GRID, linewidth=0.8, zorder=0)
-    ax.set_axisbelow(True)
-    for sp in ("top", "right"):
-        ax.spines[sp].set_visible(False)
-    for sp in ("left", "bottom"):
-        ax.spines[sp].set_color(COLOR_GRID)
-    for yi, tot in zip(y, left):
-        ax.text(tot + 0.05, yi, str(int(tot)), va="center", fontsize=8,
-                color=COLOR_TEXT_MUTED)
-    ax.legend(loc="lower right", frameon=False, fontsize=8,
-              labelcolor=COLOR_TEXT_MUTED)
+        by_fc[item["function"]][item["category"]] += 1
+    segs = []
+    for cat, _, _ in CATEGORIES:
+        fcs = [(fn, cc[cat]) for fn, cc in by_fc.items() if cc.get(cat)]
+        for fn, cnt in sorted(fcs, key=lambda kv: (-kv[1], kv[0])):
+            segs.append((fn, cnt, cat))
+    return segs
 
 
 def plot(results, out_path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.ticker
+    from matplotlib.patches import Patch
 
-    # Panel heights proportional to the number of functions (min 1 row each).
-    n_rows = [max(1, len({i["function"] for i in results[s][0]})) for s in SCHEMES]
-    fig_h = sum(0.42 * n + 1.4 for n in n_rows)
-    fig, axes = plt.subplots(
-        nrows=len(SCHEMES), ncols=1,
-        figsize=(11, max(4.0, fig_h)),
-        gridspec_kw={"height_ratios": n_rows}, dpi=150)
-    if len(SCHEMES) == 1:
-        axes = [axes]
+    fig, ax = plt.subplots(figsize=(10, 6), dpi=150)
     fig.patch.set_facecolor(COLOR_BG)
+    ax.set_facecolor(COLOR_BG)
 
-    for ax, scheme in zip(axes, SCHEMES):
-        flagged, n_scanned = results[scheme]
-        _panel(ax, scheme, flagged, n_scanned)
+    # per-scheme, per-category counts
+    cat_by_scheme = {s: Counter(i["category"] for i in results[s][0])
+                     for s in SCHEMES}
+    totals = {s: len(results[s][0]) for s in SCHEMES}
+    present_cats = [k for k, _, _ in CATEGORIES
+                    if any(cat_by_scheme[s].get(k) for s in SCHEMES)]
 
-    total = sum(len(results[s][0]) for s in SCHEMES)
+    x = list(range(len(SCHEMES)))
+    n = max(1, len(present_cats))
+    bw = 0.8 / n                       # group width 0.8, one bar per category
+    ymax = max([max(cat_by_scheme[s].values(), default=0) for s in SCHEMES] + [1])
+
+    for j, cat in enumerate(present_cats):
+        offs = (j - (n - 1) / 2) * bw
+        vals = [cat_by_scheme[s].get(cat, 0) for s in SCHEMES]
+        ax.bar([xi + offs for xi in x], vals, width=bw * 0.92,
+               color=CAT_COLOR[cat], zorder=3, label=CAT_LABEL[cat])
+        for xi, v in zip(x, vals):
+            if v:
+                ax.text(xi + offs, v + ymax * 0.015, str(v), ha="center",
+                        va="bottom", fontsize=8, color=COLOR_TEXT_MUTED,
+                        zorder=4)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"{s}\n({totals[s]} flagged)" for s in SCHEMES],
+                       fontsize=10, color=COLOR_TEXT)
+    ax.set_ylabel("faults flagged as leak", fontsize=9, color=COLOR_TEXT_MUTED)
+    ax.set_ylim(0, ymax * 1.15)
+    ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
+    ax.grid(axis="y", color=COLOR_GRID, linewidth=0.8, zorder=0)
+    ax.set_axisbelow(True)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    for sp in ("left", "bottom"):
+        ax.spines[sp].set_color(COLOR_GRID)
+
+    handles = [Patch(facecolor=CAT_COLOR[k], label=CAT_LABEL[k])
+               for k in present_cats]
+    if handles:
+        ax.legend(handles=handles, loc="upper right", frameon=False,
+                  fontsize=8.5, labelcolor=COLOR_TEXT_MUTED,
+                  title="leak category", title_fontsize=9)
+
+    total = sum(totals.values())
     fig.suptitle(f"Kyber / Dilithium scheme-specific faults "
                  f"(nonce-reuse + entropy + out-of-range): "
                  f"{total} flagged as leak",
                  fontsize=13, color=COLOR_TEXT, x=0.01, ha="left")
-    fig.tight_layout(rect=[0, 0, 1, 0.98])
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     fig.savefig(out_path, facecolor=fig.get_facecolor())
     print(f"[+] wrote {out_path}")

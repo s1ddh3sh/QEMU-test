@@ -48,9 +48,16 @@ SCHEMES = [
     ("QR-UOV",      "/home/siddhesh/Desktop/QRUOV_LLVM/round2/llvm/test_qruov"),
 ]
 
-# Shared categorical palette (matches generic_tests_plot.py).
-COLOR_WEAK = "#eb6834"     # weak-system / linearity collapse (orange)
-COLOR_VINEGAR = "#2a78d6"  # vinegar entropy collapse         (blue)
+# Per-scheme categorical palette: each scheme gets one colour, reused across
+# both test panels so a scheme reads the same everywhere.
+# Palette shared with reports/timings/summarize_timings.py so a scheme keeps
+# the same colour across the timing and fault plots.
+SCHEME_COLORS = {
+    "MAYO":        "#1baf7a",  # green  (round 2)
+    "MAYO-round3": "#eda100",  # yellow (round 3)
+    "SNOVA":       "#e87ba4",  # pink
+    "QR-UOV":      "#6250d6",  # purple
+}
 COLOR_GRID = "#d9d8d2"
 COLOR_TEXT = "#0b0b0b"
 COLOR_TEXT_MUTED = "#52514e"
@@ -126,90 +133,126 @@ def print_report(label, res):
           f"{res['n_weak'] + res['n_vin']} scanned.\n")
 
 
-def _panel(ax, label, res):
-    ax.set_facecolor(COLOR_BG)
-    weak_by = Counter(i["function"] for i in res["weak"])
-    vin_by = Counter(i["function"] for i in res["vinegar"])
-    funcs = sorted(set(weak_by) | set(vin_by),
-                   key=lambda f: (weak_by[f] + vin_by[f], f))  # bottom-up
+def _scheme_breakdown(results, test_key):
+    """Per-scheme function breakdown for one test ('weak' or 'vinegar').
 
-    if not funcs:
-        msg = (f"no leaks flagged\n({res['n_weak'] + res['n_vin']} report(s) scanned)"
-               if res["present"] else f"root not found:\n{res['root']}")
-        ax.text(0.5, 0.5, msg, ha="center", va="center", fontsize=10,
-                color=COLOR_TEXT_MUTED, transform=ax.transAxes)
-        ax.set_title(label, fontsize=12, color=COLOR_TEXT, loc="left", pad=10)
+    Returns a list of {scheme, funcs} where funcs is a list of (function, count)
+    sorted descending by count, kept only for schemes with at least one flag.
+    Order follows SCHEMES.
+    """
+    out = []
+    for label, _ in SCHEMES:
+        by = Counter(i["function"] for i in results[label][test_key])
+        if not by:
+            continue
+        funcs = sorted(by.items(), key=lambda kv: (-kv[1], kv[0]))
+        out.append({"scheme": label, "funcs": funcs})
+    return out
+
+
+def _shade(hex_color, t):
+    """Blend hex_color toward white by fraction t in [0, 1] (0 = base)."""
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    r = int(r + (255 - r) * t)
+    g = int(g + (255 - g) * t)
+    b = int(b + (255 - b) * t)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _test_panel(ax, title, blocks, matplotlib):
+    """One bar per scheme, segmented (stacked) by function."""
+    ax.set_facecolor(COLOR_BG)
+    ax.set_title(title, fontsize=12, color=COLOR_TEXT, loc="left", pad=10)
+
+    if not blocks:
+        ax.text(0.5, 0.5, "no leaks flagged", ha="center", va="center",
+                fontsize=11, color=COLOR_TEXT_MUTED, transform=ax.transAxes)
         ax.set_xticks([])
         ax.set_yticks([])
         for sp in ax.spines.values():
             sp.set_visible(False)
         return
 
-    import matplotlib.ticker
-    y = list(range(len(funcs)))
-    h = 0.38
-    wv = [weak_by[f] for f in funcs]
-    vv = [vin_by[f] for f in funcs]
-    ax.barh([yi + h / 2 for yi in y], wv, height=h, color=COLOR_WEAK, zorder=3,
-            label="weak-system (linearity)")
-    ax.barh([yi - h / 2 for yi in y], vv, height=h, color=COLOR_VINEGAR, zorder=3,
-            label="vinegar (entropy collapse)")
+    y = list(range(len(blocks)))
+    totals = [sum(c for _, c in b["funcs"]) for b in blocks]
+    xmax = max(totals) + 1
+
+    for yi, blk in zip(y, blocks):
+        base = SCHEME_COLORS.get(blk["scheme"], "#888888")
+        n = len(blk["funcs"])
+        left = 0
+        for idx, (fn, cnt) in enumerate(blk["funcs"]):
+            # successive segments lighten so boundaries read within one bar
+            t = 0.0 if n == 1 else 0.45 * idx / (n - 1)
+            ax.barh(yi, cnt, left=left, height=0.6, color=_shade(base, t),
+                    edgecolor=COLOR_BG, linewidth=1.2, zorder=3)
+            # label the segment with its function + count when it is wide enough
+            if cnt >= 0.14 * xmax:
+                ax.text(left + cnt / 2, yi, f"{fn}\n({cnt})", ha="center",
+                        va="center", fontsize=6.5, color=COLOR_TEXT, zorder=4)
+            left += cnt
+        ax.text(left + 0.06, yi, str(totals[y.index(yi)]), va="center",
+                ha="left", fontsize=8, fontweight="bold",
+                color=COLOR_TEXT_MUTED, zorder=4)
 
     ax.set_yticks(y)
-    ax.set_yticklabels(funcs, fontsize=7.5, color=COLOR_TEXT)
+    ax.set_yticklabels([b["scheme"] for b in blocks], fontsize=9,
+                       color=COLOR_TEXT)
+    ax.set_ylim(-0.6, len(blocks) - 0.4)
     ax.set_xlabel("faults flagged", fontsize=9, color=COLOR_TEXT_MUTED)
-    ax.set_title(f"{label}: {len(res['weak'])} weak-system + {len(res['vinegar'])} "
-                 f"vinegar across {len(funcs)} function(s)",
-                 fontsize=12, color=COLOR_TEXT, loc="left", pad=10)
-    ax.set_xlim(0, max(wv + vv) + 1)
+    ax.set_xlim(0, xmax)
     ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
-    ax.grid(axis="x", color=COLOR_GRID, linewidth=0.8, zorder=0)
+    ax.grid(axis="x", color=COLOR_GRID, linewidth=0.8, zorder=1)
     ax.set_axisbelow(True)
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
     for sp in ("left", "bottom"):
         ax.spines[sp].set_color(COLOR_GRID)
-    for yi, v in zip(y, wv):
-        if v:
-            ax.text(v + 0.05, yi + h / 2, str(v), va="center", fontsize=7,
-                    color=COLOR_TEXT_MUTED)
-    for yi, v in zip(y, vv):
-        if v:
-            ax.text(v + 0.05, yi - h / 2, str(v), va="center", fontsize=7,
-                    color=COLOR_TEXT_MUTED)
-    ax.legend(loc="lower right", frameon=False, fontsize=8,
-              labelcolor=COLOR_TEXT_MUTED)
 
 
 def plot(results, out_path):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.ticker
+    from matplotlib.patches import Patch
 
-    def nfuncs(res):
-        fs = {i["function"] for i in res["weak"]} | {i["function"] for i in res["vinegar"]}
-        return max(1, len(fs))
-
-    n_rows = [nfuncs(results[label]) for label, _ in SCHEMES]
-    fig_h = sum(0.42 * n + 1.5 for n in n_rows)
-    fig, axes = plt.subplots(
-        nrows=len(SCHEMES), ncols=1,
-        figsize=(11, max(5.0, fig_h)),
-        gridspec_kw={"height_ratios": n_rows}, dpi=150)
-    if len(SCHEMES) == 1:
-        axes = [axes]
-    fig.patch.set_facecolor(COLOR_BG)
-
-    for ax, (label, _) in zip(axes, SCHEMES):
-        _panel(ax, label, results[label])
-
+    weak_blocks = _scheme_breakdown(results, "weak")
+    vin_blocks = _scheme_breakdown(results, "vinegar")
     tot_weak = sum(len(results[l]["weak"]) for l, _ in SCHEMES)
     tot_vin = sum(len(results[l]["vinegar"]) for l, _ in SCHEMES)
+
+    n_weak = max(1, len(weak_blocks))
+    n_vin = max(1, len(vin_blocks))
+    fig_h = max(4.0, 0.9 * (n_weak + n_vin) + 2.2)
+    fig, axes = plt.subplots(
+        nrows=2, ncols=1, figsize=(12, fig_h),
+        gridspec_kw={"height_ratios": [n_vin, n_weak]}, dpi=150)
+    fig.patch.set_facecolor(COLOR_BG)
+
+    _test_panel(axes[0],
+                f"vinegar (entropy collapse): {tot_vin} flagged",
+                vin_blocks, matplotlib)
+    _test_panel(axes[1],
+                f"weak-system (linearity): {tot_weak} flagged",
+                weak_blocks, matplotlib)
+
+    # One shared scheme-colour legend for the whole figure.
+    present = [l for l, _ in SCHEMES
+               if any(b["scheme"] == l for b in weak_blocks + vin_blocks)]
+    handles = [Patch(facecolor=SCHEME_COLORS[l], label=l) for l in present]
+    if handles:
+        fig.legend(handles=handles, loc="upper right", frameon=False,
+                   fontsize=8.5, labelcolor=COLOR_TEXT_MUTED,
+                   title="scheme", title_fontsize=9,
+                   bbox_to_anchor=(0.995, 0.995))
+
     fig.suptitle(f"UOV-based scheme-specific faults: "
-                 f"{tot_weak} weak-system + {tot_vin} vinegar flagged "
+                 f"{tot_vin} vinegar + {tot_weak} weak-system flagged "
                  f"across {len(SCHEMES)} scheme(s)",
                  fontsize=13, color=COLOR_TEXT, x=0.01, ha="left")
-    fig.tight_layout(rect=[0, 0, 1, 0.985])
+    fig.tight_layout(rect=[0, 0, 1, 0.97])
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     fig.savefig(out_path, facecolor=fig.get_facecolor())
     print(f"[+] wrote {out_path}")
