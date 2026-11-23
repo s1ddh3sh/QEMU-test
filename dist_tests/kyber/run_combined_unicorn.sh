@@ -489,13 +489,33 @@ OVERALL_STATUS=0
 RC_DIR="$(mktemp -d "${TMPDIR:-/tmp}/kyb_sweep_rc.XXXXXX")"
 trap 'rm -rf "$RC_DIR"' EXIT
 
+# Optional GLOBAL sweep semaphore. When run_tests_all.sh exports
+# SWEEP_SEM_FIFO (a FIFO pre-filled with N core tokens), every faulty-ELF
+# sweep -- across ALL functions running concurrently -- draws one token before
+# it starts and returns it when it finishes. Cores are then held per ACTIVE
+# sweep, not reserved per function, so the cores this function is not using
+# (while it builds, calibrates, or tapers off at the end of its sweep) are
+# immediately picked up by other functions' sweeps. Without the env var this
+# is a no-op and the local --jobs pool alone bounds concurrency (unchanged).
+SWEEP_SEM=0
+if [[ -n "${SWEEP_SEM_FIFO:-}" && -p "${SWEEP_SEM_FIFO}" ]]; then
+    exec 8<>"$SWEEP_SEM_FIFO"
+    SWEEP_SEM=1
+fi
+
 # One faulty ELF: self-contained. Reads only the immutable correct ELF and
 # the shared read-only active_lengths.json; writes solely into its own
 # per-faulty-ELF dirs (dist_paired + test_result.txt), so any number of
 # these may run concurrently without colliding.
 run_one_sweep() {
     local FAULTY_ELF="$1"
-    local FAULTY_STEM DIST_PAIRED_DIR RESULT_FILE STATUS RC_KEY
+    local FAULTY_STEM DIST_PAIRED_DIR RESULT_FILE STATUS RC_KEY _tok
+    # Acquire a global core token (blocks while the shared pool is empty), and
+    # return it when this sweep's subshell exits -- normally or on error.
+    if (( SWEEP_SEM )); then
+        read -r -u 8 _tok
+        trap 'echo "${_tok:-1}" >&8' EXIT
+    fi
     FAULTY_STEM="$(rel_stem "$FAULTY_ELF" "$ELF_DIR")"
     DIST_PAIRED_DIR="${OUT_DIR}/${FAULTY_STEM}/dist_paired"
     if [[ "$FRESH" -eq 1 && -d "$DIST_PAIRED_DIR" ]]; then

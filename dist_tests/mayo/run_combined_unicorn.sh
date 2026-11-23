@@ -194,6 +194,18 @@ done
 # ---------------------------------------------------------------------------
 # [1/3] collect_dist_unicorn.sh, once per faulty ELF
 # ---------------------------------------------------------------------------
+# Optional GLOBAL sweep semaphore (see run_tests_all.sh). MAYO's sweep is
+# serial, so this process holds exactly one shared core token while it does its
+# calibrate + collect + test, and returns it on exit. At most CORES functions
+# then sweep at once, and the token is free during the separate build step, so
+# a function uses a core only while actually sweeping. No-op unless run under
+# run_tests_all.sh (SWEEP_SEM_FIFO unset).
+if [[ -n "${SWEEP_SEM_FIFO:-}" && -p "${SWEEP_SEM_FIFO}" ]]; then
+    exec 8<>"$SWEEP_SEM_FIFO"
+    read -r -u 8 _sem_tok
+    trap 'echo "${_sem_tok:-1}" >&8' EXIT
+fi
+
 echo "=== calibrate (unicorn): ${FUNC_NAME} ==="
 python3 "${SETUP_DIR}/calibrate_unicorn.py" \
     --witness "$WITNESS" --elf "$CORRECT_ELF" \

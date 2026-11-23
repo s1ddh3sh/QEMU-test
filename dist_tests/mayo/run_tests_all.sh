@@ -8,12 +8,12 @@
 #   2. ./dist_tests/mayo/run_tests_unicorn.sh <function> --seeds 0,1,2,3
 #
 # Each function's build+test is INDEPENDENT of every other function, so the
-# functions are run in parallel under a WORK-CONSERVING core budget: up to the
-# budget's worth of functions run at once, and a new one starts the moment a
-# core frees up. NOTE: unlike the Dilithium/Kyber scripts, MAYO's inner
-# run_combined_unicorn.sh sweeps its faulty ELFs SERIALLY (it has no --jobs),
-# so each function here uses exactly one core and the budget is simply the
-# number of functions run concurrently. (If --jobs is added to that inner
+# functions are run in parallel under a single GLOBAL pool of CORES tokens.
+# NOTE: unlike the Dilithium/Kyber scripts, MAYO's inner run_combined_unicorn.sh
+# sweeps its faulty ELFs SERIALLY (it has no --jobs), so each function holds
+# exactly one shared token while it sweeps -- the pool size is simply the number
+# of functions sweeping at once. The token is held only during the sweep, not
+# during the build, so builds overlap freely. (If --jobs is added to that inner
 # script later, change fault_weight below to the real fault count, as in the
 # Dilithium script, and pass --jobs to it.) Each function's full output is
 # streamed to its own log file (so parallel output does not interleave), and a
@@ -133,8 +133,8 @@ for func in "${FUNCS[@]}"; do
     WEIGHT["$func"]="$(fault_weight "$func")"
 done
 
-echo "[i] ${#FUNCS[@]} function(s) to run; core budget ${CORES} (nproc=${NPROC}), "\
-"up to ${MAXFUNCS} function(s) at once (MAYO inner sweep is serial: 1 core/function)"
+echo "[i] ${#FUNCS[@]} function(s) to run; global sweep pool ${CORES} core(s) (nproc=${NPROC}), "\
+"up to ${MAXFUNCS} function(s) in flight (MAYO inner sweep is serial: 1 core/function)"
 echo "[i] per-function logs: ${LOG_DIR}/<func>.log"
 
 # ---- one function: build then test, capturing status and wall-clock time ---
@@ -164,33 +164,30 @@ run_one() {
     end="$(date +%s.%N)"
     echo "$rc" > "${LOG_DIR}/${func}.status"
     awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f\n", e - s }' > "${LOG_DIR}/${func}.time"
-    # Release this function's reserved core(s) back to the scheduler (fd 9).
-    echo "$inner" >&9
 }
 
-# ---- work-conserving core-budget dispatch ---------------------------------
-# A FIFO on fd 9 is the completion channel: each finished run_one writes back
-# the number of cores it had reserved, and the dispatcher blocks on it only
-# when there is not enough room for the next function. Opening the FIFO
-# read/write in the parent keeps it from hitting EOF; children inherit fd 9.
-# (Every weight is 1 here, so this runs up to CORES functions at once.)
-DONE_FIFO="${LOG_DIR}/done.fifo"
-mkfifo "$DONE_FIFO"
-exec 9<>"$DONE_FIFO"
+# ---- global sweep-semaphore dispatch --------------------------------------
+# A GLOBAL pool of CORES tokens is shared by every function. Each MAYO
+# run_combined_unicorn.sh holds one token while it does its (serial) sweep and
+# returns it when done, so at most CORES functions sweep at once, and the token
+# is free during a function's build step. fd 9 keeps the pool open (pre-filled
+# with CORES tokens); the exported path lets every child open the same FIFO.
+SWEEP_SEM_FIFO="${LOG_DIR}/sweep_sem.fifo"
+mkfifo "$SWEEP_SEM_FIFO"
+exec 9<>"$SWEEP_SEM_FIFO"
+for ((_t = 0; _t < CORES; _t++)); do echo >&9; done
+export SWEEP_SEM_FIFO
 
-used=0            # cores currently reserved by running functions
-running=0         # number of functions currently running
+# Outer pool: admit up to MAXFUNCS functions at once. The global token pool is
+# what actually caps concurrent sweeps at CORES.
+active=0
 for func in "${FUNCS[@]}"; do
-    w="${WEIGHT[$func]:-1}"
-    (( w > CORES )) && w=$CORES
-    while (( used > 0 )) && { (( used + w > CORES )) || (( running >= MAXFUNCS )); }; do
-        read -r -u 9 released
-        used=$(( used - released ))
-        running=$(( running - 1 ))
-    done
-    used=$(( used + w ))
-    running=$(( running + 1 ))
-    run_one "$func" "$w" &
+    run_one "$func" "${WEIGHT[$func]:-1}" &
+    active=$(( active + 1 ))
+    if (( active >= MAXFUNCS )); then
+        wait -n 2>/dev/null || wait
+        active=$(( active - 1 ))
+    fi
 done
 wait
 exec 9>&- 9<&-

@@ -8,12 +8,12 @@
 #   2. ./dist_tests/dilithium/run_combined_unicorn.sh <function> --seeds 0,1,2,3 --fresh
 #
 # Each function's build+test is INDEPENDENT of every other function, so the
-# functions are run in parallel. Instead of a fixed number of functions at a
-# time, this script uses a WORK-CONSERVING core budget: each function's inner
-# faulty-ELF sweep is given as many workers as it has faults (up to a cap),
-# and the next function is started as soon as there are idle cores left over
-# -- so a single-fault function never leaves 31 cores idle, and a big
-# many-fault function can still grab a wide slice. This approximates the
+# functions are run in parallel under a single GLOBAL pool of CORES tokens
+# shared by every function's faulty-ELF sweep. A core is held per ACTIVE
+# sweep, never reserved per function, so there is NO per-function cap (a lone
+# function can use the whole machine) and yet cores a function is not using --
+# while it builds, calibrates, or tapers off at the end of its sweep -- are
+# immediately picked up by other functions' sweeps. This closely matches the
 # sweep-dilithium repo's single global work queue (there over machine
 # instructions; here over faulty ELFs). Each function's full output is
 # streamed to its own log file (so parallel output does not interleave), and
@@ -25,21 +25,24 @@
 # Usage:
 #   ./dist_tests/dilithium/run_tests_all.sh [-c N] [-j N] [--per-func-max M] [func ...]
 #
-#   -c N             total core budget to spread across all work
-#                    (default: number of CPUs, $(nproc)). The scheduler keeps
-#                    the sum of running functions' inner-sweep workers <= N.
-#   -j N             optional cap on how many functions may run at once
-#                    (default: N = the core budget, i.e. purely core-bound).
-#   --per-func-max M optional cap on inner workers handed to any one function
-#                    (default: the core budget). Lower it to stop one huge
-#                    many-fault function from grabbing every core at once.
+#   -c N             size of the GLOBAL sweep pool -- the max number of
+#                    faulty-ELF sweeps running at once across ALL functions
+#                    (default: number of CPUs, $(nproc)). This is the real
+#                    parallelism knob; idle cores are shared between functions.
+#   -j N             how many functions may be in flight at once (build +
+#                    calibrate + launching their sweeps). Default: N = the pool
+#                    size. It bounds the build/calibrate burst, not the sweeps.
+#   --per-func-max M cap on how many sweeps one function launches at once
+#                    (default: the pool size). There is no real per-function
+#                    cap -- a lone function can hold every token -- so normally
+#                    leave this alone; lower it only to bound launched helpers.
 #   func ...         optional explicit list of functions to run; if omitted,
 #                    every key in dilithium.json is run.
 #
-# Each function is given inner workers = min(its fault count, --per-func-max,
-# remaining free cores), so cores are packed greedily, costliest function
-# first. To reproduce the old fixed split, set -c and -j so the per-function
-# share is what you want (e.g. -c $(nproc) -j $(nproc) -> 1 worker each).
+# A core is held per ACTIVE sweep (via the global token pool), so a function
+# uses cores only while it is actually sweeping; the moment it is building,
+# calibrating, or down to its last few faults, the freed cores go to other
+# functions. There is no per-function reservation.
 #
 # A single function's failure (build or test) does not stop the sweep --
 # it is recorded and reported in the summary at the end, and the script
@@ -148,8 +151,8 @@ mapfile -t FUNCS < <(
     done | sort -rn -k1,1 | cut -f2-
 )
 
-echo "[i] ${#FUNCS[@]} function(s) to run; core budget ${CORES} (nproc=${NPROC}), "\
-"up to ${MAXFUNCS} function(s) at once, <= ${PERFUNC_MAX} inner worker(s) each"
+echo "[i] ${#FUNCS[@]} function(s) to run; global sweep pool ${CORES} core(s) (nproc=${NPROC}), "\
+"up to ${MAXFUNCS} function(s) in flight; idle cores are shared across functions"
 echo "[i] per-function logs: ${LOG_DIR}/<func>.log"
 
 # ---- one function: build then test, capturing status and wall-clock time ---
@@ -179,35 +182,37 @@ run_one() {
     end="$(date +%s.%N)"
     echo "$rc" > "${LOG_DIR}/${func}.status"
     awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f\n", e - s }' > "${LOG_DIR}/${func}.time"
-    # Release this function's reserved cores back to the scheduler (fd 9).
-    echo "$inner" >&9
 }
 
-# ---- work-conserving core-budget dispatch ---------------------------------
-# A FIFO on fd 9 is the completion channel: each finished run_one writes back
-# the number of cores it had reserved, and the dispatcher blocks on it only
-# when there is not enough room for the next function. Opening the FIFO
-# read/write in the parent keeps it from hitting EOF; children inherit fd 9.
-DONE_FIFO="${LOG_DIR}/done.fifo"
-mkfifo "$DONE_FIFO"
-exec 9<>"$DONE_FIFO"
+# ---- global sweep-semaphore dispatch --------------------------------------
+# The real throttle is a GLOBAL pool of CORES tokens, shared by every
+# function's inner sweep: run_combined_unicorn.sh draws one token per faulty-
+# ELF sweep from SWEEP_SEM_FIFO and returns it when that sweep finishes. A
+# core is therefore held per ACTIVE sweep, not reserved per function -- while a
+# function builds, calibrates, or tapers off near the end of its sweep, the
+# tokens it is not using are immediately taken by other functions' sweeps.
+# There is no per-function cap: a function alone can hold all CORES tokens.
+#
+# fd 9 keeps the token pool open (pre-filled with CORES tokens) for the whole
+# run; the exported path lets every child run_combined open the same FIFO.
+SWEEP_SEM_FIFO="${LOG_DIR}/sweep_sem.fifo"
+mkfifo "$SWEEP_SEM_FIFO"
+exec 9<>"$SWEEP_SEM_FIFO"
+for ((_t = 0; _t < CORES; _t++)); do echo >&9; done
+export SWEEP_SEM_FIFO
 
-used=0            # cores currently reserved by running functions
-running=0         # number of functions currently running
+# Outer pool: admit up to MAXFUNCS functions at once (build + calibrate +
+# launch their sweeps). This only bounds how many functions are in flight;
+# the global token pool is what caps concurrent sweeps at CORES. Costliest
+# functions are admitted first so the pool fills quickly.
+active=0
 for func in "${FUNCS[@]}"; do
-    w="${WEIGHT[$func]:-1}"
-    (( w > CORES )) && w=$CORES          # a single function may use the whole budget
-    # Wait for room: enough free cores AND a free function slot. Only block
-    # while something is actually running (used>0), so the first/biggest
-    # function never deadlocks against its own request.
-    while (( used > 0 )) && { (( used + w > CORES )) || (( running >= MAXFUNCS )); }; do
-        read -r -u 9 released
-        used=$(( used - released ))
-        running=$(( running - 1 ))
-    done
-    used=$(( used + w ))
-    running=$(( running + 1 ))
-    run_one "$func" "$w" &
+    run_one "$func" "${WEIGHT[$func]:-1}" &
+    active=$(( active + 1 ))
+    if (( active >= MAXFUNCS )); then
+        wait -n 2>/dev/null || wait
+        active=$(( active - 1 ))
+    fi
 done
 wait
 exec 9>&- 9<&-
