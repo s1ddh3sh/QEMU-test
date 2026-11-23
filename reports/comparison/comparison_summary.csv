@@ -1,0 +1,21 @@
+section,metric,O0,Os,O3,IR
+findings,IR findings in swept functions,40,40,40,40
+translation,translate (same test fires),33,13,8,
+translation,do not translate,7,9,9,
+translation,no machine instruction left,0,18,23,
+translation,translate %,82%,32%,20%,
+translation by class,call skip: translate / total,29/30,11/30,6/30,
+translation by class,value fault: translate / total,4/10,2/10,2/10,
+agreement,TP (agree yes),33,13,8,
+agreement,FN,7,9,9,
+agreement,FP,23,5,14,
+agreement,TN (agree no),102,88,76,
+agreement,agreement rate,0.818,0.878,0.785,
+agreement,Cohen's kappa,0.564,0.577,0.281,
+agreement,kappa random-PC baseline,0.114,0.351,0.000,
+blind sweep,machine instructions skipped,964,704,9678,
+blind sweep,instructions flagged by >=1 detector,163,189,1482,
+timing,sequential-equivalent seconds,39310,5075,16726,18639
+timing,units (PCs / IR faults),964,704,9678,83
+timing,seconds per unit,40.78,7.21,1.73,224.56
+timing,elapsed on 32 cores (s),2336.0,421.0,542.0,

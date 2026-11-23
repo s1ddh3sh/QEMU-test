@@ -8,20 +8,33 @@
 #   2. ./dist_tests/mayo/run_tests_unicorn.sh <function> --seeds 0,1,2,3
 #
 # Each function's build+test is INDEPENDENT of every other function, so the
-# functions are run in parallel across a bounded pool of worker jobs. Each
-# function's full output is streamed to its own log file (so parallel output
-# does not interleave), and a one-line PASS/FAIL is printed as each finishes.
+# functions are run in parallel under a WORK-CONSERVING core budget: up to the
+# budget's worth of functions run at once, and a new one starts the moment a
+# core frees up. NOTE: unlike the Dilithium/Kyber scripts, MAYO's inner
+# run_combined_unicorn.sh sweeps its faulty ELFs SERIALLY (it has no --jobs),
+# so each function here uses exactly one core and the budget is simply the
+# number of functions run concurrently. (If --jobs is added to that inner
+# script later, change fault_weight below to the real fault count, as in the
+# Dilithium script, and pass --jobs to it.) Each function's full output is
+# streamed to its own log file (so parallel output does not interleave), and a
+# one-line PASS/FAIL is printed as each finishes.
 #
 # Like run_tests_unicorn.sh, this script must be run from the repo root
 # (mayo.json and mayo_build.sh are repo-root-relative).
 #
 # Usage:
-#   ./dist_tests/mayo/run_tests_all.sh [-j N] [func ...]
+#   ./dist_tests/mayo/run_tests_all.sh [-c N] [-j N] [--per-func-max M] [func ...]
 #
-#   -j N        number of functions to process in parallel
-#               (default: number of CPUs, $(nproc))
-#   func ...    optional explicit list of functions to run; if omitted,
-#               every key in mayo.json is run.
+#   -c N             total core budget (default: number of CPUs, $(nproc)).
+#                    Because MAYO's inner sweep is serial (1 core/function),
+#                    this is effectively the number of functions run at once.
+#   -j N             optional cap on how many functions may run at once
+#                    (default: N = the core budget).
+#   --per-func-max M optional cap on inner workers per function (accepted for
+#                    parity with the Dilithium/Kyber scripts; has no effect
+#                    here while MAYO's inner sweep is serial).
+#   func ...         optional explicit list of functions to run; if omitted,
+#                    every key in mayo.json is run.
 #
 # A single function's failure (build or test) does not stop the sweep --
 # it is recorded and reported in the summary at the end, and the script
@@ -40,24 +53,36 @@ UPSERT_PY="${SCRIPT_DIR}/../common/upsert_timing.py"
 PERFUNC_CSV="${SCRIPT_DIR}/timing_${SCHEME}.csv"        # per-function timings
 SUMMARY_CSV="${SCRIPT_DIR}/../timing_schemes_summary.csv"  # avg over all schemes
 
-JOBS="$(nproc 2>/dev/null || echo 4)"
+NPROC="$(nproc 2>/dev/null || echo 4)"
+CORES=""          # -c/--cores : total core budget (default: NPROC)
+MAXFUNCS=""       # -j/--jobs  : cap on concurrent functions (default: CORES)
+PERFUNC_MAX=""    # --per-func-max : accepted for parity; no effect (serial inner)
 
-# ---- arg parse: -j N, then an optional explicit function list -------------
+# ---- arg parse ------------------------------------------------------------
 EXPLICIT_FUNCS=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -j|--jobs) JOBS="$2"; shift 2 ;;
-        -j*)       JOBS="${1#-j}"; shift ;;
-        --)        shift; EXPLICIT_FUNCS+=("$@"); break ;;
-        -*)        echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
-        *)         EXPLICIT_FUNCS+=("$1"); shift ;;
+        -c|--cores)     CORES="$2"; shift 2 ;;
+        -c*)            CORES="${1#-c}"; shift ;;
+        -j|--jobs)      MAXFUNCS="$2"; shift 2 ;;
+        -j*)            MAXFUNCS="${1#-j}"; shift ;;
+        --per-func-max) PERFUNC_MAX="$2"; shift 2 ;;
+        --)             shift; EXPLICIT_FUNCS+=("$@"); break ;;
+        -*)             echo "[!] unrecognized argument: $1" >&2; exit 1 ;;
+        *)              EXPLICIT_FUNCS+=("$1"); shift ;;
     esac
 done
 
-if ! [[ "$JOBS" =~ ^[0-9]+$ && "$JOBS" -ge 1 ]]; then
-    echo "[!] -j must be a positive integer (got: ${JOBS})" >&2
-    exit 1
-fi
+CORES="${CORES:-$NPROC}"
+MAXFUNCS="${MAXFUNCS:-$CORES}"
+PERFUNC_MAX="${PERFUNC_MAX:-$CORES}"
+for _name in CORES MAXFUNCS PERFUNC_MAX; do
+    _val="${!_name}"
+    if ! [[ "$_val" =~ ^[0-9]+$ && "$_val" -ge 1 ]]; then
+        echo "[!] ${_name} must be a positive integer (got: ${_val})" >&2
+        exit 1
+    fi
+done
 
 if [[ ! -f "$CONFIG_JSON" ]]; then
     echo "[!] ${CONFIG_JSON} not found -- run this script from the repo root" >&2
@@ -90,12 +115,32 @@ fi
 LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mayo_run_all.XXXXXX")"
 trap 'rm -rf "$LOG_DIR"' EXIT
 
-echo "[i] ${#FUNCS[@]} function(s) to run, up to ${JOBS} in parallel"
+# fault_weight: inner workers a function may reserve. MAYO's inner sweep runs
+# its faulty ELFs serially (no --jobs), so a function can only ever use one
+# core here -- weight is fixed at 1, clamped by PERFUNC_MAX. (To exploit
+# per-fault parallelism, add --jobs to dist_tests/mayo/run_combined_unicorn.sh
+# and make this count the faulty mutants, as the Dilithium script does.)
+fault_weight() {
+    local n=1
+    (( n > PERFUNC_MAX )) && n=$PERFUNC_MAX
+    echo "$n"
+}
+
+# Pre-compute each function's weight (1 here) so the dispatch loop below is
+# identical in shape to the Dilithium/Kyber scripts.
+declare -A WEIGHT=()
+for func in "${FUNCS[@]}"; do
+    WEIGHT["$func"]="$(fault_weight "$func")"
+done
+
+echo "[i] ${#FUNCS[@]} function(s) to run; core budget ${CORES} (nproc=${NPROC}), "\
+"up to ${MAXFUNCS} function(s) at once (MAYO inner sweep is serial: 1 core/function)"
 echo "[i] per-function logs: ${LOG_DIR}/<func>.log"
 
 # ---- one function: build then test, capturing status and wall-clock time ---
 run_one() {
     local func="$1"
+    local inner="$2"
     local log="${LOG_DIR}/${func}.log"
     local rc="ok" start end
     start="$(date +%s.%N)"
@@ -119,19 +164,36 @@ run_one() {
     end="$(date +%s.%N)"
     echo "$rc" > "${LOG_DIR}/${func}.status"
     awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f\n", e - s }' > "${LOG_DIR}/${func}.time"
+    # Release this function's reserved core(s) back to the scheduler (fd 9).
+    echo "$inner" >&9
 }
 
-# ---- bounded parallel dispatch --------------------------------------------
-active=0
+# ---- work-conserving core-budget dispatch ---------------------------------
+# A FIFO on fd 9 is the completion channel: each finished run_one writes back
+# the number of cores it had reserved, and the dispatcher blocks on it only
+# when there is not enough room for the next function. Opening the FIFO
+# read/write in the parent keeps it from hitting EOF; children inherit fd 9.
+# (Every weight is 1 here, so this runs up to CORES functions at once.)
+DONE_FIFO="${LOG_DIR}/done.fifo"
+mkfifo "$DONE_FIFO"
+exec 9<>"$DONE_FIFO"
+
+used=0            # cores currently reserved by running functions
+running=0         # number of functions currently running
 for func in "${FUNCS[@]}"; do
-    run_one "$func" &
-    active=$((active + 1))
-    if (( active >= JOBS )); then
-        wait -n 2>/dev/null || wait
-        active=$((active - 1))
-    fi
+    w="${WEIGHT[$func]:-1}"
+    (( w > CORES )) && w=$CORES
+    while (( used > 0 )) && { (( used + w > CORES )) || (( running >= MAXFUNCS )); }; do
+        read -r -u 9 released
+        used=$(( used - released ))
+        running=$(( running - 1 ))
+    done
+    used=$(( used + w ))
+    running=$(( running + 1 ))
+    run_one "$func" "$w" &
 done
 wait
+exec 9>&- 9<&-
 
 # ---- collect & report ------------------------------------------------------
 FAILED=()
