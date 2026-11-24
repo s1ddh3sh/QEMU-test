@@ -33,6 +33,7 @@ Outputs (reports/comparison/)
 -----------------------------
     comparison_summary.csv              one tidy table of every number plotted
     plots/translation_by_build.png      IR findings: translate / not / no-instruction
+    plots/correspondence.png            simple % of IR findings confirmed on machine
     plots/translation_by_class.png      translation split by fault class and by test
     plots/agreement_metrics.png         agreement + Cohen's kappa vs random-PC baseline
     plots/blind_sweep_scale.png         blind machine sweep: instructions vs detections
@@ -317,11 +318,34 @@ def plot_translation_by_build(tbb, path):
 
     ax.set_xticks(list(x))
     ax.set_xticklabels([f"{b}" for b in BUILDS])
-    ax.set_ylabel(f"IR findings (of {total} in the swept functions)")
-    ax.set_xlabel("machine build (all compiled from the same dilithium2.ll)")
-    ax.set_title("Do IR-level Dilithium findings survive as machine-instruction skips?")
+    ax.set_ylabel(f"IR findings (of {total}")
+    ax.set_xlabel("machine build (all compiled from the same llvm)")
+    ax.set_title("Do IR findings survive as machine-instruction skips?")
     ax.legend(frameon=False, loc="upper right", fontsize=9)
     ax.set_ylim(0, total * 1.12)
+    ax.grid(axis="x", visible=False)
+    _finish(fig, path)
+
+
+def plot_correspondence(tbb, path):
+    """The easy metric: of the IR findings in swept functions, what share is
+    confirmed by a machine-instruction skip, per build. One number, no chance
+    correction -- the plain-English companion to the kappa plot."""
+    fig, ax = plt.subplots(figsize=(7.5, 5))
+    total = tbb[BUILDS[0]]["swept"]
+    pct = [tbb[b]["yes"] / total * 100 for b in BUILDS]
+    ax.bar(BUILDS, pct, color=[BUILD_COLOR[b] for b in BUILDS], width=0.6)
+    for i, b in enumerate(BUILDS):
+        ax.text(i, pct[i] + 1.5, f"{pct[i]:.0f}%\n{tbb[b]['yes']}/{total}",
+                ha="center", va="bottom", fontsize=11, fontweight="bold", color=INK2)
+    ax.axhline(100, color=C_MUTED, linestyle="--", linewidth=1.3)
+    ax.text(len(BUILDS) - 0.5, 100, "  all IR findings", va="bottom", ha="right",
+            color=INK2, fontsize=9)
+    ax.set_ylim(0, 115)
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.0f}%"))
+    ax.set_ylabel(f"IR findings confirmed on machine (of {total})")
+    ax.set_xlabel("machine build (all compiled from the same llvm)")
+    ax.set_title("IR findings confirmed on machine")
     ax.grid(axis="x", visible=False)
     _finish(fig, path)
 
@@ -374,50 +398,25 @@ def plot_translation_by_class(tbc, tbt, path):
 
 
 def plot_agreement(am, path):
-    fig, (axL, axR) = plt.subplots(1, 2, figsize=(13, 5))
+    fig, axL = plt.subplots(figsize=(7.5, 5))
 
-    # left: stacked confusion (TP/FN/FP/TN) per build, as share of n
-    labels = [("tp", "agree yes (TP)", C_BLUE),
+    # stacked confusion (TP/FN/FP/TN) per build, as share of n
+    labels = [("tp", "both agree (TP)", C_BLUE),
               ("fn", "IR yes, machine no (FN)", C_ORANGE),
               ("fp", "IR no, machine yes (FP)", C_YELLOW),
-              ("tn", "agree no (TN)", C_GREY)]
+              ("tn", "both disagree (TN)", C_GREY)]
     bottom = [0] * len(BUILDS)
     for key, lab, col in labels:
         vals = [am[b][key] for b in BUILDS]
         axL.bar(BUILDS, vals, bottom=bottom, color=col, label=lab, width=0.6)
         bottom = [a + c for a, c in zip(bottom, vals)]
-    axL.set_ylabel("report rows (all tested faults × tests)")
+    axL.set_ylabel("all tested faults × tests")
     axL.set_title("IR vs machine agreement (O0/Os/O3)")
     axL.legend(frameon=False, fontsize=8.5, loc="upper right")
     axL.grid(axis="x", visible=False)
 
-    # right: kappa vs random-PC baseline + agreement rate
-    width = 0.26
-    xs = range(len(BUILDS))
-    k_obs = [am[b]["kappa"] for b in BUILDS]
-    k_base = [am[b]["base_kappa"] for b in BUILDS]
-    agr = [am[b]["agree_rate"] for b in BUILDS]
-    axR.bar([i - width for i in xs], k_obs, width=width, color=C_BLUE,
-            label="Cohen's κ (observed)")
-    axR.bar([i for i in xs], k_base, width=width, color=C_MUTED,
-            label="κ, random-PC baseline")
-    axR.bar([i + width for i in xs], agr, width=width, color=C_AQUA,
-            label="agreement rate")
-    for i, b in enumerate(BUILDS):
-        axR.text(i - width, (k_obs[i] or 0) + 0.01, f"{k_obs[i]:.2f}",
-                 ha="center", va="bottom", fontsize=8.5, color=INK2)
-        axR.text(i + width, (agr[i] or 0) + 0.01, f"{agr[i]:.2f}",
-                 ha="center", va="bottom", fontsize=8.5, color=INK2)
-    axR.set_xticks(list(xs))
-    axR.set_xticklabels(BUILDS)
-    axR.set_ylabel("score")
-    axR.set_ylim(0, 1.0)
-    axR.set_title("Correspondence is well above chance")
-    axR.legend(frameon=False, fontsize=8.5, loc="upper right")
-    axR.grid(axis="x", visible=False)
-
-    fig.suptitle("Statistical agreement between the two approaches",
-                 fontsize=14, fontweight="bold", y=1.02)
+    # fig.suptitle("Statistical agreement between the two approaches",
+    #              fontsize=14, fontweight="bold", y=1.02)
     _finish(fig, path)
 
 
@@ -638,6 +637,7 @@ def main(argv=None):
 
     print("plots:")
     plot_translation_by_build(tbb, os.path.join(PLOTS_DIR, "translation_by_build.png"))
+    plot_correspondence(tbb, os.path.join(PLOTS_DIR, "correspondence.png"))
     plot_translation_by_class(tbc, tbt, os.path.join(PLOTS_DIR, "translation_by_class.png"))
     plot_agreement(am, os.path.join(PLOTS_DIR, "agreement_metrics.png"))
     plot_blind_sweep(bss, ir_findings_swept, os.path.join(PLOTS_DIR, "blind_sweep_scale.png"))

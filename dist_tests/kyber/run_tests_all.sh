@@ -180,8 +180,22 @@ run_one() {
         fi
     } >"$log" 2>&1
     end="$(date +%s.%N)"
+    local secs
+    secs="$(awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f", e - s }')"
     echo "$rc" > "${LOG_DIR}/${func}.status"
-    awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f\n", e - s }' > "${LOG_DIR}/${func}.time"
+    echo "$secs" > "${LOG_DIR}/${func}.time"
+    # Incremental timing: update THIS function's row in the per-function CSV as
+    # soon as it finishes, so the CSV reflects progress without waiting for the
+    # whole sweep. fd 200 is a lock that serialises the read-modify-write, since
+    # every concurrent function upserts into the same CSV. The final batch
+    # upsert still runs (idempotent).
+    if [[ -f "$UPSERT_PY" ]]; then
+        (
+            flock 200
+            printf '%s %s %s\n' "$func" "$rc" "$secs" \
+                | python3 "$UPSERT_PY" perfunc --csv "$PERFUNC_CSV" --scheme "$SCHEME"
+        ) 200>"${LOG_DIR}/timing.lock" 2>>"$log"
+    fi
 }
 
 # ---- global sweep-semaphore dispatch --------------------------------------
