@@ -310,15 +310,15 @@ def plot_translation_by_build(tbb, path):
             ax.text(i, yes[i] / 2, f"{yes[i]}\n({yes[i]/total*100:.0f}%)",
                     ha="center", va="center", color="white", fontsize=11, fontweight="bold")
         if no[i]:
-            ax.text(i, yes[i] + no[i] / 2, str(no[i]), ha="center", va="center",
-                    color="white", fontsize=10)
+            ax.text(i, yes[i] + no[i] / 2, f"{no[i]}\n({no[i]/total*100:.0f}%)",
+                    ha="center", va="center", color="white", fontsize=10)
         if none[i]:
-            ax.text(i, bot2[i] + none[i] / 2, str(none[i]), ha="center", va="center",
-                    color=INK2, fontsize=10)
+            ax.text(i, bot2[i] + none[i] / 2, f"{none[i]}\n({none[i]/total*100:.0f}%)",
+                    ha="center", va="center", color=INK2, fontsize=10)
 
     ax.set_xticks(list(x))
     ax.set_xticklabels([f"{b}" for b in BUILDS])
-    ax.set_ylabel(f"IR findings (of {total}")
+    ax.set_ylabel(f"IR findings (out of {total})")
     ax.set_xlabel("machine build (all compiled from the same llvm)")
     ax.set_title("Do IR findings survive as machine-instruction skips?")
     ax.legend(frameon=False, loc="upper right", fontsize=9)
@@ -405,10 +405,17 @@ def plot_agreement(am, path):
               ("fn", "IR yes, machine no (FN)", C_ORANGE),
               ("fp", "IR no, machine yes (FP)", C_YELLOW),
               ("tn", "both disagree (TN)", C_GREY)]
+    totals = [sum(am[b][k] for k, _, _ in labels) for b in BUILDS]
+    light_fg = {C_YELLOW, C_GREY}  # light fills -> black text; else white
     bottom = [0] * len(BUILDS)
     for key, lab, col in labels:
         vals = [am[b][key] for b in BUILDS]
         axL.bar(BUILDS, vals, bottom=bottom, color=col, label=lab, width=0.6)
+        for i, (v, bot, tot) in enumerate(zip(vals, bottom, totals)):
+            if tot and v / tot >= 0.02:  # skip slivers too thin to label
+                axL.text(i, bot + v / 2, f"{v / tot * 100:.1f}%",
+                         ha="center", va="center", fontsize=8.5, fontweight="bold",
+                         color="black" if col in light_fg else "white")
         bottom = [a + c for a, c in zip(bottom, vals)]
     axL.set_ylabel("all tested faults × tests")
     axL.set_title("IR vs machine agreement (O0/Os/O3)")
